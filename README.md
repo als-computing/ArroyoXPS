@@ -29,3 +29,26 @@ Project documentation is maintained in this repository. This includes:
 - [System Components](./docs/system_components.md) Describes the components of system maintained in this repository.
 
 - [Design](./docs/design.md) Design notes and diagrams for this system.
+
+
+# Developer Setup
+If you are developing this library, there are a few things to note.
+
+1. Install development dependencies:
+
+```
+pip install .[dev]
+```
+
+2. Install pre-commit
+This step will setup the pre-commit package. After this, commits will get run against flake8, black, isort.
+
+```
+pre-commit install
+```
+
+3. (Optional) If you want to check what pre-commit would do before commiting, you can run:
+
+```
+pre-commit run --all-files
+```

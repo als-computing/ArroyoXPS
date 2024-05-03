@@ -18,7 +18,7 @@ sequenceDiagram
     activate tr_xrd_svc
     tr_xrd_svc ->> tiled: write frame
     tr_xrd_svc ->> tr_xrd_calc: calculate(tiled_client_frame_obj, tiled_client_process_node)
-    
+
     activate tr_xrd_calc
     tr_xrd_calc ->> tiled: get raw frame
     tr_xrd_calc ->> tr_xrd_calc: perform calculations
@@ -43,7 +43,7 @@ sequenceDiagram
 
 ```mermaid
 classDiagram
-    
+
     class RunNode{
         +TiledClient raw_data_node
         +TiledClient integrated_data_node

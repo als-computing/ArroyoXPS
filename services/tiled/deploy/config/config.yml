@@ -24,5 +24,5 @@ uvicorn:
   port: 8000
 object_cache:
   available_bytes: 0
-metrics: 
+metrics:
   prometheus: false

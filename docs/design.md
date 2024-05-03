@@ -44,16 +44,15 @@ sequenceDiagram
 ```mermaid
 classDiagram
     
-    class RuneNode{
+    class RunNode{
         +TiledClient raw_data_node
         +TiledClient integrated_data_node
         +TiledClient vfft_node
         +TiledClient ifft_node
+        +TiledClient sum_node
         +TiledClient trending_node
 
-        +from_node(TiledClient repository_node, String run_name)$
+        +from_node(TiledClient run_node)$
     }
-    
-    
 
 ```

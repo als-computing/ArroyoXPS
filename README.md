@@ -1,5 +1,5 @@
 # Real Time AP-XPS Service
-This repository maintains a service that will integrate with Beamline Control System for the new Real Time Ambient Pressure XRay Photon Spectroscopy instrument at the ALS.
+This repository maintains a service that will the integrate with Beamline Control System for the new Real Time Ambient Pressure XRay Photon Spectroscopy instrument at the ALS.
 
 # Installation
 TBD

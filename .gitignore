@@ -170,3 +170,6 @@ test.zarr
 misc
 test_fast.zarr
 zarr_utils.py
+
+
+data/

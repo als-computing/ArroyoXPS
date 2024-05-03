@@ -1,0 +1,22 @@
+
+version: "3.3"
+services:
+  tiled:
+    # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
+    image: ghcr.io/bluesky/tiled:v0.1.0a114
+    ports:
+      - "8000:8000"
+    environment:
+      - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
+    volumes:
+      - ./services/tiled/deploy:/deploy:Z
+      - ./data:/data:Z
+    depends_on:
+      - tiled_db
+    networks:
+      mle_net:
+
+  
+networks:
+  mle_net:
+    driver: bridge

@@ -2,7 +2,22 @@
 This repository maintains a service that will the integrate with Beamline Control System for the new Real Time Ambient Pressure XRay Photon Spectroscopy instrument at the ALS.
 
 # Installation
-TBD
+
+1. Copy `.env.example` file as `.env` add a very unique key to the `TILED_SINGLE_USER_API_KEY` value.
+
+2. Start services using
+
+```
+docker-compose up
+```
+
+or if podman-compose is your thing:
+
+```
+podman-compose up
+```
+
+
 
 # Project Documentation
 Project documentation is maintained in this repository. This includes:

@@ -11,11 +11,8 @@ services:
     volumes:
       - ./services/tiled/deploy:/deploy:Z
       - ./data:/data:Z
-    depends_on:
-      - tiled_db
     networks:
       mle_net:
-
 
 networks:
   mle_net:

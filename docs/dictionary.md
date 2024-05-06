@@ -8,4 +8,3 @@ We maintain the following dictionary of terminology used in this project
 | IVFFT| Inverse of the Vertical fast fourier transform  | 2D array |
 | Peak Fit | Display of current peak fit values (table of location, amplitude, FWHM) | Table |
 | Cycle Number | ??| Scalar |
-

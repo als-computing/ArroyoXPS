@@ -1,3 +1,5 @@
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -170,3 +172,6 @@ test.zarr
 misc
 test_fast.zarr
 zarr_utils.py
+
+
+data/

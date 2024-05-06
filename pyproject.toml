@@ -1,0 +1,38 @@
+[project]
+name = "tr-ap-xps"
+version = "0.0.1"
+authors = [
+    { name="Runbo Jiang", email="rjiang2@lbl.gov"},
+    { name="Dylan McReynolds", email="dmcreynolds@lbl.gov"},
+]
+description = "a package to perform computations and suggestion during a time-resolved AP-XPS experiment"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "python-dotenv",
+    "pandas",
+    "numpy",
+    "typer",
+]
+
+[project.optional-dependencies]
+# These are required for developing the package (running the tests, building
+# the documentation) but not necessarily required for _using_ it.
+dev = [
+    "flake8",
+    "pre-commit",
+    "pytest-mock"
+]
+
+[project.urls]
+Homepage = "https://github.com/als-computing/AP-XPS"
+Issues = "https://github.com/als-computing/AP-XPS/issues"
+
+
+[tool.isort]
+profile = "black"

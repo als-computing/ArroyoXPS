@@ -1,27 +1,19 @@
 # %%
-import misc.trs_refactor as trs
-import numpy as np
-import zarr
+# %%
 import os
-import zstd
-import numcodecs
-import json
-from ttictoc import tic, toc
 import shutil
-# %%
-import os
-from multiprocessing import Pool, Manager
-import zarr
-import numcodecs
-import dill 
-from frame_utils import get_frame_data
+from multiprocessing import Pool
 
+import dill
+import misc.trs_refactor as trs
+import numcodecs
+import numpy as np
 
 # %%
 import zarr
-import numcodecs
 from frame_utils import get_frame_data
 
+# from ttictoc import tic, toc
 
 # %%
 # Specify the path to your JSON file (adjust as necessary)
@@ -38,7 +30,7 @@ metadata_instance = trs.Metadata(path, name, number, ext)
 """ Read a frame from a Frame Stream
 MAKE sure you don't put a space after "Frame Stream" even so the filename is "Frame Stream " followed by the number
 The number also to be 12 NOT 00012 like the filename """
-    
+
 frame_stream = trs.FrameStream(path=".", name="Frame Stream", number=12, ext="bin")
 ccd_image, normalization = frame_stream.__frame_data__(frame_i=0)
 
@@ -80,7 +72,7 @@ number = 12
 ext = "bin"
 # Define the dimensions of a frame
 frame_height = frame_stream.n_y  # Height of a frame,
-frame_width = frame_stream.n_x  # Width of a frame, 
+frame_width = frame_stream.n_x  # Width of a frame,
 
 
 zarr_directory = "./test_faster.zarr"
@@ -98,17 +90,18 @@ root_group = zarr.open(zarr_directory, mode="w")
 compressor = numcodecs.Zstd(level=3)
 chunks = (1, frame_height, frame_width)  # Chunk size configuration
 # To remove an existing dataset
-if 'frame_data' in root_group:
-    del root_group['frame_data']
+if "frame_data" in root_group:
+    del root_group["frame_data"]
 
 # Then recreate it
 frame_data_zarr = root_group.create_dataset(
     "frame_data",
     shape=(n_frames, frame_height, frame_width),
     chunks=chunks,
-    dtype='float32',
-    compressor=compressor
+    dtype="float32",
+    compressor=compressor,
 )
+
 
 def write_frame_to_zarr_serialized(args_serialized):
     # Deserialize the arguments
@@ -118,15 +111,16 @@ def write_frame_to_zarr_serialized(args_serialized):
     frame_data = get_frame_data(frame_i, path, name, number, ext)
     # Since we're modifying a global object, ensure this operation is safe if using actual multiprocessing
     frame_data_zarr[frame_i, :, :] = frame_data
-    
-    
+
 
 if __name__ == "__main__":
     num_cores = os.cpu_count()
     print(f"Number of cores available: {num_cores}")
 
     # Prepare the arguments and serialize them
-    args_list_serialized = [dill.dumps((frame_i, path, name, number, ext)) for frame_i in range(n_frames)]
+    args_list_serialized = [
+        dill.dumps((frame_i, path, name, number, ext)) for frame_i in range(n_frames)
+    ]
 
     # Use Pool to process data in parallel
     with Pool(processes=num_cores) as pool:

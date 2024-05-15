@@ -17,7 +17,9 @@ dependencies = [
     "python-dotenv",
     "pandas",
     "numpy",
-    "typer",
+    "pyzmq",
+    "tiled[client]",
+    "typer"
 ]
 
 [project.optional-dependencies]
@@ -26,7 +28,8 @@ dependencies = [
 dev = [
     "flake8",
     "pre-commit",
-    "pytest-mock"
+    "pytest-mock",
+    "tiled[server]"
 ]
 
 [project.urls]

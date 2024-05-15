@@ -175,3 +175,5 @@ zarr_utils.py
 
 
 data/
+
+.vscode/

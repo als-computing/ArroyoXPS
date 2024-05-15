@@ -52,3 +52,24 @@ pre-commit install
 ```
 pre-commit run --all-files
 ```
+
+# Test publisher
+This repo contains a test ZMQ publisher that mimics the frame-producing ZMQ publisher that we expect to see from LabView.
+
+To test it:
+1. Create a python environment and activate it (using env, conda or others).
+2. Install this package with dependencies by typing:
+
+```
+pip install .
+```
+
+3. Start the listener through docker-compose (above).
+
+4. Start the producer:
+```
+python -m tr_ap_xps.producer
+
+```
+
+Now, if the listener is listening on `tcp://127.0.0.1:5555` then the publisher will publish to it.

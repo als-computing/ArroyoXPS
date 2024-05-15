@@ -35,5 +35,5 @@ def test_listen_zmq_interface():
         thread.start()
         time.sleep(1)
         image_dispatcher.stop = True
-        time.sleep(2)
+        time.sleep(1)
         assert received_image["test"].shape == (2, 3)

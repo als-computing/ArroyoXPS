@@ -12,11 +12,12 @@ setup_logger()
 
 logger = logging.getLogger("tr-ap-xps.listener")
 
+received_sigterm = {"received": False}  # Define the variable received_sigterm
+
 
 def handle_sigterm(signum, frame):
-    global received_sigterm
-    print("SIGTERM received, stopping...")
-    received_sigterm = True
+    logger.info("SIGTERM received, stopping...")
+    received_sigterm["received"] = True
 
 
 # Register the handler for SIGTERM
@@ -43,7 +44,7 @@ class ZMQImageDispatcher:
         socket.setsockopt(zmq.SUBSCRIBE, b"")
 
         while True:
-            if self.stop or received_sigterm:
+            if self.stop or received_sigterm["received"]:
                 logger.info("Stopping listener.")
                 break
             buffer = socket.recv()

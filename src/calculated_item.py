@@ -18,8 +18,3 @@ class CalculatedItem:
         vfft = None
         ifft = None
         sum = None
-
-    
-
-    def total_cost(self) -> float:
-        return self.unit_price * self.quantity_on_hand

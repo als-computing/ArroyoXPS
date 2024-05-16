@@ -349,7 +349,7 @@ def peak_fit(array):
     for peak in return_list:
         peak_location.append(peak['index'])
     peak_location.sort()
-    return peak_location
+    return np.array(peak_location)
 
 
 if __name__ == "__main__":

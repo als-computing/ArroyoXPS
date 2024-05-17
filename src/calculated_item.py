@@ -16,10 +16,11 @@ class CalculatedItem:
                  integrated_frame: np.array, 
                  detected_peaks: np.array,
                  vfft: np.array,
+                 sum: np.array,
                  ifft: np.array,
-                 sum: np.array):
-        self.integrated_frame = integrated_frame #avg = np.mean(raw_frame, axis=0)
-        self.detected_peaks = detected_peaks, #peak_fit(self.integrated_frame)
+                 ):
+        self.integrated_frame = integrated_frame
+        self.detected_peaks = detected_peaks
         self.vfft = vfft
-        self.ifft = ifft
         self.sum = sum
+        self.ifft = ifft

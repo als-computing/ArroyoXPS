@@ -310,36 +310,6 @@ def get_peaks(x_data, y_data, num_peaks, peak_shape, baseline=None, block=None):
 
     return return_list, unfit_list, fit_list, residual, base_list
 
-
-def test():
-    """
-    This function will plot the peak locations for the entire data
-    """
-    file_path = "/Users/runbojiang/Desktop/AP-XPS-my/avg_array_3.npy"
-    array = np.load(file_path)
-    print(array.shape)
-    x = np.arange(array.shape[1])
-    peak_locations = collections.defaultdict(list)
-    # for i in range(array.shape[0]):
-    for i in range(300):
-        y = array[i, :]
-        return_list, unfit_list, fit_list, residual, base_list = get_peaks(x, y, 2, 'g')
-        for peak in return_list:
-            peak_locations[i].append(peak['index'])
-
-    # plot the location of first and second peak
-    for key in peak_locations:
-        peak_locations[key].sort()
-    keys = list(peak_locations.keys())
-    first_peak_locations = [peak_locations[key][0] for key in keys]
-    second_peak_locations = [peak_locations[key][1] for key in keys]
-    plt.figure(figsize=(10, 5))
-    plt.plot(keys, first_peak_locations, label='First Peak Mean', marker='o')
-    plt.plot(keys, second_peak_locations , label='Second Peak Mean', marker='o')
-    plt.grid(True)
-    # Show plot
-    plt.show()
-
 def peak_fit(array):
     array = np.array(array)
     assert array.ndim == 1, "Input array must be 1-dimensional"
@@ -350,10 +320,3 @@ def peak_fit(array):
         peak_location.append(peak['index'])
     peak_location.sort()
     return np.array(peak_location)
-
-
-if __name__ == "__main__":
-    test()
-    # array = np.array([1,2,3,4,5,6])
-    # a = peak_fit(array)
-    # print(a)

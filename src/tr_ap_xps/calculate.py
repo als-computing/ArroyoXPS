@@ -1,10 +1,11 @@
 import numpy as np
 
-from .peak_fitting import peak_fit
-from .fft_calculating import calculate_fft_items
 from .calculated_item import CalculatedItem
+from .fft_calculating import calculate_fft_items
+from .peak_fitting import peak_fit
 
-def calculate(array: np.array, repeat_factor = 20):
+
+def calculate(array: np.array, repeat_factor=20):
     """
     Array is of shape (frame index, x, y)
     """

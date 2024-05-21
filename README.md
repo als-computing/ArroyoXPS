@@ -40,17 +40,29 @@ If you are developing this library, there are a few things to note.
 pip install .[dev]
 ```
 
-2. Install pre-commit
+2. Install jupyter notebook dependencies:
+
+```
+pip install .[notebook]
+```
+
+3. Install pre-commit
 This step will setup the pre-commit package. After this, commits will get run against flake8, black, isort.
 
 ```
 pre-commit install
 ```
 
-3. (Optional) If you want to check what pre-commit would do before commiting, you can run:
+4. (Optional) If you want to check what pre-commit would do before commiting, you can run:
 
 ```
 pre-commit run --all-files
+```
+
+5. To run test cases:
+
+```
+python -m pytest
 ```
 
 # Test publisher

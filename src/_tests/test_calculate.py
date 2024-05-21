@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from tr_ap_xps.calculate import calculate
-from tr_ap_xps.fft_calculating import calculate_fft_items
+from tr_ap_xps.fft import calculate_fft_items
 from tr_ap_xps.peak_fitting import get_peaks
 
 

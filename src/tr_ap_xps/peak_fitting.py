@@ -321,9 +321,7 @@ def peak_fit(array):
     peak_location.sort()
     return np.array(peak_location)
 
-
-
-def test():
+def plot_peak_locations_for_raw_data():
     """
     This function will plot the peak locations for the entire data with path specified
     """

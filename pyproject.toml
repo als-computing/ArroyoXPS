@@ -19,7 +19,8 @@ dependencies = [
     "numpy",
     "pyzmq",
     "tiled[client]",
-    "typer"
+    "typer", 
+    "astropy"
 ]
 
 [project.optional-dependencies]
@@ -29,7 +30,8 @@ dev = [
     "flake8",
     "pre-commit",
     "pytest-mock",
-    "tiled[server]"
+    "tiled[server]",
+    "astropy"
 ]
 
 [project.urls]

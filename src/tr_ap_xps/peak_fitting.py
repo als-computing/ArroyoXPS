@@ -1,6 +1,5 @@
 
 import numpy as np
-import pandas as pd
 from scipy import signal
 from astropy.modeling import models, fitting
 

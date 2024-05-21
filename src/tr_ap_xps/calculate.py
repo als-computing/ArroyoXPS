@@ -1,8 +1,8 @@
 import numpy as np
 
-from peak_fitting import peak_fit
-from fft_calculating import calculate_fft_items
-from calculated_item import CalculatedItem
+from .peak_fitting import peak_fit
+from .fft_calculating import calculate_fft_items
+from .calculated_item import CalculatedItem
 
 def calculate(array: np.array, repeat_factor = 20):
     """

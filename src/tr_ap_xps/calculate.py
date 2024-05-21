@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .fft_calculating import calculate_fft_items
+from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
 
 

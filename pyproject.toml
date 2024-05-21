@@ -19,7 +19,7 @@ dependencies = [
     "numpy",
     "pyzmq",
     "tiled[client]",
-    "typer", 
+    "typer",
     "astropy"
 ]
 
@@ -31,6 +31,11 @@ dev = [
     "pre-commit",
     "pytest-mock",
     "tiled[server]",
+]
+
+notebook = [
+    "jupyterlab",
+    "matplotlib"
 ]
 
 [project.urls]

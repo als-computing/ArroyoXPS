@@ -1,3 +1,8 @@
+"""
+This is a script for peak fitting.
+This code is modify from https://github.com/mlexchange/mlex_peak_detection.
+Specifically, the part related with base_line and block were removed.
+"""
 import collections
 
 import numpy as np

@@ -40,30 +40,35 @@ If you are developing this library, there are a few things to note.
 pip install .[dev]
 ```
 
-2. Install jupyter notebook dependencies:
-
-```
-pip install .[notebook]
-```
-
-3. Install pre-commit
+2. Install pre-commit
 This step will setup the pre-commit package. After this, commits will get run against flake8, black, isort.
 
 ```
 pre-commit install
 ```
 
-4. (Optional) If you want to check what pre-commit would do before commiting, you can run:
+3. (Optional) If you want to check what pre-commit would do before commiting, you can run:
 
 ```
 pre-commit run --all-files
 ```
 
-5. To run test cases:
+4. To run test cases:
 
 ```
 python -m pytest
 ```
+
+# Notebook Setup
+To run the notebooks in `examples` folder, install jupyter notebook dependencies:
+
+```
+pip install .[notebook]
+```
+
+The `Explore_data_write_zarr.ipynb` converts the raw `bin` formated data into `zarr` format.
+
+The `example_peak_detection_plot.ipynb` read the example `test_array_300_1131.npy` file, run the peak detection code, and plot the location of detected peaks.
 
 # Test publisher
 This repo contains a test ZMQ publisher that mimics the frame-producing ZMQ publisher that we expect to see from LabView.

@@ -1,4 +1,7 @@
+import collections
+
 import numpy as np
+import pandas as pd
 from astropy.modeling import fitting, models
 from scipy import signal
 
@@ -201,18 +204,30 @@ def peak_helper(x_data, y_data, num_peaks, peak_shape):
     else:
         flag_list = list(np.zeros(num_peaks))
     FWHM_list = []
+    amplitude_list = []
+
     if len(init_ypeaks) == 1:
         if peak_shape == "Voigt":
             FWHM_list.append(g_fit.fwhm_G.value)
+            amplitude_list.append(g_fit.amplitude_L.value)
         else:
             FWHM_list.append(g_fit.stddev.value)
+            amplitude_list.append(g_fit.amplitude.value)
     else:
         for i in range(len(init_ypeaks)):
             if peak_shape == "Voigt":
                 FWHM_list.append(1 * getattr(g_fit, f"fwhm_G_{i}"))
+                amplitude_list.append(
+                    getattr(g_fit, f"amplitude_{len(init_ypeaks) - i - 1}").value
+                )
             else:
-                FWHM_list.append(c * getattr(g_fit, f"stddev_{i}"))
-    return ind_peaks, FWHM_list, flag_list, g_unfit, g_fit
+                FWHM_list.append(
+                    c * getattr(g_fit, f"stddev_{len(init_ypeaks) - i - 1}") * 100
+                )
+                amplitude_list.append(
+                    getattr(g_fit, f"amplitude_{len(init_ypeaks) - i - 1}").value
+                )
+    return ind_peaks, FWHM_list, flag_list, g_unfit, g_fit, amplitude_list
 
 
 def get_peaks(x_data, y_data, num_peaks, peak_shape, baseline=None, block=None):
@@ -238,6 +253,7 @@ def get_peaks(x_data, y_data, num_peaks, peak_shape, baseline=None, block=None):
     FWHM_list = []
     peak_list = []
     flag_list = []
+    amplitude_list = []
 
     if block:
         boundaries = bayesian_block_finder(np.array(x_data), np.array(y_data))
@@ -267,7 +283,7 @@ def get_peaks(x_data, y_data, num_peaks, peak_shape, baseline=None, block=None):
                     fit_list[1].append(fit(i))
 
     else:
-        peak_list, FWHM_list, flag_list, g_unfit, g_fit = peak_helper(
+        peak_list, FWHM_list, flag_list, g_unfit, g_fit, amplitude_list = peak_helper(
             x_data, y_data, num_peaks, peak_shape
         )
         unfit_list[0].extend(x_data)
@@ -286,6 +302,7 @@ def get_peaks(x_data, y_data, num_peaks, peak_shape, baseline=None, block=None):
         diction["index"] = peak_list[i]
         diction["FWHM"] = FWHM_list[i]
         diction["flag"] = flag_list[i]
+        diction["amplitude"] = amplitude_list[i]
         return_list.append(diction)
 
     residual[0].extend(fit_list[0])
@@ -302,8 +319,11 @@ def peak_fit(array):
     assert array.ndim == 1, "Input array must be 1-dimensional"
     x = np.arange(array.shape[0])
     return_list, unfit_list, fit_list, residual, base_list = get_peaks(x, array, 2, "g")
-    peak_location = []
+    # return table (location, amplitude, FWHM)
+    result = collections.defaultdict(list)
     for peak in return_list:
-        peak_location.append(peak["index"])
-    peak_location.sort()
-    return np.array(peak_location)
+        result["index"].append(peak["index"])
+        result["amplitude"].append(peak["amplitude"])
+        result["FWHM"].append(peak["FWHM"])
+    print(result)
+    return pd.DataFrame(result)

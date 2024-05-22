@@ -1,15 +1,16 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from tr_ap_xps.calculate import calculate
 from tr_ap_xps.fft import calculate_fft_items
-from tr_ap_xps.peak_fitting import get_peaks
+from tr_ap_xps.peak_fitting import get_peaks, peak_fit
 
 
 @pytest.fixture
-def test_array(file_name="./src/_tests/test_array_300_1131.npy"):
+def test_array(file_name="test_array_300_1131.npy"):
     """
     Helper function to load the test array, each row of the test array is a integrated frame already
     """
@@ -19,7 +20,7 @@ def test_array(file_name="./src/_tests/test_array_300_1131.npy"):
 
 
 @pytest.fixture
-def test_raw_array(file_name="./src/_tests/test_raw_frame_269_1131.npy"):
+def test_raw_array(file_name="test_raw_frame_269_1131.npy"):
     """
     Helper function to load the one test raw frame
     """
@@ -48,6 +49,16 @@ def test_peak_detection(test_array):
     ), f"Second peak at unexpected location {peak_locations[1]}"
 
 
+def test_peak_fit(test_array):
+    df = peak_fit(test_array[-1, :])
+    assert isinstance(
+        df, pd.DataFrame
+    ), "The peak_fit return a table of (index, amplitude, FWHM)"
+    assert "index" in df.columns, "index not in table column"
+    assert "amplitude" in df.columns, "amplitude not in table column"
+    assert "FWHM" in df.columns, "FWHM not in table column"
+
+
 def test_fft_items(test_array):
     """Test the FFT calculation functionality."""
     vfft, sum, ifft = calculate_fft_items(test_array)
@@ -65,8 +76,8 @@ def test_calculate(test_raw_array):
         len(calculated_item.integrated_frame.shape) == 1
     ), "integrated_frame should be 1D"
     assert isinstance(
-        calculated_item.detected_peaks, np.ndarray
-    ), "detected_peaks should be an ndarray"
+        calculated_item.detected_peaks, pd.DataFrame
+    ), "detected_peaks should be a pandas dataframe"
     assert isinstance(calculated_item.vfft, np.ndarray), "vfft should be an ndarray"
     assert isinstance(calculated_item.sum, np.ndarray), "sum should be an ndarray"
     assert isinstance(calculated_item.ifft, np.ndarray), "ifft should be an ndarray"

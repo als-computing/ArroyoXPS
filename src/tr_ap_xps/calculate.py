@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
@@ -11,7 +12,7 @@ class CalculatedItem:
     """Class for keeping track of all calculated items."""
 
     integrated_frame: np.array
-    detected_peaks: np.array
+    detected_peaks: pd.DataFrame
     vfft: np.array
     ifft: np.array
     sum: np.array

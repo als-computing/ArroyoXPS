@@ -10,7 +10,7 @@ from tr_ap_xps.peak_fitting import get_peaks, peak_fit
 
 
 @pytest.fixture
-def test_array(file_name="test_array_300_1131.npy"):
+def test_array(file_name="./src/_tests/test_array_300_1131.npy"):
     """
     Helper function to load the test array, each row of the test array is a integrated frame already
     """
@@ -20,7 +20,7 @@ def test_array(file_name="test_array_300_1131.npy"):
 
 
 @pytest.fixture
-def test_raw_array(file_name="test_raw_frame_269_1131.npy"):
+def test_raw_array(file_name="./src/_tests/test_raw_frame_269_1131.npy"):
     """
     Helper function to load the one test raw frame
     """

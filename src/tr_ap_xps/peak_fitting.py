@@ -230,71 +230,31 @@ def peak_helper(x_data, y_data, num_peaks, peak_shape):
     return ind_peaks, FWHM_list, flag_list, g_unfit, g_fit, amplitude_list
 
 
-def get_peaks(x_data, y_data, num_peaks, peak_shape, baseline=None, block=None):
+def get_peaks(x_data, y_data, num_peaks, peak_shape):
     base_list = None
     unfit_list = [[], []]
     fit_list = [[], []]
     residual = [[], []]
-    base_model = None
     g_unfit = None
     g_fit = None
-    # Linear Model from data on the left wall of the window to data on the
-    # right wall of the window
-    if baseline:
-        base_list = [[], []]
-        slope = (y_data[-1] - y_data[0]) / (x_data[-1] - x_data[0])
-        intercept = y_data[0] - (slope * x_data[0])
-        base_model = models.Linear1D(slope=slope, intercept=intercept)
-        base = list(base_model(np.array(x_data)))
-        y_data = list(np.array(y_data) - base_model(np.array(x_data)))
-        base_list[0] = x_data
-        base_list[1] = base
 
     FWHM_list = []
     peak_list = []
     flag_list = []
     amplitude_list = []
 
-    if block:
-        boundaries = bayesian_block_finder(np.array(x_data), np.array(y_data))
-        for bound_i in range(len(boundaries)):
-            lower = int(boundaries[bound_i])
-            if bound_i == (len(boundaries) - 1):
-                upper = len(x_data)
-            else:
-                upper = int(boundaries[bound_i + 1])
-            temp_x = x_data[lower:upper]
-            temp_y = y_data[lower:upper]
-            temp_peak, temp_FWHM, temp_flag, unfit, fit = peak_helper(
-                temp_x, temp_y, num_peaks, peak_shape
-            )
-            temp_peak = [i + lower for i in temp_peak]
-            flag_list.extend(temp_flag)
-            FWHM_list.extend(temp_FWHM)
-            peak_list.extend(temp_peak)
-            unfit_list[0].extend(temp_x)
-            fit_list[0].extend(temp_x)
-            for i in temp_x:
-                if unfit is None:
-                    unfit_list[1].append(0)
-                    fit_list[1].append(0)
-                else:
-                    unfit_list[1].append(unfit(i))
-                    fit_list[1].append(fit(i))
-
-    else:
-        peak_list, FWHM_list, flag_list, g_unfit, g_fit, amplitude_list = peak_helper(
-            x_data, y_data, num_peaks, peak_shape
-        )
-        unfit_list[0].extend(x_data)
-        fit_list[0].extend(x_data)
-        for i in x_data:
-            if g_unfit is not None:
-                unfit_list[1].append(g_unfit(i))
-                fit_list[1].append(g_fit(i))
-            else:
-                unfit_list[1].append(0)
-                fit_list[1].append(0)
+    peak_list, FWHM_list, flag_list, g_unfit, g_fit, amplitude_list = peak_helper(
+        x_data, y_data, num_peaks, peak_shape
+    )
+    unfit_list[0].extend(x_data)
+    fit_list[0].extend(x_data)
+    for i in x_data:
+        if g_unfit is not None:
+            unfit_list[1].append(g_unfit(i))
+            fit_list[1].append(g_fit(i))
+        else:
+            unfit_list[1].append(0)
+            fit_list[1].append(0)
 
     return_list = []
     for i in range(len(peak_list)):

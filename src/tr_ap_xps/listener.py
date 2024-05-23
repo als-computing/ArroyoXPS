@@ -50,7 +50,7 @@ class ZMQImageDispatcher:
                     break
                 buffer = socket.recv()
                 image_info = socket.recv_json()
-                shape = (image_info["Width"], image_info["Width"])
+                shape = (image_info["Width"], image_info["Height"])
                 array_received = np.frombuffer(buffer, dtype=np.int32).reshape(shape)
                 logger.debug(
                     f"received: shape: {shape} dtype: {np.int32} array: {array_received}"

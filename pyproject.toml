@@ -35,7 +35,8 @@ dev = [
 
 notebook = [
     "jupyterlab",
-    "matplotlib"
+    "matplotlib",
+    "python-dotenv"
 ]
 
 [project.urls]

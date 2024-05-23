@@ -44,18 +44,23 @@ class ZMQImageDispatcher:
         socket.setsockopt(zmq.SUBSCRIBE, b"")
 
         while True:
-            if self.stop or received_sigterm["received"]:
-                logger.info("Stopping listener.")
-                break
-            buffer = socket.recv()
-            shape = socket.recv_pyobj()
-            dtype = socket.recv_pyobj()
-            array_received = np.frombuffer(buffer, dtype=dtype).reshape(shape)
-            logger.info(
-                f"received: shape: {shape} dtype: {dtype} array: {array_received}"
-            )
-            if self.function:
-                self.function(array_received)
+            try:
+                if self.stop or received_sigterm["received"]:
+                    logger.info("Stopping listener.")
+                    break
+                buffer = socket.recv()
+                image_info = socket.recv_json()
+                shape = (image_info["Width"], image_info["Height"])
+                array_received = np.frombuffer(buffer, dtype=np.int32).reshape(shape)
+                logger.debug(
+                    f"received: shape: {shape} dtype: {np.int32} array: {array_received}"
+                )
+                if self.function:
+                    self.function(array_received)
+            except Exception as e:
+                logger.error(e)
+                if image_info:
+                    logger.error(f"Error dealing with {image_info=}")
 
     def stop(self):
         self.stop = True

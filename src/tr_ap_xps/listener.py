@@ -9,11 +9,18 @@ from .log import setup_logger
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
+# LabView also has an 'Extended Float' and I don't know how to map that.
 DATATYPE_MAP = {
+    "U8": np.dtype(np.uint8).newbyteorder(">"),
     "U16": np.dtype(np.uint16).newbyteorder(">"),
     "U32": np.dtype(np.uint32).newbyteorder(">"),
+    "U64": np.dtype(np.uint64).newbyteorder(">"),
+    "I8": np.dtype(np.int8).newbyteorder(">"),
     "I16": np.dtype(np.int16).newbyteorder(">"),
-    "I32": np.dtype(np.int16).newbyteorder(">"),
+    "I32": np.dtype(np.int32).newbyteorder(">"),
+    "I64": np.dtype(np.int64).newbyteorder(">"),
+    "Single Float": np.dtype(np.single).newbyteorder(">"),
+    "Double Float": np.dtype(np.double).newbyteorder(">"),
 }
 
 app = typer.Typer()

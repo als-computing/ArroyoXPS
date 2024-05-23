@@ -7,6 +7,15 @@ import zmq
 
 from .log import setup_logger
 
+# Maintain a map of LabView datatypes. LabView sends BigE,
+# and Numpy assumes LittleE, so adjust that too.
+DATATYPE_MAP = {
+    "U16": np.dtype(np.uint16).newbyteorder(">"),
+    "U32": np.dtype(np.uint32).newbyteorder(">"),
+    "I16": np.dtype(np.int16).newbyteorder(">"),
+    "I32": np.dtype(np.int16).newbyteorder(">"),
+}
+
 app = typer.Typer()
 setup_logger()
 
@@ -51,10 +60,16 @@ class ZMQImageDispatcher:
                 buffer = socket.recv()
                 image_info = socket.recv_json()
                 shape = (image_info["Width"], image_info["Height"])
-                array_received = np.frombuffer(buffer, dtype=np.int32).reshape(shape)
-                logger.debug(
-                    f"received: shape: {shape} dtype: {np.int32} array: {array_received}"
-                )
+                frame_number = image_info["Frame Number"]
+                dtype = DATATYPE_MAP.get(image_info["Type"])
+                if not dtype:
+                    logger.error(f"Received unexpected data type: {image_info}")
+                    continue
+                array_received = np.frombuffer(buffer, dtype=dtype).reshape(shape)
+                if logger.getEffectiveLevel() == logging.DEBUG:
+                    logger.debug(
+                        f"received: {frame_number=} {shape=} {dtype=} {array_received}"
+                    )
                 if self.function:
                     self.function(array_received)
             except Exception as e:

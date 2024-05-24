@@ -10,11 +10,18 @@ app = dash.Dash(__name__)
 
 # Sample data for the plots
 x = np.linspace(0, 10, 100)
-y1 = np.sin(x)
 y2 = np.cos(x)
 y3 = np.tan(x)
 y4 = np.exp(x)
 y5 = np.log(x + 1)
+
+raw_frame_path = "test_raw_frame_269_1131.npy"
+integrated_frames_path = "test_array_300_1131.npy"
+raw_frame = np.load(raw_frame_path)
+integrated_frame = np.load(integrated_frames_path)
+
+calculated_item = calculate(integrated_frame)
+print(calculated_item, flush=True)
 
 # Layout of the Dash application
 app.layout = html.Div(children=[
@@ -26,17 +33,13 @@ app.layout = html.Div(children=[
 
     # Plot 1
     dcc.Graph(
-        id='plot-1',
-        figure={
-            'data': [
-                go.Scatter(x=x, y=y1, mode='lines', name='Sine')
-            ],
-            'layout': go.Layout(
-                title='Plot 1: Sine Function',
-                xaxis={'title': 'x'},
-                yaxis={'title': 'y'}
+        id='image-plot',
+        figure=go.Figure(
+            data=go.Heatmap(z=raw_frame),
+            layout=go.Layout(
+                title="One Raw Frame"
             )
-        }
+        )
     ),
 
     # Plot 2
@@ -100,6 +103,6 @@ app.layout = html.Div(children=[
     ),
 ])
 
-# Run the application
-if __name__ == '__main__':
-    app.run_server(debug=True)
+# # Run the application
+# if __name__ == '__main__':
+#     app.run_server(debug=True)

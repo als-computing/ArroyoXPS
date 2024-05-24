@@ -14,13 +14,14 @@ classifiers = [
 ]
 
 dependencies = [
+    "astropy",
     "python-dotenv",
     "pandas",
     "numpy",
     "pyzmq",
     "tiled[client]",
     "typer",
-    "astropy"
+    "zarr"
 ]
 
 [project.optional-dependencies]

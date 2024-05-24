@@ -23,10 +23,17 @@ def test_update_zarr(tmpdir):
     # Test that the writer can append a 2D chunk to a 3D Zarr array
     # Create a Zarr array
     zarr_location = str(tmpdir.join("test.zarr"))
-    writer = ResultWriter(zarr_location, "run42")
+    writer = ResultWriter(zarr_location, "run42", 10)
     assert zarr.open(zarr_location) is not None
+    assert writer.run_group is not None
+    assert writer.results_group is not None
+    assert writer.v_integrated_frame_dataset is not None
+    assert writer.vfft_dataset is not None
+    assert writer.ifft_dataset is not None
+    assert writer.sum_data_dataset is not None
+
     # Append a 1D chunk
     chunk_1d = np.random.rand(10).astype(np.int32)
-    writer.append_1d_chunk("fft", chunk_1d)
-    assert writer.run_group["fft"].shape == (1, 10)
-    assert np.allclose(writer.run_group["fft"][0], chunk_1d)
+    writer.append_1d_chunk(writer.vfft_dataset, chunk_1d)
+    assert writer.vfft_dataset.shape == (1, 10)
+    assert np.allclose(writer.vfft_dataset[0], chunk_1d)

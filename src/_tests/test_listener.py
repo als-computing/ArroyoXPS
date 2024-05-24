@@ -4,6 +4,8 @@ import sys
 import threading
 import time
 
+import numpy as np
+
 from tr_ap_xps.listener import ZMQImageDispatcher
 
 
@@ -26,8 +28,9 @@ def test_listen_zmq_interface():
     # dictionary to store the received image
     received_image = {}
 
-    def got_an_image(image):
-        received_image["test"] = image
+    def got_an_image(frame_number: int, image: np.array):
+        received_image["image"] = image
+        received_image["frame_number"] = frame_number
 
     with run_publisher("tr_ap_xps.publisher"):
         image_dispatcher = ZMQImageDispatcher(function=got_an_image)
@@ -36,4 +39,5 @@ def test_listen_zmq_interface():
         time.sleep(2)
         image_dispatcher.stop = True
         time.sleep(2)
-        assert received_image["test"].shape == (10, 10)
+        assert received_image["image"].shape == (10, 10)
+        assert received_image["frame_number"]

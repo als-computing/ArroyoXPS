@@ -78,7 +78,7 @@ class ZMQImageDispatcher:
                         f"received: {frame_number=} {shape=} {dtype=} {array_received}"
                     )
                 if self.function:
-                    self.function(array_received)
+                    self.function(frame_number, array_received)
             except Exception as e:
                 logger.error(e)
                 if image_info:

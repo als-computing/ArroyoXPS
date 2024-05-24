@@ -19,6 +19,7 @@ class CalculatedItem:
     ifft: np.array
     sum: np.array
 
+
 def integrate_frame(array: np.array):
     """
     This function integrate the input 2d raw frame into 1d.

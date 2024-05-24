@@ -3,10 +3,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-# from .fft import calculate_fft_items
-# from .peak_fitting import peak_fit
-from fft import calculate_fft_items
-from peak_fitting import peak_fit
+from .fft import calculate_fft_items
+from .peak_fitting import peak_fit
 
 
 @dataclass
@@ -31,12 +29,12 @@ def integrate_frame(array: np.array):
     return integrated_frame, detected_peaks
 
 
-def calculate(raw_frame: np.array, stacked_integrated_frames: np.array, repeat_factor=20):
+def calculate(raw_frame: np.array, stacked_integrated_frames: np.array, repeat_factor: int = 20,  width: int = 0):
     assert raw_frame.ndim == 2, "The current raw_frame is not 2D."
     assert stacked_integrated_frames.ndim == 2, "The stacked_integrated_frames array is not 2D."
 
     integrated_frame, detected_peaks = integrate_frame(raw_frame)
-    vfft, sum, ifft = calculate_fft_items(stacked_integrated_frames, repeat_factor=repeat_factor)
+    vfft, sum, ifft = calculate_fft_items(stacked_integrated_frames, repeat_factor=repeat_factor, width=width)
 
     result = CalculatedItem(integrated_frame, detected_peaks, vfft, sum, ifft)
     return result

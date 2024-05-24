@@ -26,10 +26,11 @@ def test_raw_array(file_name="./src/_tests/test_raw_frame_269_1131.npy"):
     """
     file_path = Path(file_name)
     array = np.load(file_path)
-    # we need to simulate the raw incoming array, which is of shape (frame index, x, y)
-    # let's simulate 100 incoming raw arrays
-    duplicated_array = np.stack([array] * 100)
-    return duplicated_array
+    # # we need to simulate the raw incoming array, which is of shape (frame index, x, y)
+    # # let's simulate 100 incoming raw arrays
+    # duplicated_array = np.stack([array] * 100)
+    # return duplicated_array
+    return array
 
 
 def test_peak_detection(test_array):
@@ -68,9 +69,9 @@ def test_fft_items(test_array):
     assert ifft.shape == test_array.shape, "ifft shape mismatch"
 
 
-def test_calculate(test_raw_array):
+def test_calculate(test_array, test_raw_array):
     """Test the main calculate function."""
-    calculated_item = calculate(test_raw_array, repeat_factor=20)
+    calculated_item = calculate(test_array, test_raw_array, repeat_factor=20, width=10)
 
     assert (
         len(calculated_item.integrated_frame.shape) == 1

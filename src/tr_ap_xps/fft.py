@@ -11,6 +11,39 @@ def get_vfft(array: np.array):
 def get_sum(array: np.array):
     return np.sum(array[:, :], axis=1)
 
+def do_fft_filter(array: np.array, repeat_factor: int=25, width: int = 1):
+    """
+    Perform FFT filtering on the input array.
+    
+    Parameters:
+    array (np.array): Input array to filter.
+    repeat_factor (int): Repeat factor for the input array.
+    width (int): Width for the filter (default is 1).
+    
+    Returns:
+    np.array: Filtered array after inverse FFT.
+    """
+    
+    # Perform FFT along the columns
+    fcarray = np.fft.fft(array, axis=0)
+    # Initialize a zero array of the same shape and dtype complex
+    array2 = np.zeros(fcarray.shape, dtype=complex)
+
+    
+    # Calculate the step size for sampling
+    dummy = int(fcarray.shape[0] / repeat_factor)
+    
+    # Sample every 'dummy'-th row and also copy 'width' rows before and after each sampled index
+    for i in range(0, fcarray.shape[0], dummy):
+        start = max(0, i - width)
+        end = min(fcarray.shape[0], i + width + 1)
+        array2[start:end] = fcarray[start:end]
+
+    # Perform inverse FFT
+    ifcarray = np.fft.ifft(array2, axis=0)
+
+    return ifcarray
+
 
 def get_ifft(array: np.array, repeat_factor: int):
     # Perform FFT along the columns

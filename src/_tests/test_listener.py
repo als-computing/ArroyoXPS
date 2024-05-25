@@ -6,7 +6,7 @@ import time
 
 import numpy as np
 
-from tr_ap_xps.listener import ZMQImageDispatcher
+from tr_ap_xps.listener import ZMQImageListener
 
 
 @contextlib.contextmanager
@@ -33,7 +33,7 @@ def test_listen_zmq_interface():
         received_image["frame_number"] = frame_number
 
     with run_publisher("tr_ap_xps.publisher"):
-        image_dispatcher = ZMQImageDispatcher(function=got_an_image)
+        image_dispatcher = ZMQImageListener(frame_function=got_an_image)
         thread = threading.Thread(target=image_dispatcher.start)
         thread.start()
         time.sleep(2)

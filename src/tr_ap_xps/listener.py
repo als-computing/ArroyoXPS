@@ -40,16 +40,16 @@ def handle_sigterm(signum, frame):
 signal.signal(signal.SIGTERM, handle_sigterm)
 
 
-class ZMQImageDispatcher:
+class ZMQImageListener:
     def __init__(
         self,
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
-        function: callable = None,
+        frame_function: callable = None,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
-        self.function = function
+        self.function = frame_function
         self.stop = False
 
     def start(self):
@@ -98,7 +98,7 @@ def listen(
     logger.debug("DEBUG LOGGING SET")
     logger.info(f"zmq_pub_address: {zmq_pub_address}")
     logger.info(f"zmq_pub_port: {zmq_pub_port}")
-    dispatcher = ZMQImageDispatcher(zmq_pub_address, zmq_pub_port)
+    dispatcher = ZMQImageListener(zmq_pub_address, zmq_pub_port)
     dispatcher.start()
 
 

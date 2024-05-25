@@ -109,7 +109,7 @@ class XPSDataSet:
         else:
             self.lines_filtered_node.append_partition(new_integrated_df, 0)
 
-    def new_integrated_frame(self, curr_frame: np.array):
+    def new_frame(self, curr_frame: np.array):
         # Compute horizontally-integrated frame
         new_integrated_frame = self._compute_mean(curr_frame)
         # Column names for the dataframes

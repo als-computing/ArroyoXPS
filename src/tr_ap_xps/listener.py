@@ -1,5 +1,6 @@
 import logging
 import signal
+from typing import Callable, Optional
 
 import numpy as np
 import typer
@@ -45,7 +46,7 @@ class ZMQImageListener:
         self,
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
-        frame_function: callable = None,
+        frame_function: Optional[Callable[[int, np.ndarray], None]] = None,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port

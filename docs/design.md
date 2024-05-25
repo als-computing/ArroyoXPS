@@ -63,7 +63,7 @@ classDiagram
     class ZMQImageListener {
         - zmq_pub_address: str
         - zmq_pub_port: int
-        - frame_function: callable
+        - frame_function: Callable[[int, np.ndarray], None]
         - stop: bool
         + __init__(zmq_pub_address: str="tcp://127.0.0.1", zmq_pub_port: int=5555, function: callable=None)
         + start()

@@ -14,13 +14,14 @@ classifiers = [
 ]
 
 dependencies = [
+    "astropy",
     "python-dotenv",
     "pandas",
     "numpy",
     "pyzmq",
-    "tiled[client]",
+    "tiled[client]==v0.1.a122",
     "typer",
-    "astropy"
+    "zarr"
 ]
 
 [project.optional-dependencies]
@@ -35,7 +36,8 @@ dev = [
 
 notebook = [
     "jupyterlab",
-    "matplotlib"
+    "matplotlib",
+    "python-dotenv"
 ]
 
 [project.urls]

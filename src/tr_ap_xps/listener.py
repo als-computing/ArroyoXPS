@@ -1,5 +1,6 @@
 import logging
 import signal
+from typing import Callable, Optional
 
 import numpy as np
 import typer
@@ -40,16 +41,16 @@ def handle_sigterm(signum, frame):
 signal.signal(signal.SIGTERM, handle_sigterm)
 
 
-class ZMQImageDispatcher:
+class ZMQImageListener:
     def __init__(
         self,
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
-        function: callable = None,
+        frame_function: Optional[Callable[[int, np.ndarray], None]] = None,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
-        self.function = function
+        self.function = frame_function
         self.stop = False
 
     def start(self):
@@ -78,7 +79,7 @@ class ZMQImageDispatcher:
                         f"received: {frame_number=} {shape=} {dtype=} {array_received}"
                     )
                 if self.function:
-                    self.function(array_received)
+                    self.function(frame_number, array_received)
             except Exception as e:
                 logger.error(e)
                 if image_info:
@@ -98,7 +99,7 @@ def listen(
     logger.debug("DEBUG LOGGING SET")
     logger.info(f"zmq_pub_address: {zmq_pub_address}")
     logger.info(f"zmq_pub_port: {zmq_pub_port}")
-    dispatcher = ZMQImageDispatcher(zmq_pub_address, zmq_pub_port)
+    dispatcher = ZMQImageListener(zmq_pub_address, zmq_pub_port)
     dispatcher.start()
 
 

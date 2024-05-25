@@ -11,48 +11,63 @@ System design notes for supporting the [Experiment Monitoring](./user_strories.m
 sequenceDiagram
     actor user
     user ->> labview: start scan
-    labview ->> tr_xrd_svc: start_scan(scan_name, cycle_nmber)
-    tr_xrd_svc ->> tiled: create new run node and add metadata
-    labview ->>+ tr_xrd_svc: send new frame
+    labview ->> ZMQImageDispatcher: start_scan(scan_metadata)
+    ZMQImageDispatcher ->> XPSDataSet: create(scan_metadata)
+    activate XPSDataSet
+    XPSDataSet ->> Tiled: create run collection with metadata
 
-    activate tr_xrd_svc
-    tr_xrd_svc ->> tiled: write frame
-    tr_xrd_svc ->> tr_xrd_calc: calculate(tiled_client_frame_obj, tiled_client_process_node)
+    XPSDataSet ->> Tiled: create intgrated frame table
+    XPSDataSet ->> Tiled: create filtered frame table
+    deactivate XPSDataSet
+    labview ->>+ ZMQImageDispatcher: send new frame
 
-    activate tr_xrd_calc
-    tr_xrd_calc ->> tiled: get raw frame
-    tr_xrd_calc ->> tr_xrd_calc: perform calculations
-    tr_xrd_calc ->> tiled: write VFFT
-    tr_xrd_calc ->> tiled: write Sum
-    tr_xrd_calc ->> tiled: write IVFFT
-    tr_xrd_calc ->> tiled: write Peak Fit
-    deactivate tr_xrd_calc
+    activate XPSDataSet
+    ZMQImageDispatcher ->> XPSDataSet: new frame
+    XPSDataSet ->> XPSDataSet: vertically integrate frame
+    XPSDataSet ->> Tiled: write frame
+    XPSDataSet ->> tr_xrd_calc: calculate filtered frame
+    XPSDataSet ->> Tiled: write filtered frame
+    XPSDataSet ->> tr_xrd_calc: caluculatepeak fit
+    XPSDataSet ->> Tiled: write peak fit
+    deactivate XPSDataSet
 
-    tr_xrd_svc ->> tr_xrd_ui: notify new data available
-    deactivate tr_xrd_svc
-    activate tr_xrd_ui
-    tr_xrd_ui ->> tiled: read VFFT
-    tr_xrd_ui ->> tiled: read Sum
-    tr_xrd_ui ->> tiled: read IVFFT
-    tr_xrd_ui ->> tiled: read Peak Fit
-    tr_xrd_ui ->> tr_xrd_ui: update slider
-    deactivate tr_xrd_ui
+
+    ZMQImageDispatcher ->> Dash App: notify new data available
+
+    activate Dash App
+    Dash App ->> Tiled: read VFFT
+    Dash App ->> Tiled: read Sum
+    Dash App ->> Tiled: read IVFFT
+    Dash App ->> Tiled: read Peak Fit
+    Dash App ->> Dash App: update slider
+    deactivate Dash App
 ```
 
 ### Classes
 
 ```mermaid
 classDiagram
+    note for XPSDataSet "Module: tr_ap_xps.writer"
+    class XPSDataSet {
+        - run_id: str
+        - runs_node: node
+        - run_node: node
+        - lines_raw_node: node
+        + __init__(runs_node: node, run_id: str)
+        - _get_or_create_container(tiled_node: node, name: str) node
+        - _get_or_create_table(tiled_node: node, data_frame: pd.DataFrame, name: str) node
+        + new_integrated_frame(curr_frame: np.array)
+    }
 
-    class RunNode{
-        +TiledClient raw_data_node
-        +TiledClient integrated_data_node
-        +TiledClient vfft_node
-        +TiledClient ifft_node
-        +TiledClient sum_node
-        +TiledClient trending_node
-
-        +from_node(TiledClient run_node)$
+    note for ZMQImageListener "Module: tr_ap_xps.listener"
+    class ZMQImageListener {
+        - zmq_pub_address: str
+        - zmq_pub_port: int
+        - frame_function: Callable[[int, np.ndarray], None]
+        - stop: bool
+        + __init__(zmq_pub_address: str="tcp://127.0.0.1", zmq_pub_port: int=5555, function: callable=None)
+        + start()
+        + stop()
     }
 
 ```

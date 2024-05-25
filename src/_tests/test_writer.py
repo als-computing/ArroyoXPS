@@ -17,7 +17,7 @@ def test_XPSDataSet(client, integrated_frame):
     assert xps_dataset.run_id == "42"
     assert xps_dataset.run_node == client["runs"]["42"]
 
-    xps_dataset.new_integrated_frame(integrated_frame)
+    xps_dataset.new_frame(integrated_frame)
     assert "lines_raw" in xps_dataset.run_node
     assert xps_dataset.lines_raw_node is not None
     assert xps_dataset.lines_raw_node.read().shape == (
@@ -29,7 +29,7 @@ def test_XPSDataSet(client, integrated_frame):
         10,
     ), "Expected a single row with 10 columns, matching a veritcally filtered integrated frame"
 
-    xps_dataset.new_integrated_frame(integrated_frame)
+    xps_dataset.new_frame(integrated_frame)
     assert xps_dataset.lines_raw_node.read().shape == (
         2,
         10,

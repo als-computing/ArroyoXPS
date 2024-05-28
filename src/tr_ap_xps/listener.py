@@ -1,12 +1,9 @@
 import logging
 import signal
-from typing import Callable, Optional
+from typing import Callable
 
 import numpy as np
-import typer
 import zmq
-
-from .log import setup_logger
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -24,10 +21,7 @@ DATATYPE_MAP = {
     "Double Float": np.dtype(np.double).newbyteorder(">"),
 }
 
-app = typer.Typer()
-setup_logger()
-
-logger = logging.getLogger("tr-ap-xps.listener")
+logger = logging.getLogger(__name__)
 
 received_sigterm = {"received": False}  # Define the variable received_sigterm
 
@@ -44,13 +38,17 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 class ZMQImageListener:
     def __init__(
         self,
+        start_function: Callable[[dict], None],
+        event_function: Callable[[int, np.ndarray], None],
+        stop_function: Callable[[dict], None],
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
-        frame_function: Optional[Callable[[int, np.ndarray], None]] = None,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
-        self.function = frame_function
+        self.start_function = start_function
+        self.stop_function = stop_function
+        self.event_function = event_function
         self.stop = False
 
     def start(self):
@@ -65,8 +63,29 @@ class ZMQImageListener:
                 if self.stop or received_sigterm["received"]:
                     logger.info("Stopping listener.")
                     break
+
+                message = socket.recv_json()
+                logger.info(f"{message=}")
+
+                if "start" in message:
+                    self.start_function(message["start"])
+                    if logger.getEffectiveLevel() == logging.DEBUG:
+                        logger.debug(f"start: {message['start']}")
+                    continue
+                if "stop" in message:
+                    self.stop_function(message["stop"])
+
+                    continue
+                if "event" not in message:
+                    logger.error(f"Received unexpected message: {message}")
+                    continue
+                # Must be an event with an image
+                image_info = message["event"]
+                if logger.getEffectiveLevel() == logging.DEBUG:
+                    logger.debug(f"event: {image_info}")
+
+                # Image should be the next thing received
                 buffer = socket.recv()
-                image_info = socket.recv_json()
                 shape = (image_info["Width"], image_info["Height"])
                 frame_number = image_info["Frame Number"]
                 dtype = DATATYPE_MAP.get(image_info["Type"])
@@ -78,30 +97,13 @@ class ZMQImageListener:
                     logger.debug(
                         f"received: {frame_number=} {shape=} {dtype=} {array_received}"
                     )
-                if self.function:
-                    self.function(frame_number, array_received)
+                if self.event_function:
+                    self.event_function(image_info, array_received)
+
             except Exception as e:
                 logger.error(e)
-                if image_info:
-                    logger.error(f"Error dealing with {image_info=}")
+                if message:
+                    logger.exception(f"Error dealing with {message=}")
 
     def stop(self):
         self.stop = True
-
-
-@app.command()
-def listen(
-    zmq_pub_address: str = "tcp://127.0.0.1",
-    zmq_pub_port: int = 5555,
-    log_level="INFO",
-) -> None:
-    logger.setLevel(log_level.upper())
-    logger.debug("DEBUG LOGGING SET")
-    logger.info(f"zmq_pub_address: {zmq_pub_address}")
-    logger.info(f"zmq_pub_port: {zmq_pub_port}")
-    dispatcher = ZMQImageListener(zmq_pub_address, zmq_pub_port)
-    dispatcher.start()
-
-
-if __name__ == "__main__":
-    app()

@@ -30,12 +30,12 @@ class LabViewSimulator:
             start = {"start": {"scan_name": f"test_scan{uuid4()}"}}
             self.socket.send_json(start)
             print(start)
-            num_frames = 10
+            num_frames = 100
             for i in range(num_frames):
                 image_metadata["Frame Number"] = i
                 self.socket.send_json({"event": image_metadata})
                 self._send_image(image.byteswap().newbyteorder())
-                time.sleep(0.5)
+                time.sleep(0.1)
             stop = {"stop": {"num_frames": num_frames}}
             self.socket.send_json(stop)
             print(stop)

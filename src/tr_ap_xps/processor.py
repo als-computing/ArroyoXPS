@@ -17,7 +17,10 @@ logger = logging.getLogger("tr-ap-xps.writer")
 class Result:
     frame_number: int
     integrated_frame: np.ndarray
-    filtered_integrated_frame: np.ndarray
+    detected_peaks: pd.DataFrame
+    vfft: np.ndarray
+    ifft: np.ndarray
+    sum: np.ndarray
 
 
 class TimingDecorator:
@@ -181,9 +184,11 @@ class XPSProcessor:
         )
 
         # Update the local cached dataframes
-        self.integrated_frames_df = pd.concat(
+        self.integrated_frames_df = pd.concat( # curr + all the prev stacked avg frame -> fft
             [self.integrated_filtered_frames_df, new_integrated_df], ignore_index=True
         )
+        # TODO: fft on self.integrated_frames_df
+        # TODO: result of fft is the. self.self.integrated_filtered_frames_df = fft.result
         self.integrated_filtered_frames_df = pd.concat(
             [self.integrated_filtered_frames_df, new_filtered_df], ignore_index=True
         )

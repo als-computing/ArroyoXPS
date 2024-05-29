@@ -12,23 +12,35 @@ def get_sum(array: np.array):
     return np.sum(array[:, :], axis=1)
 
 
-def get_ifft(array: np.array, repeat_factor: int):
+def get_ifft(array: np.array, repeat_factor: int = 25, width: int = 0):
+    """
+    Perform IFFT filtering on the input array.
+    Parameters:
+    array (np.array): Input array to filter.
+    repeat_factor (int): Repeat factor for the input array.
+    width (int): Width for the filter (default is 0).
+    Returns:
+    np.array: Filtered array after inverse FFT.
+    """
     # Perform FFT along the columns
-    fcdata = np.fft.fft(array[0 : repeat_factor * 150, :], axis=0)
+    fcarray = np.fft.fft(array, axis=0)
     # Initialize a zero array of the same shape and dtype complex
-    array2 = np.zeros(fcdata.shape, dtype=complex)
+    array2 = np.zeros(fcarray.shape, dtype=complex)
     # Calculate the step size for sampling
-    dummy = int(fcdata.shape[0] / 25)
-    # Sample every 'dummy'-th row from the FFT result and copy to array2
-    array2[::dummy] = fcdata[::dummy]
+    dummy = int(fcarray.shape[0] / repeat_factor)
+    # Sample every 'dummy'-th row and also copy 'width' rows before and after each sampled index
+    for i in range(0, fcarray.shape[0], dummy):
+        start = max(0, i - width)
+        end = min(fcarray.shape[0], i + width + 1)
+        array2[start:end] = fcarray[start:end]
+
     # Perform inverse FFT
-    ifarray2 = np.fft.ifft(array2, axis=0)
-    # Compute the absolute value for visualization
-    ifarray2 = np.abs(ifarray2)
-    return ifarray2
+    ifcarray = np.fft.ifft(array2, axis=0)
+
+    return np.abs(ifcarray)
 
 
-def calculate_fft_items(array: np.array, repeat_factor=20):
+def calculate_fft_items(array: np.array, repeat_factor: int = 20, width: int = 0):
     assert (
         isinstance(repeat_factor, int) and repeat_factor > 0
     ), "Repeat factor is a positive integer."
@@ -36,6 +48,6 @@ def calculate_fft_items(array: np.array, repeat_factor=20):
     array = np.array(array)
     vfft = get_vfft(array)
     sum = get_sum(vfft)
-    ifft = get_ifft(array, repeat_factor)
+    ifft = get_ifft(array, repeat_factor, width)
 
     return vfft, sum, ifft

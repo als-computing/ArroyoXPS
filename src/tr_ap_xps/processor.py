@@ -9,6 +9,8 @@ import pandas as pd
 from tiled.client import node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
+from peak_fitting import peak_fit
+from fft import calculate_fft_items
 
 logger = logging.getLogger("tr-ap-xps.writer")
 
@@ -168,6 +170,9 @@ class XPSProcessor:
         # Compute horizontally-integrated frame
         new_integrated_frame = self._compute_mean(curr_frame)
 
+        # Peak detection on new_integrated_frame
+        detected_peaks_df = peak_fit(new_integrated_frame)
+
         # Compute filtered integrated frames
         new_filtered_frame = (
             new_integrated_frame  # placeholder, until we have filtering code
@@ -197,11 +202,11 @@ class XPSProcessor:
             integrated_frames_np = self._integrated_frames_pd_to_np(
                 self.integrated_frames_df
             )
-            integated_fiiltered_frames_np = self._integrated_filtered_frames_pd_to_np(
-                self.integrated_filtered_frames_df
-            )
+            # TODO: allow user to select repeat factor and width on UI
+            vfft_np, sum_np, ifft_np = calculate_fft_items(integrated_frames_np, repeat_factor=20, width=0)
+            
             result = Result(
-                frame_number, integrated_frames_np, integated_fiiltered_frames_np
+                frame_number, integrated_frames_np, detected_peaks_df, vfft_np, ifft_np, sum_np
             )
             self._send_result(result)
             self._tiled_update_lines_raw(new_integrated_df)
@@ -216,3 +221,4 @@ class XPSProcessor:
             )
         finally:
             timer.reset()
+

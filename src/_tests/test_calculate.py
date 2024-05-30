@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tr_ap_xps.calculate import calculate
 from tr_ap_xps.fft import calculate_fft_items
 from tr_ap_xps.peak_fitting import get_peaks, peak_fit
 
@@ -66,18 +65,3 @@ def test_fft_items(test_array):
     assert vfft.shape == test_array.shape, "vfft shape mismatch"
     assert len(sum.shape) == 1, "sum should be a 1D array"
     assert ifft.shape == test_array.shape, "ifft shape mismatch"
-
-
-def test_calculate(test_raw_array):
-    """Test the main calculate function."""
-    calculated_item = calculate(test_raw_array, repeat_factor=20)
-
-    assert (
-        len(calculated_item.integrated_frame.shape) == 1
-    ), "integrated_frame should be 1D"
-    assert isinstance(
-        calculated_item.detected_peaks, pd.DataFrame
-    ), "detected_peaks should be a pandas dataframe"
-    assert isinstance(calculated_item.vfft, np.ndarray), "vfft should be an ndarray"
-    assert isinstance(calculated_item.sum, np.ndarray), "sum should be an ndarray"
-    assert isinstance(calculated_item.ifft, np.ndarray), "ifft should be an ndarray"

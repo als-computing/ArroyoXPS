@@ -70,7 +70,7 @@ The `Explore_data_write_zarr.ipynb` converts the raw `bin` formated data into `z
 
 The `example_peak_detection_plot.ipynb` read the example `test_array_300_1131.npy` file, run the peak detection code, and plot the location of detected peaks.
 
-# Test publisher
+# Test Simulator
 This repo contains a test ZMQ publisher that mimics the frame-producing ZMQ publisher that we expect to see from LabView.
 
 To test it:
@@ -83,10 +83,10 @@ pip install .
 
 3. Start the listener through docker-compose (above).
 
-4. Start the producer:
+4. Start the simulator:
 ```
-python -m tr_ap_xps.producer
+python -m tr_ap_xps.simulator
 
 ```
 
-Now, if the listener is listening on `tcp://127.0.0.1:5555` then the publisher will publish to it.
+Now, if the listener is listening on `tcp://127.0.0.1:5555` then the simulator will publish to it.

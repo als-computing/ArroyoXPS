@@ -146,7 +146,7 @@ class XPSProcessor:
             )
         else:
             self.tiled_struct.lines_raw_node.append_partition(new_integrated_df, 0)
-
+    # TODO: we do not have filtered, but 4 the other instead. So, update this part?
     @timer
     def _tiled_update_lines_filtered(self, new_integrated_df: pd.DataFrame):
         if "lines_filtered" not in self.tiled_struct.run_node:

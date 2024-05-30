@@ -9,8 +9,9 @@ import pandas as pd
 from tiled.client import node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
-from peak_fitting import peak_fit
-from fft import calculate_fft_items
+
+from .fft import calculate_fft_items
+from .peak_fitting import peak_fit
 
 logger = logging.getLogger("tr-ap-xps.writer")
 
@@ -92,7 +93,7 @@ class XPSProcessor:
         # self.lines_filtered_node: node = None
         # self.timing_node: node = None
         self.integrated_frames_df: pd.DataFrame = None
-        self.integrated_filtered_frames_df: pd.DataFrame = None # remove this?
+        self.integrated_filtered_frames_df: pd.DataFrame = None
         self.detected_peaks: pd.DataFrame = None
         self.vfft: pd.DataFrame = None
         self.ifft: pd.DataFrame = None
@@ -146,6 +147,7 @@ class XPSProcessor:
             )
         else:
             self.tiled_struct.lines_raw_node.append_partition(new_integrated_df, 0)
+
     # TODO: we do not have filtered, but 4 the other instead. So, update this part?
     @timer
     def _tiled_update_lines_filtered(self, new_integrated_df: pd.DataFrame):
@@ -193,24 +195,35 @@ class XPSProcessor:
         )
 
         # Update the local cached dataframes
-        self.integrated_frames_df = pd.concat( # curr + all the prev stacked avg frame -> fft
-            [self.integrated_filtered_frames_df, new_integrated_df], ignore_index=True
+        self.integrated_frames_df = (
+            pd.concat(  # curr + all the prev stacked avg frame -> fft
+                [self.integrated_frames_df, new_integrated_df],
+                ignore_index=True,
+            )
         )
 
         # TODO:
         self.integrated_filtered_frames_df = pd.concat(
             [self.integrated_filtered_frames_df, new_filtered_df], ignore_index=True
         )
+
         # Things to do every so often
         if frame_number % self.write_tiled_nth_frame == 0:
             integrated_frames_np = self._integrated_frames_pd_to_np(
                 self.integrated_frames_df
             )
             # TODO: allow user to select repeat factor and width on UI
-            vfft_np, sum_np, ifft_np = calculate_fft_items(integrated_frames_np, repeat_factor=20, width=0)
-            
+            vfft_np, sum_np, ifft_np = calculate_fft_items(
+                integrated_frames_np, repeat_factor=20, width=0
+            )
+
             result = Result(
-                frame_number, integrated_frames_np, detected_peaks_df, vfft_np, ifft_np, sum_np
+                frame_number,
+                integrated_frames_np,
+                detected_peaks_df,
+                vfft_np,
+                ifft_np,
+                sum_np,
             )
             self._send_result(result)
             self._tiled_update_lines_raw(new_integrated_df)
@@ -226,4 +239,3 @@ class XPSProcessor:
             )
         finally:
             timer.reset()
-

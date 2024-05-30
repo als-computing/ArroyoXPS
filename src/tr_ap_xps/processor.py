@@ -92,7 +92,11 @@ class XPSProcessor:
         # self.lines_filtered_node: node = None
         # self.timing_node: node = None
         self.integrated_frames_df: pd.DataFrame = None
-        self.integrated_filtered_frames_df: pd.DataFrame = None
+        self.integrated_filtered_frames_df: pd.DataFrame = None # remove this?
+        self.detected_peaks: pd.DataFrame = None
+        self.vfft: pd.DataFrame = None
+        self.ifft: pd.DataFrame = None
+        self.sum: pd.DataFrame = None
 
     def _create_runs_container(self, tiled_node, name: str):
         return tiled_node.create_container(name)
@@ -192,8 +196,8 @@ class XPSProcessor:
         self.integrated_frames_df = pd.concat( # curr + all the prev stacked avg frame -> fft
             [self.integrated_filtered_frames_df, new_integrated_df], ignore_index=True
         )
-        # TODO: fft on self.integrated_frames_df
-        # TODO: result of fft is the. self.self.integrated_filtered_frames_df = fft.result
+
+        # TODO:
         self.integrated_filtered_frames_df = pd.concat(
             [self.integrated_filtered_frames_df, new_filtered_df], ignore_index=True
         )
@@ -211,6 +215,7 @@ class XPSProcessor:
             self._send_result(result)
             self._tiled_update_lines_raw(new_integrated_df)
             self._tiled_update_lines_filtered(new_filtered_df)
+            # TODO: update
 
         timer.end_frame()
 

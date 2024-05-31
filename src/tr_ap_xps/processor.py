@@ -179,9 +179,9 @@ class XPSProcessor:
         detected_peaks_df = peak_fit(new_integrated_frame)
 
         # Compute filtered integrated frames
-        new_filtered_frame = (
-            new_integrated_frame  # placeholder, until we have filtering code
-        )
+        # new_filtered_frame = (
+        #     new_integrated_frame  # placeholder, until we have filtering code
+        # )
 
         # Column names for the dataframes
         frame_number = frame_info["Frame Number"]
@@ -189,9 +189,9 @@ class XPSProcessor:
         new_integrated_df = self._create_dataframe(
             frame_number, new_integrated_frame, column_names
         )
-        new_filtered_df = self._create_dataframe(
-            frame_number, new_filtered_frame, column_names
-        )
+        # new_filtered_df = self._create_dataframe(
+        #     frame_number, new_filtered_frame, column_names
+        # )
 
         # Update the local cached dataframes
         self.integrated_frames_df = (

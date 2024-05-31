@@ -1,4 +1,4 @@
-### This file is for debugging purposes only. Not part of the regular workflow.
+# This file is for debugging purposes only. Not part of the regular workflow.
 
 import os
 import threading
@@ -10,8 +10,8 @@ import numpy as np
 import zmq
 from tiled.client import from_uri
 
-from tr_ap_xps.cli import listen
-from tr_ap_xps.processor import Result, XPSProcessor
+# from tr_ap_xps.cli import listen
+from tr_ap_xps.processor import Result
 
 dotenv.load_dotenv()
 
@@ -68,8 +68,8 @@ def listen():
                     sum_np,
                 )
             )
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
 
 # class Result:

@@ -5,7 +5,8 @@ def get_vfft(array: np.array):
     """
     Perform fft along colmns
     """
-    return np.abs(np.log(np.abs(np.fft.fft(array[:, :], axis=0))))
+    epsilon = 1e-5
+    return np.abs(np.log(np.abs(np.fft.fft(array[:, :], axis=0)) + epsilon))
 
 
 def get_sum(array: np.array):
@@ -29,6 +30,10 @@ def get_ifft(array: np.array, repeat_factor: int = 25, width: int = 0):
     # Calculate the step size for sampling
     dummy = int(fcarray.shape[0] / repeat_factor)
     # Sample every 'dummy'-th row and also copy 'width' rows before and after each sampled index
+
+    # TODO what do do if dummy rounds down to zero?
+    if dummy == 0:
+        dummy = 1
     for i in range(0, fcarray.shape[0], dummy):
         start = max(0, i - width)
         end = min(fcarray.shape[0], i + width + 1)

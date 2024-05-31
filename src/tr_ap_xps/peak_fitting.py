@@ -166,6 +166,7 @@ def peak_helper(x_data, y_data, num_peaks, peak_shape):
     c = 2 * np.sqrt(2 * np.log(2))
     ind_peaks = signal.find_peaks_cwt(y_data, 100)
     ref = signal.cwt(y_data, signal.ricker, list(range(1, 10)))
+    ref = np.clip(ref, a_min=1e-10, a_max=None)
     ref = np.log(ref + 1)
     if len(ind_peaks) == 0:
         return [], [], [], None, None
@@ -205,6 +206,8 @@ def peak_helper(x_data, y_data, num_peaks, peak_shape):
         fit_g = fitting.LevMarLSQFitter()
     g_fit = fit_g(g_unfit, x_data, y_data)
     residual = np.abs(g_fit(x_data) - y_data)
+    epsilon = 1e-5
+    y_data = y_data + epsilon
     if np.mean(residual / y_data) > 0.10:
         flag_list = list(np.ones(num_peaks))
     else:

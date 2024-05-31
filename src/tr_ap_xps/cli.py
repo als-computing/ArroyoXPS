@@ -34,6 +34,8 @@ def listen(
     if tiled_token is None:
         tiled_token = os.getenv("TILED_SINGLE_USER_API_KEY")
     tiled_client = from_uri(tiled_uri, api_key=tiled_token)
+    if tiled_client.get("runs") == None:
+        tiled_client.create_container("runs")
     runs_node = tiled_client["runs"]
 
     result_publisher = XPSResultPublisher()
@@ -42,7 +44,7 @@ def listen(
         result_publisher.send_result(result)
 
     def start_function(data: dict):
-        logger.info(f"start: {data}")
+        logger.info(f"!!!!!!!!!!!!!!!!!!!!!!start: {data}")
         global processor
         processor = XPSProcessor(publish_result, runs_node, data["scan_name"])
 

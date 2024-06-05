@@ -44,7 +44,7 @@ def listen(
         result_publisher.send_result(result)
 
     def start_function(data: dict):
-        logger.info(f"!!!!!!!!!!!!!!!!!!!!!!start: {data}")
+        logger.info(f"start: {data}")
         global processor
         processor = XPSProcessor(publish_result, runs_node, data["scan_name"])
 

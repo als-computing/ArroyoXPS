@@ -34,6 +34,8 @@ def listen(
     if tiled_token is None:
         tiled_token = os.getenv("TILED_SINGLE_USER_API_KEY")
     tiled_client = from_uri(tiled_uri, api_key=tiled_token)
+    if tiled_client.get("runs") is None:
+        tiled_client.create_container("runs")
     runs_node = tiled_client["runs"]
 
     result_publisher = XPSResultPublisher()

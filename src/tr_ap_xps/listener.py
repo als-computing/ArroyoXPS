@@ -1,6 +1,7 @@
 import logging
 import signal
 from typing import Callable
+from uuid import uuid4
 
 import numpy as np
 import zmq
@@ -66,21 +67,22 @@ class ZMQImageListener:
 
                 message = socket.recv_json()
                 logger.info(f"{message=}")
-
-                if "start" in message:
-                    self.start_function(message["start"])
+                message_type = message["msg_type"]
+                if message_type == "start":
+                    message["scan_name"] = f"temporary scan name{uuid4()}"  # temporary
+                    self.start_function(message)
                     if logger.getEffectiveLevel() == logging.DEBUG:
-                        logger.debug(f"start: {message['start']}")
+                        logger.debug(f"start: {message}")
                     continue
-                if "stop" in message:
-                    self.stop_function(message["stop"])
+                if message_type == "metadata":
+                    self.stop_function(message)
 
                     continue
-                if "event" not in message:
+                if message_type != "image":
                     logger.error(f"Received unexpected message: {message}")
                     continue
                 # Must be an event with an image
-                image_info = message["event"]
+                image_info = message
                 if logger.getEffectiveLevel() == logging.DEBUG:
                     logger.debug(f"event: {image_info}")
 
@@ -88,7 +90,7 @@ class ZMQImageListener:
                 buffer = socket.recv()
                 shape = (image_info["Width"], image_info["Height"])
                 frame_number = image_info["Frame Number"]
-                dtype = DATATYPE_MAP.get(image_info["Type"])
+                dtype = DATATYPE_MAP.get(image_info["data_type"])
                 if not dtype:
                     logger.error(f"Received unexpected data type: {image_info}")
                     continue

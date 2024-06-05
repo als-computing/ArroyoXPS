@@ -93,7 +93,6 @@ class XPSProcessor:
         # self.lines_filtered_node: node = None
         # self.timing_node: node = None
         self.integrated_frames_df: pd.DataFrame = None
-        self.integrated_filtered_frames_df: pd.DataFrame = None
         self.detected_peaks: pd.DataFrame = None
         self.vfft: pd.DataFrame = None
         self.ifft: pd.DataFrame = None
@@ -180,9 +179,9 @@ class XPSProcessor:
         detected_peaks_df = peak_fit(new_integrated_frame)
 
         # Compute filtered integrated frames
-        new_filtered_frame = (
-            new_integrated_frame  # placeholder, until we have filtering code
-        )
+        # new_filtered_frame = (
+        #     new_integrated_frame  # placeholder, until we have filtering code
+        # )
 
         # Column names for the dataframes
         frame_number = frame_info["Frame Number"]
@@ -190,9 +189,9 @@ class XPSProcessor:
         new_integrated_df = self._create_dataframe(
             frame_number, new_integrated_frame, column_names
         )
-        new_filtered_df = self._create_dataframe(
-            frame_number, new_filtered_frame, column_names
-        )
+        # new_filtered_df = self._create_dataframe(
+        #     frame_number, new_filtered_frame, column_names
+        # )
 
         # Update the local cached dataframes
         self.integrated_frames_df = (
@@ -200,11 +199,6 @@ class XPSProcessor:
                 [self.integrated_frames_df, new_integrated_df],
                 ignore_index=True,
             )
-        )
-
-        # TODO:
-        self.integrated_filtered_frames_df = pd.concat(
-            [self.integrated_filtered_frames_df, new_filtered_df], ignore_index=True
         )
 
         # Things to do every so often
@@ -226,8 +220,9 @@ class XPSProcessor:
                 sum_np,
             )
             self._send_result(result)
-            self._tiled_update_lines_raw(new_integrated_df)
-            self._tiled_update_lines_filtered(new_filtered_df)
+            # TODO add tiled persistence later
+            # self._tiled_update_lines_raw(new_integrated_df)
+            # self.detected_peaks
             # TODO: update
 
         timer.end_frame()

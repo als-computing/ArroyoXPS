@@ -1,6 +1,8 @@
+import dataclasses
 import logging
 import signal
 from typing import Callable
+import queue
 from uuid import uuid4
 
 import numpy as np
@@ -35,21 +37,31 @@ def handle_sigterm(signum, frame):
 # Register the handler for SIGTERM
 signal.signal(signal.SIGTERM, handle_sigterm)
 
+@dataclasses.dataclass
+class Start():
+    metadata: dict
+
+
+@dataclasses.dataclass
+class Event():
+    image_info: dict
+    image: np.ndarray
+
+
+@dataclasses.dataclass
+class Stop():
+    metadata: dict
+
 
 class ZMQImageListener:
     def __init__(
         self,
-        start_function: Callable[[dict], None],
-        event_function: Callable[[int, np.ndarray], None],
-        stop_function: Callable[[dict], None],
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
-        self.start_function = start_function
-        self.stop_function = stop_function
-        self.event_function = event_function
+        self.messages = queue.Queue()
         self.stop = False
 
     def start(self):
@@ -70,13 +82,12 @@ class ZMQImageListener:
                 message_type = message["msg_type"]
                 if message_type == "start":
                     message["scan_name"] = f"temporary scan name{uuid4()}"  # temporary
-                    self.start_function(message)
+                    self.messages.put(Start(message))
                     if logger.getEffectiveLevel() == logging.DEBUG:
                         logger.debug(f"start: {message}")
                     continue
                 if message_type == "metadata":
-                    self.stop_function(message)
-
+                    self.messages.put(Stop())
                     continue
                 if message_type != "image":
                     logger.error(f"Received unexpected message: {message}")
@@ -99,8 +110,7 @@ class ZMQImageListener:
                     logger.debug(
                         f"received: {frame_number=} {shape=} {dtype=} {array_received}"
                     )
-                if self.event_function:
-                    self.event_function(image_info, array_received)
+                self.messages.put(Event(message, array_received))
 
             except Exception as e:
                 logger.error(e)

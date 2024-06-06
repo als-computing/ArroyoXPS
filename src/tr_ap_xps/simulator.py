@@ -7,7 +7,7 @@ import zmq
 IMAGE_METADATA = {"Frame Number": 0, "Width": 1000, "Height": 100, "Type": "I32"}
 
 
-class LabViewSimulator:
+class RandomLabViewSimulator:
     def __init__(
         self, zmq_pub_address: str = "tcp://127.0.0.1", zmq_pub_port: int = 5555
     ):
@@ -46,10 +46,38 @@ class LabViewSimulator:
         self.ctx.term()
 
 
-if __name__ == "__main__":
-    publisher = LabViewSimulator()
-    print("starting labview simulator")
-    publisher.start()
+class LabViewSimulator:
+    def __init__(
+        self,
+        zmq_pub_address: str = "tcp://127.0.0.1",
+        zmq_pub_port: int = 5555,
+        pickle_dir: str = "./sample_data/scan1"
+    ):
+        self.ctx = zmq.Context()
+        self.socket = self.ctx.socket(zmq.PUB)
+        self.socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
+        self.pickle_dir = pickle_dir
 
-    # publisher.finish()
+    def _send_image(self, image: np.ndarray):
+        self.socket.send(image)
+
+    def start(self, sleep_interval: int = 5):
+        import glob
+        import pickle
+        file_paths = glob.glob(f"{self.pickle_dir}/*.pickle")
+        for file_path in file_paths:
+            with open(file_path, "rb") as file:
+                data = pickle.load(file)
+                self.socket.send(data)
+    
+    def finish(self):
+        self.socket.close()
+        self.ctx.term()
+
+
+if __name__ == "__main__":
+    simulator = LabViewSimulator()
+    print("starting labview simulator")
+    simulator.start()
+    simulator.finish()
     print("Publisher labview simulator.")

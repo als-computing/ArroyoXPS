@@ -14,8 +14,8 @@ def main(
     zmq_pub_address: str = "tcp://192.168.1.84",
     zmq_pub_port: int = 5555,
     zme_hwm: int = 5000,
-    scan_name="scan1",
-    data_dir="/tmp/zmq_pickle",
+    scan_name="scan2",
+    data_dir="./sample_data",
     log_level="debug",
 ):
     setup_logger(logger, log_level)

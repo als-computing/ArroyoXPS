@@ -63,13 +63,30 @@ class LabViewSimulator:
 
     def start(self, sleep_interval: int = 5):
         import glob
+        import os
         import pickle
+   
+
         file_paths = glob.glob(f"{self.pickle_dir}/*.pickle")
+        # load messages into memory
+        messages  = {}
         for file_path in file_paths:
             with open(file_path, "rb") as file:
                 data = pickle.load(file)
+                file_name = int(os.path.splitext(os.path.basename(file_path))[0])
+                messages[file_name] = data
+       
+        # sort messages by key
+        sorted_messages = dict(sorted(messages.items(), key=lambda x: x[0]))
+        
+        while True:
+            # loop through each scan message
+            for file_name, data in sorted_messages.items():
                 self.socket.send(data)
-    
+                time.sleep(0.1)
+            print(f"send {len(sorted_messages.keys())} message")
+            time.sleep(5)
+
     def finish(self):
         self.socket.close()
         self.ctx.term()

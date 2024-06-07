@@ -175,7 +175,7 @@ export default function App() {
       }, */
       {
         id: 'p2',
-        title: 'Fitted',
+        title: 'Fitted Peaks',
         data: gaussianData2
       }
     ]
@@ -212,7 +212,7 @@ export default function App() {
                 key = {item.id}
                 className="w-96 h-96 my-12 shadow-md border"
                 data={item.data}
-                layout={{ title: `Gaussian Distribution - ${item.title}`, xaxis: { title: 'X'}, yaxis: { title: 'Y' } }}
+                layout={{ title: `${item.title}`, xaxis: { title: 'X'}, yaxis: { title: 'Y' } }}
               />
             )
           })}

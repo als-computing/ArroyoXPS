@@ -72,46 +72,57 @@ export default function App() {
                 image.src = 'data:image/jpeg;base64,' + data[key];
               } else {
                 if ( plotNames.includes(key)) {
-                  //handle plot update
-                  //define xValues and yValues which may contain
+                  //---------handle plot update -----------------------
                   var allPlots = []
-                  // console.log(data[key]);
                   if (typeof data[key] === 'string') {
-                    JSON.parse(data[key]).forEach((plot, index) => {
-                      var singlePlot = {
-                        x: [],
-                        y: [],
-                        mode: 'lines',
-                        type: 'scatter',
-                        name: 'peak ' + index
-                      };
-                      const x_peak = plot.x;
-                      const y_peak = plot.h;
-                      const fwhm = plot.fwhm;
-  
-                      const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
-                      const xValues = [];
-                      const yValues = [];
-                      const x_min = x_peak - 5 * sigma;
-                      const x_max = x_peak + 5 * sigma;
-                      const step = (x_max - x_min) / 100;
-  
-                      for (let x = x_min; x <= x_max; x += step) {
-                        const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
-                        xValues.push(x);
-                        yValues.push(y);
-                      }
-                      singlePlot.x = xValues;
-                      singlePlot.y = yValues;
-                      allPlots.push(singlePlot);
-                    })
-                    const setGaussianDataFunction = setGaussianFunctions[key];
-                    setGaussianDataFunction(allPlots);
+                    const plotData = JSON.parse(data[key]);
+                    //check if parsed JSON data is array
+                    if (Array.isArray(plotData)) {
+                      plotData.forEach((plot, index) => {
+                        //check the values of the x, y, fwhm keys, should be numbers
+                        if (typeof plot.x === 'number' && typeof plot.h === 'number' && typeof plot.fwhm === 'number') {
+                          var singlePlot = {
+                            x: [],
+                            y: [],
+                            mode: 'lines',
+                            type: 'scatter',
+                            name: 'peak ' + index
+                          };
+                          const x_peak = plot.x;
+                          const y_peak = plot.h;
+                          const fwhm = plot.fwhm;
+      
+                          const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
+                          const xValues = [];
+                          const yValues = [];
+                          const x_min = x_peak - 5 * sigma;
+                          const x_max = x_peak + 5 * sigma;
+                          const step = (x_max - x_min) / 100;
+      
+                          for (let x = x_min; x <= x_max; x += step) {
+                            const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
+                            xValues.push(x);
+                            yValues.push(y);
+                          }
+                          singlePlot.x = xValues;
+                          singlePlot.y = yValues;
+                          allPlots.push(singlePlot);
+                        } else {
+                          console.log('Received invalid plot key values, should be integers');
+                          console.log({plot});
+                        }
+                      })
+                      const setGaussianDataFunction = setGaussianFunctions[key];
+                      setGaussianDataFunction(allPlots);
+                    } else {
+                      console.log('Received a non-array dataset from the ' + key + ' plot');
+                      console.log(data[key]);
+                    }
                   }
                   }
                   else {
                     //do nothing on seij's machine because my python server doesn't send string
-
+                    console.log('plot data was found in websocket message, however it is not a string type. Skipping this data')
                   }
               }
 

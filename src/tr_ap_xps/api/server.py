@@ -61,8 +61,8 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             result = await subscriber.receive_message()
-            integrated_frame = buffer_to_jpeg(
-                result.integrated_frame,
+            raw = buffer_to_jpeg(
+                result.raw,
                 result.result_info["shape"],
                 result.result_info["dtype"],
             )
@@ -77,12 +77,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 result.result_info["vfft_dtype"],
             )
             # sum_json = df_to_json(result.sum)
-            detected_peaks = json.dumps(peaks_output(result.detected_peaks))
+            detected_peaks = json.dumps(peaks_output(result.fitted))
 
             data = {
                 "frame_number": result.result_info["frame_number"],
-                "integrated_frame": integrated_frame,
-                "detected_peaks": detected_peaks,
+                "raw": raw,
+                "fitted": detected_peaks,
                 "vfft": vfft,
                 "ifft": ifft,
             }

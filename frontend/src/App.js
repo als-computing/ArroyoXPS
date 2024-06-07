@@ -46,7 +46,7 @@ export default function App() {
 
         ws.current.onmessage = function (event) {
             const data = JSON.parse(event.data);
-            console.log({data});
+            // console.log({data});
 
             //Refactor for new JSON structure
 /*             data = {
@@ -81,7 +81,8 @@ export default function App() {
                   //handle plot update
                   //define xValues and yValues which may contain
                   var allPlots = []
-                  data[key].forEach((plot, index) => {
+                  // console.log(data[key]);
+                  JSON.parse(data[key]).forEach((plot, index) => {
                     var singlePlot = {
                       x: [],
                       y: [],
@@ -92,14 +93,14 @@ export default function App() {
                     const x_peak = plot.x;
                     const y_peak = plot.h;
                     const fwhm = plot.fwhm;
-        
+
                     const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
                     const xValues = [];
                     const yValues = [];
                     const x_min = x_peak - 5 * sigma;
                     const x_max = x_peak + 5 * sigma;
                     const step = (x_max - x_min) / 100;
-        
+
                     for (let x = x_min; x <= x_max; x += step) {
                       const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
                       xValues.push(x);

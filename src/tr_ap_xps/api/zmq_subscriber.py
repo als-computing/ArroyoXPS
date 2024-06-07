@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResultData:
     result_info: dict
-    integrated_frame: bytes
-    detected_peaks: bytes
+    raw: bytes
+    fitted: bytes
     vfft: bytes
     ifft: bytes
     # sum: bytes
@@ -37,8 +37,8 @@ class ZMQSubscriber:
 
             return ResultData(
                 result_info=result_info,
-                integrated_frame=integrated_frame,
-                detected_peaks=detected_peaks,
+                raw=integrated_frame,
+                fitted=detected_peaks,
                 vfft=vfft,
                 ifft=ifft,
                 # sum=sum

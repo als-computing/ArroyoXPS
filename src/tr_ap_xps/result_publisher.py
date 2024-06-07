@@ -35,8 +35,8 @@ class XPSResultPublisher:
                 self.socket.send_json(
                     {
                         "frame_number": result.frame_num,
-                        "shape": result.integrated_frame.shape,
-                        "dtype": str(result.integrated_frame.dtype),
+                        "shape": result.raw.shape,
+                        "dtype": str(result.raw.dtype),
                         "vfft_dtype": str(result.vfft.dtype),
                         "vfft_shape": result.vfft.shape,
                         "ifft_dtype": str(result.ifft.dtype),
@@ -45,7 +45,7 @@ class XPSResultPublisher:
                         "sum_shape": result.sum.shape,
                     }
                 )  # Convert dtype to string
-                self.socket.send(result.integrated_frame)
+                self.socket.send(result.raw)
                 peaks_json = result.detected_peaks.to_json(orient="split")
                 self.socket.send_json(peaks_json)
 

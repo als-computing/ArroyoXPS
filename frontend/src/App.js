@@ -8,8 +8,8 @@ export default function App() {
     const canvasRef2 = useRef(null);
     const canvasRef3 = useRef(null);
 
-    //const [gaussianData1, setGaussianData1] = useState({ xValues: [], yValues: []}); //remove SUM
-    const [gaussianData2, setGaussianData2] = useState([]);
+    const [gaussianData1, setGaussianData1] = useState([]); //persistent values
+    const [gaussianData2, setGaussianData2] = useState([]); //fitted values
 
     const [socketStatus, setSocketStatus] = useState('closed');
     const [ wsUrl, setWsUrl ] = useState('ws://localhost:8001/simImages');
@@ -29,7 +29,7 @@ export default function App() {
         }
 
         const setGaussianFunctions = {
-          sum: () => {}, //setGaussianData1, //REMOVE SUM
+          cumulative: setGaussianData1,
           fitted: setGaussianData2
         }
 
@@ -71,11 +71,21 @@ export default function App() {
                 };
                 image.src = 'data:image/jpeg;base64,' + data[key];
               } else {
+
                 if ( plotNames.includes(key)) {
                   //---------handle plot update -----------------------
-                  var allPlots = []
-                  if (typeof data[key] === 'string') {
-                    const plotData = JSON.parse(data[key]);
+                  var allPlots = [];
+                  var plotData;
+
+                  //allow for arrays or a JSON stringified array
+                  if (Array.isArray(data[key])) {
+                    plotData = data[key];
+                  } else {
+                    if (typeof data[key] === 'string') {
+                      plotData = JSON.parse(data[key]);
+                    }
+                  }
+
                     //check if parsed JSON data is array
                     if (Array.isArray(plotData)) {
                       plotData.forEach((plot, index) => {
@@ -86,7 +96,7 @@ export default function App() {
                             y: [],
                             mode: 'lines',
                             type: 'scatter',
-                            name: 'peak ' + index
+                            name: `P${index} X: ${plot.x.toPrecision(3)}, H: ${plot.h.toPrecision(3)}, FWHM: ${plot.fwhm.toPrecision(3)}`
                           };
                           const x_peak = plot.x;
                           const y_peak = plot.h;
@@ -114,15 +124,12 @@ export default function App() {
                       })
                       const setGaussianDataFunction = setGaussianFunctions[key];
                       setGaussianDataFunction(allPlots);
+                      var count;
+                      updateCumulativePlot(allPlots);
                     } else {
                       console.log('Received a non-array dataset from the ' + key + ' plot');
                       console.log(data[key]);
                     }
-                  }
-                  }
-                  else {
-                    //do nothing on seij's machine because my python server doesn't send string
-                    console.log('plot data was found in websocket message, however it is not a string type. Skipping this data')
                   }
               }
 
@@ -135,6 +142,24 @@ export default function App() {
 
 
         };
+    }
+
+    const updateCumulativePlot = (newPlot) => {
+      //append the newest plot data to the existing data for the cumulative plot
+      setGaussianData1((data) => {
+        //copy by value to be safe
+        var oldArrayData = Array.from(data);
+        var newArrayData = [];
+        oldArrayData.forEach((plot, index) => {
+          plot.line = {
+            color: 'rgb(199, 199, 199)',
+            width: 1,
+          };
+          plot.name = `frame ${index}`;
+          newArrayData.push(plot);
+        })
+        return [...newArrayData, ...newPlot];
+      })      
     }
 
     const closeWebSocket = () => {
@@ -179,16 +204,16 @@ export default function App() {
     ];
 
     const plotData = [
-      /* {
-        id: 'p1',
-        title: 'Sum',
-        data: gaussianData1
-      }, */
       {
         id: 'p2',
         title: 'Fitted Peaks',
         data: gaussianData2
-      }
+      },
+      {
+        id: 'p1',
+        title: 'Fitted peaks - Cumulative',
+        data: gaussianData1
+      }, 
     ]
 
     return (
@@ -221,7 +246,7 @@ export default function App() {
             return (
               <Plot
                 key = {item.id}
-                className="w-96 h-96 my-12 shadow-md border"
+                className="w-3/4 h-96 my-12 shadow-md border"
                 data={item.data}
                 layout={{ title: `${item.title}`, xaxis: { title: 'X'}, yaxis: { title: 'Y' } }}
               />

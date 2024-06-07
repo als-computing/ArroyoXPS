@@ -80,6 +80,7 @@ async def websocket_endpoint(websocket: WebSocket):
             detected_peaks = json.dumps(peaks_output(result.fitted))
 
             data = {
+                "result_info": result.result_info,
                 "frame_number": result.result_info["frame_number"],
                 "raw": raw,
                 "fitted": detected_peaks,

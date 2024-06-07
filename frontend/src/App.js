@@ -70,8 +70,14 @@ export default function App() {
                 //handle image update
                 const image = new Image();
                 image.onload = function () {
+                  const imgWidth = image.width;
+                  const imgHeight = image.height;
+
                   const canvas = canvases[key];
                   const context = canvas.getContext('2d');
+
+                  //reset the canvas height to match the height/width ratio of the image
+                  canvas.height = (imgHeight/imgWidth) * 384;
                   context.clearRect(0, 0, canvas.width, canvas.height);
                   context.drawImage(image, 0, 0, canvas.width, canvas.height);
                 };

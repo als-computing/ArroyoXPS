@@ -1,4 +1,3 @@
-import io
 import logging
 import queue
 import threading
@@ -35,7 +34,7 @@ class XPSResultPublisher:
                     continue
                 self.socket.send_json(
                     {
-                        "frame_number": result.frame_number,
+                        "frame_number": result.frame_num,
                         "shape": result.integrated_frame.shape,
                         "dtype": str(result.integrated_frame.dtype),
                         "vfft_dtype": str(result.vfft.dtype),
@@ -47,11 +46,12 @@ class XPSResultPublisher:
                     }
                 )  # Convert dtype to string
                 self.socket.send(result.integrated_frame)
-                peaks_buffer = io.StringIO()
-                result.detected_peaks.to_csv(peaks_buffer, index=False)
-                self.socket.send_string(peaks_buffer.getvalue())
+                peaks_json = result.detected_peaks.to_json(orient="split")
+                self.socket.send_json(peaks_json)
+
                 self.socket.send(result.vfft)
                 self.socket.send(result.ifft)
-                self.socket.send(result.sum)
+                # sum_json = result.sum.to_json(orient='split')
+                # self.socket.send_json(sum_json)
             except Exception as e:
                 logger.exception(e)

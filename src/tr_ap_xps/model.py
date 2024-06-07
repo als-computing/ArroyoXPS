@@ -6,7 +6,7 @@ import pandas
 
 @dataclasses.dataclass
 class Result:
-    frame_number: int
+    frame_num: dict
     integrated_frame: numpy.ndarray
     detected_peaks: pandas.DataFrame
     vfft: numpy.ndarray

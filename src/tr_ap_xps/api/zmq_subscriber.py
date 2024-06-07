@@ -1,11 +1,20 @@
 import logging
+from dataclasses import dataclass
 
 import zmq
 import zmq.asyncio
 
-from ..model import Result
-
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ResultData:
+    result_info: dict
+    integrated_frame: bytes
+    detected_peaks: bytes
+    vfft: bytes
+    ifft: bytes
+    # sum: bytes
 
 
 class ZMQSubscriber:
@@ -21,18 +30,18 @@ class ZMQSubscriber:
         try:
             result_info = await self.socket.recv_json()
             integrated_frame = await self.socket.recv()
-            detected_peaks = await self.socket.recv()
+            detected_peaks = await self.socket.recv_json()
             vfft = await self.socket.recv()
             ifft = await self.socket.recv()
-            sum = await self.socket.recv()
+            # sum = await self.socket.recv()
 
-            return Result(
-                result_info["frame_number"],
-                integrated_frame,
-                detected_peaks,
-                vfft,
-                ifft,
-                sum,
+            return ResultData(
+                result_info=result_info,
+                integrated_frame=integrated_frame,
+                detected_peaks=detected_peaks,
+                vfft=vfft,
+                ifft=ifft,
+                # sum=sum
             )
         except Exception as e:
             logger.exception(e)

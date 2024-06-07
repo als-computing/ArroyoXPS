@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import io
+import json
 import logging
 
 import numpy as np
@@ -32,8 +33,10 @@ app.add_middleware(
 )
 
 
-def array_to_jpeg(arr: np.ndarray):
-    img = Image.fromarray(arr, "RGB")
+def buffer_to_jpeg(arr_buffer, shape: list, dtype: str):
+    shape = tuple(shape)
+    nd_arr = np.frombuffer(arr_buffer, dtype=dtype).reshape(shape)
+    img = Image.fromarray(nd_arr, "RGB")
     # Convert image to base64
     buffered = io.BytesIO()
     img.save(buffered, format="JPEG")
@@ -42,40 +45,47 @@ def array_to_jpeg(arr: np.ndarray):
     return img_str
 
 
+def peaks_output(json_str):
+    #     [
+    # {"x": 235, "h": 433.3: "fwhm": 4334},
+    # {"x": 235, "h": 433.3: "fwhm": 4334}
+    # ]
+    obj = json.loads(json_str)
+    data = [{"x": data[0], "h": data[1], "fwhm": data[2]} for data in obj["data"]]
+    return data
+
+
 @app.websocket("/simImages")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
             result = await subscriber.receive_message()
-            # data = {
-            #     "description": "name tbd",
-            #     "image": [result.integrated_frame, result.ifft, result.vfft],
-            #     "plots": [
+            integrated_frame = buffer_to_jpeg(
+                result.integrated_frame,
+                result.result_info["shape"],
+                result.result_info["dtype"],
+            )
+            ifft = buffer_to_jpeg(
+                result.ifft,
+                result.result_info["ifft_shape"],
+                result.result_info["ifft_dtype"],
+            )
+            vfft = buffer_to_jpeg(
+                result.vfft,
+                result.result_info["vfft_shape"],
+                result.result_info["vfft_dtype"],
+            )
+            # sum_json = df_to_json(result.sum)
+            detected_peaks = json.dumps(peaks_output(result.detected_peaks))
 
-            #     ]
-
-            # }
-            data = {"description": "", "images": [], "plots": []}
-            # Generate 3 random RGB images
-            # img_types = ["raw", "vfft", "ifft"]
-            # plot_types = ["sum", "fitted"]
-
-            raw_img = array_to_jpeg(result.integrated_frame)
-            ifft_img = array_to_jpeg(result.ifft)
-            vfft_img = array_to_jpeg(result.vfft)
-            data["images"] = [raw_img, ifft_img, vfft_img]
-            # for i in range(2):
-            #     gaussianPlot = {
-            #         "X": np.random.randint(20) + 5,
-            #         "H": np.random.randint(20) + 5,
-            #         "FWHM": np.random.randint(20) + 1,
-            #     }
-            #     plot = {"terms": gaussianPlot, "key": plot_types[i]}
-            #     data["plots"].append(plot)
-            # provide description
-            data["description"] = "3 sample images and 2 sample plots"
-
+            data = {
+                "frame_number": result.result_info["frame_number"],
+                "integrated_frame": integrated_frame,
+                "detected_peaks": detected_peaks,
+                "vfft": vfft,
+                "ifft": ifft,
+            }
             # # Send all data
             await websocket.send_json(data)
             await asyncio.sleep(0.1)  # Sending 10 new images every second

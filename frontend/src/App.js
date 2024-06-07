@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from './component_library/Button';
 import TextField from './component_library/TextField';
 import Plot from 'react-plotly.js';
-
+import dayjs from 'dayjs';
 export default function App() {
     const canvasRef1 = useRef(null);
     const canvasRef2 = useRef(null);
@@ -13,9 +13,12 @@ export default function App() {
 
     const [socketStatus, setSocketStatus] = useState('closed');
     const [ wsUrl, setWsUrl ] = useState('ws://localhost:8001/simImages');
+    const [frameCount, setFrameCount ] = useState('');
+    const [timeStamp, setTimeStamp] = useState('');
     const [ warningMessage, setWarningMessage ] = useState('');
     const ws = useRef(null);
-    const [src, setSrc] = useState('');
+
+    const defaultCanvasHeight = 512;
 
     const startWebSocket = () => {
       setWarningMessage('');
@@ -46,23 +49,8 @@ export default function App() {
 
         ws.current.onmessage = function (event) {
             const data = JSON.parse(event.data);
-            // console.log({data});
+            setTimeStamp(dayjs().format('hh:mm:ss:SSS'));
 
-            //Refactor for new JSON structure
-/*             data = {
-              raw: 'base64 encoded jpeg',
-              vfft: 'base64 encoded jpeg',
-              ifft: 'base64 encoded jpeg',
-              sum: '[]', //will be array containing n number of plots
-              fitted: '[]'  //array containing n number of plots
-            }
-
-            var sampleArray = [
-              {"x": 235, "h": 433.3, "fwhm": 4334},
-              {"x": 235, "h": 433.3, "fwhm": 4334}
-              ]; */
-
-              //NEW DATA STRUCTURE
             const imageNames = ['raw', 'vfft', 'ifft'];
             const plotNames = ['sum', 'fitted']
             for (const key in data) {
@@ -77,7 +65,7 @@ export default function App() {
                   const context = canvas.getContext('2d');
 
                   //reset the canvas height to match the height/width ratio of the image
-                  canvas.height = (imgHeight/imgWidth) * 384;
+                  canvas.height = (imgHeight/imgWidth) * defaultCanvasHeight;
                   context.clearRect(0, 0, canvas.width, canvas.height);
                   context.drawImage(image, 0, 0, canvas.width, canvas.height);
                 };
@@ -88,37 +76,49 @@ export default function App() {
                   //define xValues and yValues which may contain
                   var allPlots = []
                   // console.log(data[key]);
-                  JSON.parse(data[key]).forEach((plot, index) => {
-                    var singlePlot = {
-                      x: [],
-                      y: [],
-                      mode: 'lines',
-                      type: 'scatter',
-                      name: 'peak ' + index
-                    };
-                    const x_peak = plot.x;
-                    const y_peak = plot.h;
-                    const fwhm = plot.fwhm;
+                  if (typeof data[key] === 'string') {
+                    JSON.parse(data[key]).forEach((plot, index) => {
+                      var singlePlot = {
+                        x: [],
+                        y: [],
+                        mode: 'lines',
+                        type: 'scatter',
+                        name: 'peak ' + index
+                      };
+                      const x_peak = plot.x;
+                      const y_peak = plot.h;
+                      const fwhm = plot.fwhm;
+  
+                      const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
+                      const xValues = [];
+                      const yValues = [];
+                      const x_min = x_peak - 5 * sigma;
+                      const x_max = x_peak + 5 * sigma;
+                      const step = (x_max - x_min) / 100;
+  
+                      for (let x = x_min; x <= x_max; x += step) {
+                        const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
+                        xValues.push(x);
+                        yValues.push(y);
+                      }
+                      singlePlot.x = xValues;
+                      singlePlot.y = yValues;
+                      allPlots.push(singlePlot);
+                    })
+                    const setGaussianDataFunction = setGaussianFunctions[key];
+                    setGaussianDataFunction(allPlots);
+                  }
+                  }
+                  else {
+                    //do nothing on seij's machine because my python server doesn't send string
 
-                    const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
-                    const xValues = [];
-                    const yValues = [];
-                    const x_min = x_peak - 5 * sigma;
-                    const x_max = x_peak + 5 * sigma;
-                    const step = (x_max - x_min) / 100;
+                  }
+              }
 
-                    for (let x = x_min; x <= x_max; x += step) {
-                      const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
-                      xValues.push(x);
-                      yValues.push(y);
-                    }
-                    singlePlot.x = xValues;
-                    singlePlot.y = yValues;
-                    allPlots.push(singlePlot);
-                  })
-                  const setGaussianDataFunction = setGaussianFunctions[key];
-                  setGaussianDataFunction(allPlots);
-                }
+
+              //additional information
+              if (key === 'frame_number') {
+                setFrameCount(data[key]);
               }
             }
 
@@ -148,21 +148,21 @@ export default function App() {
         id: 1,
         title: "raw",
         canvasRef: canvasRef1,
-        height: 512,
+        height: defaultCanvasHeight,
         width: 512
       },
       {
         id: 2,
         title: "vfft",
         canvasRef: canvasRef2,
-        height: 512,
+        height: defaultCanvasHeight,
         width: 512
       },
       {
         id: 3,
         title: "ifft",
         canvasRef: canvasRef3,
-        height: 512,
+        height: defaultCanvasHeight,
         width: 512
       },
     ];
@@ -184,13 +184,25 @@ export default function App() {
       <main className="sm:w-full 2xl:w-3/4 min-h-screen border m-auto">
         <header className="w-full py-4">
           <h1 className="text-center font-medium text-5xl w-full">AP-XPS Visualization</h1>
+          <div className="w-full  flex justify-center items-center space-x-4">
+            <div className="flex px-2 py-1">
+              <p className="pr-2"> Current Frame Count: </p>
+              <p className="bg-blue-100 border-blue-400 rounded-md min-h-6 min-w-12 text-center">{frameCount}</p>
+            </div>
+            <div className='flex min-w-64'>
+              <p className='pr-2'>Last Update at: </p>
+              <p className="bg-blue-100 border-blue-400  rounded-md min-w-28 text-center">{timeStamp}</p>
+            </div>
+          </div>
         </header>
         <div name="canvas and plot container" className="flex flex-wrap justify-around">
           {canvasData.map((item) => {
             return (
               <section key={item.id} className="my-8 flex flex-col">
                 <h2 className="text-center">{item.title}</h2>
-                <canvas className='m-auto border shadow-md max-w-96' ref={item.canvasRef} width={item.width} height={item.height} />
+                <div className="h-96 border shadow-md flex items-end">
+                  <canvas className='border  w-96' ref={item.canvasRef} width={item.width} height={item.height} />
+                </div>
               </section>
             )
           })}
@@ -204,6 +216,7 @@ export default function App() {
               />
             )
           })}
+          
         </div>
         <div className="m-auto w-fit my-8">
           <div className="flex border border-slate-700 rounded-md items-center justify-center space-x-6 py-8 px-8 bg-slate-200 shadow-sm">

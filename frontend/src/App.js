@@ -43,7 +43,7 @@ export default function App() {
           alert("Unable to connect to websocket");
           setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
         }
-    
+
         ws.current.onmessage = function (event) {
             const data = JSON.parse(event.data);
 
@@ -62,7 +62,7 @@ export default function App() {
                         context.drawImage(image, 0, 0, canvas.width, canvas.height);
                       };
                       image.src = 'data:image/jpeg;base64,' + imgData.image;
-  
+
                       //create and display Gaussian Plot from FWHM data to Plotly
                     } else {
                       console.log("Matching canvas key was not found in WS data");
@@ -76,8 +76,8 @@ export default function App() {
                 console.log('Received empty image data');
               }
             }
-            
-            
+
+
             //Plots
             if ("plots" in data) {
               if (data.plots.length > 0) {
@@ -85,14 +85,14 @@ export default function App() {
                   const x_peak = plot.terms.X;
                   const y_peak = plot.terms.H;
                   const fwhm = plot.terms.FWHM;
-      
+
                   const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
                   const xValues = [];
                   const yValues = [];
                   const x_min = x_peak - 5 * sigma;
                   const x_max = x_peak + 5 * sigma;
                   const step = (x_max - x_min) / 100;
-      
+
                   for (let x = x_min; x <= x_max; x += step) {
                     const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
                     xValues.push(x);
@@ -104,7 +104,7 @@ export default function App() {
 
               }
             }
-            
+
 
         };
     }
@@ -183,7 +183,7 @@ export default function App() {
             return (
               <Plot
                 key = {item.id}
-                className="max-w-96 max-h-96 my-8 h-auto shadow-md border"
+                className="w-96 h-96 my-8 h-auto shadow-md border"
                 data={[
                   {
                     x: item.data.xValues,

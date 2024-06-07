@@ -1,12 +1,14 @@
-import dataclasses
+import json
 import logging
+import queue
 import signal
 from typing import Callable
-import queue
 from uuid import uuid4
 
 import numpy as np
 import zmq
+
+from .beamline_events import Event, Start, Stop
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -37,31 +39,93 @@ def handle_sigterm(signum, frame):
 # Register the handler for SIGTERM
 signal.signal(signal.SIGTERM, handle_sigterm)
 
-@dataclasses.dataclass
-class Start():
-    metadata: dict
 
-
-@dataclasses.dataclass
-class Event():
-    image_info: dict
-    image: np.ndarray
-
-
-@dataclasses.dataclass
-class Stop():
-    metadata: dict
-
-
-class ZMQImageListener:
+class LabviewListener:
     def __init__(
         self,
+        raw_message_queue: queue.Queue,
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
-        self.messages = queue.Queue()
+        self.raw_message_queue = raw_message_queue
+        self.stop = False
+
+    def start(self):
+        ctx = zmq.Context()
+        socket = ctx.socket(zmq.SUB)
+        logger.info(f"binding to: {self.zmq_pub_address}:{self.zmq_pub_port}")
+        socket.connect(f"{self.zmq_pub_address}:{self.zmq_pub_port}")
+        socket.setsockopt(zmq.SUBSCRIBE, b"")
+
+        image_info = {}
+        frame_num = 0
+        while True:
+            try:
+                if self.stop or received_sigterm["received"]:
+                    logger.info("Stopping listener.")
+                    break
+                message = socket.recv()
+                try:
+                    message_json = json.loads(message)
+                except:
+                    image = message
+                    message_json = None
+
+                if message_json:
+                    # logger.info(f"{message=}")
+                    message_type = message_json["msg_type"]
+                    if message_type == "start":
+                        message_json[
+                            "scan_name"
+                        ] = f"temporary scan name{uuid4()}"  # temporary
+                        self.raw_message_queue.put(Start(message_json))
+
+                        logger.info(f"start: {message}")
+                        continue
+                    if message_type == "metadata":
+                        self.raw_message_queue.put(Stop(message_json))
+                        image_info = {}
+                        frame_num = 0
+                        continue
+                    if message_type == "image":
+                        image_info = {
+                            "shape": (message_json["Width"], message_json["Height"]),
+                            "dtype": DATATYPE_MAP.get(message_json["data_type"]),
+                        }
+                        continue
+                else:  # must be an image
+                    if "dtype" not in image_info:
+                        logger.error("Out of order messages.")
+                        continue
+                    array_received = np.frombuffer(
+                        image, dtype=image_info["dtype"]
+                    ).reshape(image_info["shape"])
+                    if self.raw_message_queue.qsize() > 100:
+                        self.raw_message_queue.get()  # Remove oldest item from the queue
+                    self.raw_message_queue.put(
+                        Event(frame_num, image_info, array_received)
+                    )
+                    frame_num += 1
+
+            except Exception as e:
+                logger.error(e)
+
+    def stop(self):
+        self.stop = True
+
+
+class LabviewListener2:
+    def __init__(
+        self,
+        raw_message_queue: queue.Queue,
+        zmq_pub_address: str = "tcp://127.0.0.1",
+        zmq_pub_port: int = 5555,
+    ):
+        self.zmq_pub_address = zmq_pub_address
+        self.zmq_pub_port = zmq_pub_port
+        self.raw_message_queue = raw_message_queue
         self.stop = False
 
     def start(self):
@@ -76,18 +140,17 @@ class ZMQImageListener:
                 if self.stop or received_sigterm["received"]:
                     logger.info("Stopping listener.")
                     break
-
                 message = socket.recv_json()
-                logger.info(f"{message=}")
+                # logger.info(f"{message=}")
                 message_type = message["msg_type"]
                 if message_type == "start":
                     message["scan_name"] = f"temporary scan name{uuid4()}"  # temporary
-                    self.messages.put(Start(message))
+                    self.raw_message_queue.put(Start(message))
                     if logger.getEffectiveLevel() == logging.DEBUG:
                         logger.debug(f"start: {message}")
                     continue
                 if message_type == "metadata":
-                    self.messages.put(Stop())
+                    self.raw_message_queue.put(Stop(message))
                     continue
                 if message_type != "image":
                     logger.error(f"Received unexpected message: {message}")
@@ -110,7 +173,7 @@ class ZMQImageListener:
                     logger.debug(
                         f"received: {frame_number=} {shape=} {dtype=} {array_received}"
                     )
-                self.messages.put(Event(message, array_received))
+                self.raw_message_queue.put(Event(message, array_received))
 
             except Exception as e:
                 logger.error(e)

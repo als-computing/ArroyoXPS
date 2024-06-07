@@ -1,24 +1,70 @@
 import logging
 import os
+import queue
+import threading
+import time
 
 import numpy as np
 import typer
-from tiled.client import from_uri
+import uvicorn
+from tiled.client import from_uri, node
 
-from .listener import ZMQImageListener
+from .app import app
+from .beamline_events import Event, Start, Stop
+from .labview import LabviewListener
 from .log import setup_logger
 from .processor import XPSProcessor
-from .result_publisher import Result, XPSResultPublisher
 
-app = typer.Typer()
+cli_app = typer.Typer()
 
 setup_logger()
 logger = logging.getLogger("tr-ap-xps.cli")
 
-processor = None  # Declare processor as a global variable
+raw_message_queue = queue.Queue()
+processed_message_queue = queue.Queue()
 
 
-@app.command()
+def start_listener(listener: LabviewListener):
+    listener.start()
+
+
+def monitor_runs(runs_node: node):
+    message = None
+    while True:
+        try:
+            message = raw_message_queue.get(
+                timeout=1
+            )  # Timeout to prevent indefinite blocking
+        except queue.Empty:
+            pass
+        if not message:
+            continue
+        try:
+            if isinstance(message, Start):
+                processor = XPSProcessor(
+                    processed_message_queue,
+                    runs_node,
+                    message.metadata["scan_name"],
+                    message.metadata["frame_per_cycle"],
+                )
+
+            if isinstance(message, Event):
+                result = processor.process_frame(message)
+                if isinstance(message, Event):
+                    result = processor.process_frame(message)
+                    if processed_message_queue.qsize() > 100:
+                        processed_message_queue.get()
+
+                    processed_message_queue.put(result)
+
+            if isinstance(message, Stop):
+                processor = None
+        except Exception as e:
+            logger.error(e)
+        time.sleep(0.01)
+
+
+@cli_app.command()
 def listen(
     zmq_pub_address: str = "tcp://127.0.0.1",
     zmq_pub_port: int = 5555,
@@ -38,35 +84,20 @@ def listen(
         tiled_client.create_container("runs")
     runs_node = tiled_client["runs"]
 
-    result_publisher = XPSResultPublisher()
-
-    def publish_result(result: Result):
-        result_publisher.send_result(result)
-
-    def start_function(data: dict):
-        logger.info(f"start: {data}")
-        global processor
-        processor = XPSProcessor(publish_result, runs_node, data["scan_name"])
-
-    def event_function(frame_info: dict, image: np.ndarray):
-        if processor is None:
-            logger.error("Processor not started, ignoring frame.")
-            return
-        logger.info(f"frame: {frame_info=}")
-        processor.process_frame(frame_info, image)
-
-    def stop_function(data: dict):
-        if processor is None:
-            logger.error("Processor not started, ignoring stop.")
-            return
-        logger.info(f"stop: {data}")
-        processor.finish(data)
-
-    listener = ZMQImageListener(
-        start_function, event_function, stop_function, zmq_pub_address, zmq_pub_port
+    labview_listener = LabviewListener(
+        raw_message_queue, zmq_pub_address=zmq_pub_address, zmq_pub_port=zmq_pub_port
     )
-    listener.start()
+    labview_thread = threading.Thread(
+        name="LabviewListenerThread", target=start_listener, args=(labview_listener,)
+    )
+    labview_thread.start()
+
+    processor_thread = threading.Thread(
+        name="ProcessorThread", target=monitor_runs, args=(runs_node,)
+    )
+    processor_thread.start()
+    uvicorn.run("tr_ap_xps.app:app", host="0.0.0.0", port=8001, reload=True)
 
 
 if __name__ == "__main__":
-    app()
+    cli_app()

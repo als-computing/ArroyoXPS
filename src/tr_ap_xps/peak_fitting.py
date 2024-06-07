@@ -5,11 +5,19 @@ Specifically, the part related with base_line and block were removed.
 """
 
 import collections
+import warnings
 
 import numpy as np
 import pandas as pd
 from astropy.modeling import fitting, models
 from scipy import signal
+
+warnings.filterwarnings(
+    "ignore",
+    message="The fit may be unsuccessful; Maximum number of iterations reached.",
+    category=UserWarning,
+    module="astropy.modeling.optimizers",
+)
 
 
 # find the bins
@@ -283,16 +291,16 @@ def get_peaks(x_data, y_data, num_peaks, peak_shape):
     return return_list, unfit_list, fit_list, residual, base_list
 
 
-def peak_fit(array):
-    array = np.array(array)
-    assert array.ndim == 1, "Input array must be 1-dimensional"
-    x = np.arange(array.shape[0])
-    return_list, unfit_list, fit_list, residual, base_list = get_peaks(x, array, 2, "g")
+def peak_fit(one_d_array: np.ndarray):
+    assert one_d_array.ndim == 1, "Input array must be 1-dimensional"
+    x = np.arange(one_d_array.shape[0])
+    return_list, unfit_list, fit_list, residual, base_list = get_peaks(
+        x, one_d_array, 2, "g"
+    )
     # return table (location, amplitude, FWHM)
     result = collections.defaultdict(list)
     for peak in return_list:
         result["index"].append(peak["index"])
         result["amplitude"].append(peak["amplitude"])
         result["FWHM"].append(peak["FWHM"])
-    print(result)
     return pd.DataFrame(result)

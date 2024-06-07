@@ -1,5 +1,6 @@
 import functools
 import logging
+import queue
 import time
 from dataclasses import dataclass
 from typing import Callable
@@ -10,6 +11,7 @@ from tiled.client import node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
+from .beamline_events import Event
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
 
@@ -74,21 +76,22 @@ class TiledStruct:
 class XPSProcessor:
     def __init__(
         self,
-        results_function: Callable[[Result], None],
+        results_queue: queue.Queue,
         tiled_runs_node: node,
         run_id: str,
-        write_tiled_nth_frame: int = 10,
+        frames_per_cycle: int,
     ):
-        self.results_function = results_function
+        self.results_queue = results_queue
         self.run_id = run_id
-        self.tiled_struct = TiledStruct(
-            runs_node=tiled_runs_node,
-            run_node=tiled_runs_node.create_container(run_id),
-            lines_raw_node=None,
-            lines_filtered_node=None,
-            timing_node=None,
-        )
-        self.write_tiled_nth_frame = write_tiled_nth_frame
+        self.tiled_runs_node = tiled_runs_node
+        # self.tiled_struct = TiledStruct(
+        #     runs_node=tiled_runs_node,
+        #     run_node=tiled_runs_node.create_container(run_id),
+        #     lines_raw_node=None,
+        #     lines_filtered_node=None,
+        #     timing_node=None,
+        # )
+        self.frames_per_cycle = frames_per_cycle
         # self.lines_raw_node: node = None
         # self.lines_filtered_node: node = None
         # self.timing_node: node = None
@@ -101,33 +104,12 @@ class XPSProcessor:
     def _create_runs_container(self, tiled_node, name: str):
         return tiled_node.create_container(name)
 
-    def create_tiled_table_node(
-        self, parent_node: node, data_frame: pd.DataFrame, name: str
-    ):
-        if name not in parent_node:
-            structure = TableStructure.from_pandas(data_frame)
-            frame = parent_node.new(
-                "table",
-                [
-                    DataSource(
-                        structure_family="table",
-                        structure=structure,
-                        mimetype="text/csv",
-                    ),
-                ],
-                key=name,
-            )
-            frame.write(data_frame)
-            return frame
-        parent_node[name].append_partition(data_frame, 0)
-        return parent_node[name]
+    def _create_column_names(self, new_integrated_frame: np.array):
+        return [str(i) for i in range(0, len(new_integrated_frame))]
 
     @timer
     def _compute_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
-
-    def _create_column_names(self, new_integrated_frame: np.array):
-        return [str(i) for i in range(0, len(new_integrated_frame))]
 
     def _create_dataframe(
         self, frame_number: int, new_integrated_frame: np.array, column_names
@@ -139,52 +121,39 @@ class XPSProcessor:
         return df
 
     @timer
-    def _tiled_update_lines_raw(self, new_integrated_df: pd.DataFrame):
-        if "lines_raw" not in self.tiled_struct.run_node:
-            self.tiled_struct.lines_raw_node = self.create_tiled_table_node(
-                self.tiled_struct.run_node, new_integrated_df, "lines_raw"
-            )
-        else:
-            self.tiled_struct.lines_raw_node.append_partition(new_integrated_df, 0)
+    def _pd_to_np(self, frames_df: pd.DataFrame):
+        return frames_df.iloc[:, 1:].to_numpy()
 
-    # TODO: we do not have filtered, but 4 the other instead. So, update this part?
     @timer
-    def _tiled_update_lines_filtered(self, new_integrated_df: pd.DataFrame):
-        if "lines_filtered" not in self.tiled_struct.run_node:
-            self.tiled_struct.lines_filtered_node = self.create_tiled_table_node(
-                self.tiled_struct.run_node, new_integrated_df, "lines_filtered"
-            )
-        else:
-            self.tiled_struct.lines_filtered_node.append_partition(new_integrated_df, 0)
+    def _fit_peak(self, integrated_frame: np.ndarray):
+        peak_fit(integrated_frame)
 
     @timer
     def _integrated_frames_pd_to_np(self, integrated_frames_df: pd.DataFrame):
         return integrated_frames_df.iloc[:, 1:].to_numpy()
 
     @timer
-    def _integrated_filtered_frames_pd_to_np(
-        self, integrated_filtered_frames_df: pd.DataFrame
-    ):
-        return integrated_filtered_frames_df.iloc[:, 1:].to_numpy()
+    def _calculate_fft_items(nd_array: np.array, repeat_factor: int, width: int):
+        return calculate_fft_items(nd_array, repeat_factor, width)
 
     @timer
-    def _send_result(self, result: Result):
-        self.results_function(result)
+    def _peak_fit(self, frame: np.ndarray):
+        return peak_fit(frame)
 
-    def process_frame(self, frame_info: dict, curr_frame: np.array):
+    def process_frame(self, event: Event):
         # Compute horizontally-integrated frame
-        new_integrated_frame = self._compute_mean(curr_frame)
+        new_integrated_frame = self._compute_mean(event.image)
 
-        # Peak detection on new_integrated_frame
-        detected_peaks_df = peak_fit(new_integrated_frame)
+        # # Peak detection on new_integrated_frame
+        # detected_peaks_df = self._fit_peak(new_integrated_frame)
 
         # Compute filtered integrated frames
-        # new_filtered_frame = (
-        #     new_integrated_frame  # placeholder, until we have filtering code
-        # )
+        new_filtered_frame = (
+            new_integrated_frame  # placeholder, until we have filtering code
+        )
 
         # Column names for the dataframes
-        frame_number = frame_info["Frame Number"]
+        frame_number = event.frame_num
         column_names = self._create_column_names(new_integrated_frame)
         new_integrated_df = self._create_dataframe(
             frame_number, new_integrated_frame, column_names
@@ -202,7 +171,7 @@ class XPSProcessor:
         )
 
         # Things to do every so often
-        if frame_number % self.write_tiled_nth_frame == 0:
+        if frame_number % self.frames_per_cycle == 0:
             integrated_frames_np = self._integrated_frames_pd_to_np(
                 self.integrated_frames_df
             )
@@ -210,7 +179,7 @@ class XPSProcessor:
             vfft_np, sum_np, ifft_np = calculate_fft_items(
                 integrated_frames_np, repeat_factor=20, width=0
             )
-
+            detected_peaks_df = self._peak_fit(new_integrated_frame)
             result = Result(
                 frame_number,
                 integrated_frames_np,
@@ -219,7 +188,7 @@ class XPSProcessor:
                 ifft_np,
                 sum_np,
             )
-            self._send_result(result)
+            return result
             # TODO add tiled persistence later
             # self._tiled_update_lines_raw(new_integrated_df)
             # self.detected_peaks

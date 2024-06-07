@@ -177,3 +177,6 @@ zarr_utils.py
 data/
 
 .vscode/
+
+
+node_modules/

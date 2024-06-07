@@ -1,4 +1,4 @@
-# Getting Started 
+# Getting Started
 
 This app provides several canvases and plot.js plots for viewing data from a websocket. The canvases are made to render data from base 64 encoded jpeg. The plots are made to generate a Gaussian distribution based on the X position of peak, Y peak value, and Full Width Half Max value.
 
@@ -26,5 +26,3 @@ The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-

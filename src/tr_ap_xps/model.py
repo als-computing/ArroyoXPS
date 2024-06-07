@@ -1,6 +1,17 @@
 import dataclasses
 
 import numpy
+import pandas
+
+
+@dataclasses.dataclass
+class Result:
+    frame_number: int
+    integrated_frame: numpy.ndarray
+    detected_peaks: pandas.DataFrame
+    vfft: numpy.ndarray
+    ifft: numpy.ndarray
+    sum: numpy.ndarray
 
 
 @dataclasses.dataclass

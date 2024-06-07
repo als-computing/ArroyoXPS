@@ -1,13 +1,13 @@
 import json
 import logging
-import queue
 import signal
+import threading
 from uuid import uuid4
 
 import numpy as np
 import zmq
 
-from .beamline_events import Event, Start, Stop
+from .model import Event, Start, Stop
 from .shared_queue import raw_message_queue
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
@@ -49,8 +49,11 @@ class LabviewListener:
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
         self.stop = False
+        self.thread = threading.Thread(target=self.listen, name="LabviewListenerThread")
+        self.thread.daemon = True
+        self.thread.start()
 
-    def start(self):
+    def listen(self):
         ctx = zmq.Context()
         socket = ctx.socket(zmq.SUB)
         logger.info(f"binding to: {self.zmq_pub_address}:{self.zmq_pub_port}")
@@ -59,6 +62,7 @@ class LabviewListener:
 
         image_info = {}
         frame_num = 0
+
         while True:
             try:
                 if self.stop or received_sigterm["received"]:
@@ -67,7 +71,7 @@ class LabviewListener:
                 message = socket.recv()
                 try:
                     message_json = json.loads(message)
-                except:
+                except Exception:
                     image = message
                     message_json = None
 

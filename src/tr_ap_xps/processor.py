@@ -3,29 +3,21 @@ import logging
 import queue
 import time
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 import pandas as pd
 from tiled.client import node
-from tiled.structures.data_source import DataSource
-from tiled.structures.table import TableStructure
 
-from .beamline_events import Event
 from .fft import calculate_fft_items
+from .model import Event, Start, Stop
 from .peak_fitting import peak_fit
+from .shared_queue import Result, processed_message_queue, raw_message_queue
+
+# from tiled.structures.data_source import DataSource
+# from tiled.structures.table import TableStructure
+
 
 logger = logging.getLogger("tr-ap-xps.writer")
-
-
-@dataclass
-class Result:
-    frame_number: int
-    integrated_frame: np.ndarray
-    detected_peaks: pd.DataFrame
-    vfft: np.ndarray
-    ifft: np.ndarray
-    sum: np.ndarray
 
 
 class TimingDecorator:
@@ -139,9 +131,9 @@ class XPSProcessor:
         new_integrated_frame = self._compute_mean(event.image)
 
         # Compute filtered integrated frames
-        new_filtered_frame = (
-            new_integrated_frame  # placeholder, until we have filtering code
-        )
+        # new_filtered_frame = (
+        #     new_integrated_frame  # placeholder, until we have filtering code
+        # )
 
         # Column names for the dataframes
         frame_number = event.frame_num
@@ -194,3 +186,38 @@ class XPSProcessor:
             )
         finally:
             timer.reset()
+
+
+def monitor_runs(runs_node: node):
+    message = None
+    processor = None
+    while True:
+        try:
+            message = raw_message_queue.get(
+                timeout=1
+            )  # Timeout to prevent indefinite blocking
+        except queue.Empty:
+            pass
+        if not message:
+            continue
+        try:
+            if isinstance(message, Start):
+                processor = XPSProcessor(
+                    runs_node,
+                    message.metadata["scan_name"],
+                    message.metadata["frame_per_cycle"],
+                )
+                continue
+
+            if isinstance(message, Event):
+                result = processor.process_frame(message)
+                if result:
+                    if processed_message_queue.qsize() > 100:
+                        processed_message_queue.get()
+                    processed_message_queue.put(result)
+                continue
+            if isinstance(message, Stop):
+                processor = None
+        except Exception as e:
+            logger.exception(e)
+        time.sleep(0.01)

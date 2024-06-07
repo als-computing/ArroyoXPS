@@ -14,6 +14,7 @@ class RandomLabViewSimulator:
         self.ctx = zmq.Context()
         self.socket = self.ctx.socket(zmq.PUB)
         self.socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
+        print(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 
     def _send_image(self, image: np.ndarray):
         self.socket.send(image)
@@ -56,6 +57,7 @@ class LabViewSimulator:
         self.ctx = zmq.Context()
         self.socket = self.ctx.socket(zmq.PUB)
         self.socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
+        print(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
         self.pickle_dir = pickle_dir
 
     def _send_image(self, image: np.ndarray):

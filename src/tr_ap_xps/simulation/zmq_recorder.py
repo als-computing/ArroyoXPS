@@ -5,7 +5,7 @@ from pathlib import Path
 import typer
 import zmq
 
-from .log_utils import setup_logger
+from ..log_utils import setup_logger
 
 logger = logging.getLogger(__name__)
 

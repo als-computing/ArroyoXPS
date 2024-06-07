@@ -84,7 +84,7 @@ class LabViewSimulator:
                 # print(f"{file_name=}  {data[0:20]}")
                 self.socket.send(data)
                 time.sleep(0.1)
-            # print(f"send {len(sorted_messages.keys())} message")
+            print(f"send {len(sorted_messages.keys())} message")
             time.sleep(5)
 
     def finish(self):

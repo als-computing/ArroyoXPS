@@ -2,13 +2,13 @@ import json
 import logging
 import queue
 import signal
-from typing import Callable
 from uuid import uuid4
 
 import numpy as np
 import zmq
 
 from .beamline_events import Event, Start, Stop
+from .shared_queue import raw_message_queue
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -43,13 +43,11 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 class LabviewListener:
     def __init__(
         self,
-        raw_message_queue: queue.Queue,
         zmq_pub_address: str = "tcp://127.0.0.1",
         zmq_pub_port: int = 5555,
     ):
         self.zmq_pub_address = zmq_pub_address
         self.zmq_pub_port = zmq_pub_port
-        self.raw_message_queue = raw_message_queue
         self.stop = False
 
     def start(self):
@@ -80,12 +78,12 @@ class LabviewListener:
                         message_json[
                             "scan_name"
                         ] = f"temporary scan name{uuid4()}"  # temporary
-                        self.raw_message_queue.put(Start(message_json))
+                        raw_message_queue.put(Start(message_json))
 
                         logger.info(f"start: {message}")
                         continue
                     if message_type == "metadata":
-                        self.raw_message_queue.put(Stop(message_json))
+                        raw_message_queue.put(Stop(message_json))
                         image_info = {}
                         frame_num = 0
                         continue
@@ -102,83 +100,13 @@ class LabviewListener:
                     array_received = np.frombuffer(
                         image, dtype=image_info["dtype"]
                     ).reshape(image_info["shape"])
-                    if self.raw_message_queue.qsize() > 100:
-                        self.raw_message_queue.get()  # Remove oldest item from the queue
-                    self.raw_message_queue.put(
-                        Event(frame_num, image_info, array_received)
-                    )
+                    if raw_message_queue.qsize() > 100:
+                        raw_message_queue.get()  # Remove oldest item from the queue
+                    raw_message_queue.put(Event(frame_num, image_info, array_received))
                     frame_num += 1
 
             except Exception as e:
                 logger.error(e)
-
-    def stop(self):
-        self.stop = True
-
-
-class LabviewListener2:
-    def __init__(
-        self,
-        raw_message_queue: queue.Queue,
-        zmq_pub_address: str = "tcp://127.0.0.1",
-        zmq_pub_port: int = 5555,
-    ):
-        self.zmq_pub_address = zmq_pub_address
-        self.zmq_pub_port = zmq_pub_port
-        self.raw_message_queue = raw_message_queue
-        self.stop = False
-
-    def start(self):
-        ctx = zmq.Context()
-        socket = ctx.socket(zmq.SUB)
-        logger.info(f"binding to: {self.zmq_pub_address}:{self.zmq_pub_port}")
-        socket.connect(f"{self.zmq_pub_address}:{self.zmq_pub_port}")
-        socket.setsockopt(zmq.SUBSCRIBE, b"")
-
-        while True:
-            try:
-                if self.stop or received_sigterm["received"]:
-                    logger.info("Stopping listener.")
-                    break
-                message = socket.recv_json()
-                # logger.info(f"{message=}")
-                message_type = message["msg_type"]
-                if message_type == "start":
-                    message["scan_name"] = f"temporary scan name{uuid4()}"  # temporary
-                    self.raw_message_queue.put(Start(message))
-                    if logger.getEffectiveLevel() == logging.DEBUG:
-                        logger.debug(f"start: {message}")
-                    continue
-                if message_type == "metadata":
-                    self.raw_message_queue.put(Stop(message))
-                    continue
-                if message_type != "image":
-                    logger.error(f"Received unexpected message: {message}")
-                    continue
-                # Must be an event with an image
-                image_info = message
-                if logger.getEffectiveLevel() == logging.DEBUG:
-                    logger.debug(f"event: {image_info}")
-
-                # Image should be the next thing received
-                buffer = socket.recv()
-                shape = (image_info["Width"], image_info["Height"])
-                frame_number = image_info["Frame Number"]
-                dtype = DATATYPE_MAP.get(image_info["data_type"])
-                if not dtype:
-                    logger.error(f"Received unexpected data type: {image_info}")
-                    continue
-                array_received = np.frombuffer(buffer, dtype=dtype).reshape(shape)
-                if logger.getEffectiveLevel() == logging.DEBUG:
-                    logger.debug(
-                        f"received: {frame_number=} {shape=} {dtype=} {array_received}"
-                    )
-                self.raw_message_queue.put(Event(message, array_received))
-
-            except Exception as e:
-                logger.error(e)
-                if message:
-                    logger.exception(f"Error dealing with {message=}")
 
     def stop(self):
         self.stop = True

@@ -76,12 +76,10 @@ class TiledStruct:
 class XPSProcessor:
     def __init__(
         self,
-        results_queue: queue.Queue,
         tiled_runs_node: node,
         run_id: str,
         frames_per_cycle: int,
     ):
-        self.results_queue = results_queue
         self.run_id = run_id
         self.tiled_runs_node = tiled_runs_node
         # self.tiled_struct = TiledStruct(
@@ -126,7 +124,7 @@ class XPSProcessor:
 
     @timer
     def _fit_peak(self, integrated_frame: np.ndarray):
-        peak_fit(integrated_frame)
+        return peak_fit(integrated_frame)
 
     @timer
     def _integrated_frames_pd_to_np(self, integrated_frames_df: pd.DataFrame):
@@ -136,16 +134,9 @@ class XPSProcessor:
     def _calculate_fft_items(nd_array: np.array, repeat_factor: int, width: int):
         return calculate_fft_items(nd_array, repeat_factor, width)
 
-    @timer
-    def _peak_fit(self, frame: np.ndarray):
-        return peak_fit(frame)
-
     def process_frame(self, event: Event):
         # Compute horizontally-integrated frame
         new_integrated_frame = self._compute_mean(event.image)
-
-        # # Peak detection on new_integrated_frame
-        # detected_peaks_df = self._fit_peak(new_integrated_frame)
 
         # Compute filtered integrated frames
         new_filtered_frame = (
@@ -179,7 +170,7 @@ class XPSProcessor:
             vfft_np, sum_np, ifft_np = calculate_fft_items(
                 integrated_frames_np, repeat_factor=20, width=0
             )
-            detected_peaks_df = self._peak_fit(new_integrated_frame)
+            detected_peaks_df = self._fit_peak(new_integrated_frame)
             result = Result(
                 frame_number,
                 integrated_frames_np,
@@ -193,8 +184,8 @@ class XPSProcessor:
             # self._tiled_update_lines_raw(new_integrated_df)
             # self.detected_peaks
             # TODO: update
-
         timer.end_frame()
+        return None
 
     def finish(self, stop_data: dict):
         try:

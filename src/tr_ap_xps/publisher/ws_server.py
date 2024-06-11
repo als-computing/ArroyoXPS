@@ -10,10 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
 from ..log_utils import setup_logger
+from .result_subscriber import subscriber
 
 logger = logging.getLogger("ws-publisher")
 setup_logger(logger)
-from .result_subscriber import subscriber
+
 
 app = FastAPI()
 origins = [

@@ -4,7 +4,6 @@ import threading
 import time
 
 import typer
-from tiled.client import from_uri
 
 from ..log_utils import setup_logger
 from ..model import Event, Start, Stop
@@ -86,7 +85,7 @@ def monitor_runs():
             if isinstance(message, Stop):
                 if processor:
                     processor.finish(message)
-                proccessor = None
+                processor = None
         except Exception as e:
             logger.exception(e)
         time.sleep(0.01)

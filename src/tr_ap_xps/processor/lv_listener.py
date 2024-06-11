@@ -7,7 +7,7 @@ from uuid import uuid4
 import numpy as np
 import zmq
 
-from .model import Event, Start, Stop
+from ..model import Event, Start, Stop
 from .shared_queue import raw_message_queue
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
@@ -79,9 +79,7 @@ class LabviewListener:
                     # logger.info(f"{message=}")
                     message_type = message_json["msg_type"]
                     if message_type == "start":
-                        message_json[
-                            "scan_name"
-                        ] = f"temporary scan name{uuid4()}"  # temporary
+                        message_json["scan_name"] = f"scan {uuid4()}"  # temporary
                         raw_message_queue.put(Start(message_json))
 
                         logger.info(f"start: {message}")

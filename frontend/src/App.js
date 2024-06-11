@@ -101,14 +101,14 @@ export default function App() {
                           const x_peak = plot.x;
                           const y_peak = plot.h;
                           const fwhm = plot.fwhm;
-      
+
                           const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
                           const xValues = [];
                           const yValues = [];
                           const x_min = x_peak - 5 * sigma;
                           const x_max = x_peak + 5 * sigma;
                           const step = (x_max - x_min) / 100;
-      
+
                           for (let x = x_min; x <= x_max; x += step) {
                             const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
                             xValues.push(x);
@@ -159,7 +159,7 @@ export default function App() {
           newArrayData.push(plot);
         })
         return [...newArrayData, ...newPlot];
-      })      
+      })
     }
 
     const closeWebSocket = () => {
@@ -213,7 +213,7 @@ export default function App() {
         id: 'p1',
         title: 'Fitted peaks - Cumulative',
         data: gaussianData1
-      }, 
+      },
     ]
 
     return (
@@ -252,7 +252,7 @@ export default function App() {
               />
             )
           })}
-          
+
         </div>
         <div className="m-auto w-fit my-8">
           <div className="flex border border-slate-700 rounded-md items-center justify-center space-x-6 py-8 px-8 bg-slate-200 shadow-sm">

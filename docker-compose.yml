@@ -11,15 +11,44 @@ services:
     volumes:
       - ./services/tiled/deploy:/deploy:Z
       - ./data:/data:Z
+    restart: unless-stopped
     networks:
-      mle_net:
-  listener:
+      aps_net:
+
+  processor:
+    # command: python -m tr_ap_xps.processor.cli --zmq-pub-address tcp://simulator
+    command: sleep 888888
     build:
       context: .
+      dockerfile: Dockerfile_processor
+    restart: unless-stopped
     volumes:
       - .:/app:Z
     networks:
-      mle_net:
+      aps_net:
+
+  wspublisher:
+    command: sleep 9899999
+    build:
+      context: .
+      dockerfile: Dockerfile_wspublisher
+    restart: unless-stopped
+    volumes:
+      - .:/app:Z
+    networks:
+      aps_net:
+
+
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile_labviewsim
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /home/dmcreynolds/scan2:/app/sample_data/pickled_scan
+    networks:
+      aps_net:
 networks:
-  mle_net:
+  aps_net:
     driver: bridge

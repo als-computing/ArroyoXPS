@@ -8,10 +8,12 @@ import numpy as np
 import pandas as pd
 from tiled.client import node
 
-from .fft import calculate_fft_items
-from .model import Event, Start, Stop
-from .peak_fitting import peak_fit
+from ..model import Event, Start, Stop
+from .pipeline.fft import calculate_fft_items
+from .pipeline.peak_fitting import peak_fit
 from .shared_queue import Result, processed_message_queue, raw_message_queue
+
+# from ..tiled import create_array_node, create_table_node
 
 # from tiled.structures.data_source import DataSource
 # from tiled.structures.table import TableStructure
@@ -56,36 +58,16 @@ class TimingDecorator:
 timer = TimingDecorator()
 
 
-@dataclass
-class TiledStruct:
-    runs_node: node
-    run_node: node
-    lines_raw_node: node
-    lines_filtered_node: node
-    timing_node: node
-
-
 class XPSProcessor:
     def __init__(
         self,
-        tiled_runs_node: node,
         run_id: str,
         frames_per_cycle: int,
     ):
         self.run_id = run_id
-        self.tiled_runs_node = tiled_runs_node
-        # self.tiled_struct = TiledStruct(
-        #     runs_node=tiled_runs_node,
-        #     run_node=tiled_runs_node.create_container(run_id),
-        #     lines_raw_node=None,
-        #     lines_filtered_node=None,
-        #     timing_node=None,
-        # )
         self.frames_per_cycle = frames_per_cycle
-        # self.lines_raw_node: node = None
-        # self.lines_filtered_node: node = None
-        # self.timing_node: node = None
         self.integrated_frames_df: pd.DataFrame = None
+        self.last_result: Result = None
         self.detected_peaks: pd.DataFrame = None
         self.vfft: pd.DataFrame = None
         self.ifft: pd.DataFrame = None
@@ -130,20 +112,12 @@ class XPSProcessor:
         # Compute horizontally-integrated frame
         new_integrated_frame = self._compute_mean(event.image)
 
-        # Compute filtered integrated frames
-        # new_filtered_frame = (
-        #     new_integrated_frame  # placeholder, until we have filtering code
-        # )
-
         # Column names for the dataframes
         frame_number = event.frame_num
         column_names = self._create_column_names(new_integrated_frame)
         new_integrated_df = self._create_dataframe(
             frame_number, new_integrated_frame, column_names
         )
-        # new_filtered_df = self._create_dataframe(
-        #     frame_number, new_filtered_frame, column_names
-        # )
 
         # Update the local cached dataframes
         self.integrated_frames_df = (
@@ -155,22 +129,23 @@ class XPSProcessor:
 
         # Things to do every so often
         if frame_number % self.frames_per_cycle == 0:
-            integrated_frames_np = self._integrated_frames_pd_to_np(
+            self.integrated_frames_np = self._integrated_frames_pd_to_np(
                 self.integrated_frames_df
             )
             # TODO: allow user to select repeat factor and width on UI
             vfft_np, sum_np, ifft_np = calculate_fft_items(
-                integrated_frames_np, repeat_factor=20, width=0
+                self.integrated_frames_np, repeat_factor=20, width=0
             )
             detected_peaks_df = self._fit_peak(new_integrated_frame)
             result = Result(
                 frame_number,
-                integrated_frames_np,
+                self.integrated_frames_np,
                 detected_peaks_df,
                 vfft_np,
                 ifft_np,
                 sum_np,
             )
+            self.last_result = result
             return result
             # TODO add tiled persistence later
             # self._tiled_update_lines_raw(new_integrated_df)
@@ -181,43 +156,26 @@ class XPSProcessor:
 
     def finish(self, stop_data: dict):
         try:
-            self.timing_node = self.create_tiled_table_node(
-                self.tiled_struct.run_node, timer.timing_dataframe, "timer"
-            )
+            logger.info("finishing")
+            # create_table_node(
+            #     self.run_node, timer.timing_dataframe, "timer"
+            # )
+
+            # create_array_node(
+            #       self.run_node, self.last_result.integrated_frame, "integrated_frame"
+            # )
+
+            # create_array_node(
+            #       self.run_node, self.last_result.ifft, "ifft"
+            # )
+
+            # create_array_node(
+            #       self.run_node, self.last_result.vfft, "vfft"
+            # )
+
+            # create_table_node(
+            #       self.run_node, self.last_result.detected_peaks, "detected_peaks"
+            # )
+
         finally:
             timer.reset()
-
-
-def monitor_runs(runs_node: node):
-    message = None
-    processor = None
-    while True:
-        try:
-            message = raw_message_queue.get(
-                timeout=1
-            )  # Timeout to prevent indefinite blocking
-        except queue.Empty:
-            pass
-        if not message:
-            continue
-        try:
-            if isinstance(message, Start):
-                processor = XPSProcessor(
-                    runs_node,
-                    message.metadata["scan_name"],
-                    message.metadata["frame_per_cycle"],
-                )
-                continue
-
-            if isinstance(message, Event):
-                result = processor.process_frame(message)
-                if result:
-                    if processed_message_queue.qsize() > 100:
-                        processed_message_queue.get()
-                    processed_message_queue.put(result)
-                continue
-            if isinstance(message, Stop):
-                processor = None
-        except Exception as e:
-            logger.exception(e)
-        time.sleep(0.01)

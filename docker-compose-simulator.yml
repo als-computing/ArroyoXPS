@@ -1,0 +1,16 @@
+
+version: "3.3"
+services:
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile_labviewsim
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /home/dmcreynolds/scan2:/app/sample_data/pickled_scan
+    networks:
+      aps_net:
+networks:
+  aps_net:
+    driver: bridge

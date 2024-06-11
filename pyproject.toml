@@ -14,16 +14,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "astropy",
-    "fastapi",
-    "python-dotenv",
-    "pandas",
-    "numpy",
-    "pyzmq",
-    "tiled[client]==v0.1.a122",
-    "typer",
-    "uvicorn",
-    "zarr"
+
 ]
 
 [project.optional-dependencies]
@@ -40,6 +31,29 @@ notebook = [
     "jupyterlab",
     "matplotlib",
     "python-dotenv"
+]
+
+processor = [
+    "astropy",
+    "python-dotenv",
+    "pandas",
+    "numpy",
+    "pyzmq",
+    "tiled[client]==v0.1.a122",
+    "typer",
+    "uvicorn"
+]
+
+ws_publisher = [
+    "fastapi",
+    "python-dotenv",
+    "pandas",
+    "numpy",
+    "Pillow",
+    "pyzmq",
+    "tiled[client]==v0.1.a122",
+    "typer",
+    "uvicorn"
 ]
 
 [project.urls]

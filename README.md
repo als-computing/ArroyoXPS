@@ -47,14 +47,14 @@ The `docker-compose.yaml` file contains the following services:
 With all that, the system can be started with a single command:
 
 ```
-docker-compose -d up
+docker-compose up -d
 ```
 
 ## OPTIONAL
 If you're not sitting at the beamline and want to test out the system, you can use the optional Labview simulator service. This is described in `docker-compose-simulator.yaml`. To start this up:
 
 ```
-docker-compose -f docker-compose-simulator.yaml -d up
+docker-compose -f docker-compose-simulator.yaml up -d
 ```
 
 # Developer Setup

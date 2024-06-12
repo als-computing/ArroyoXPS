@@ -41,7 +41,7 @@ The `docker-compose.yaml` file contains the following services:
 - `tiled` a data server where result information gets saved
 - `processor` a service that subscribes on a ZMQ pub/sub socket for raw data from Labview, processes the data, and publishes it again on a ZMQ pub/sub socket
 - `wspublisher` a service that subscribtes to the Result ZMQ publisher and republishes result information to websockets, available for cnosumption by various clients, including web browsers
-- `frontend` - TBD, an nginx server that serves the frontend browser application
+- `frontend` - an nginx server that serves the frontend browser application
 - `tiled_writer` - TBD, a service that subscribtes to the Result ZMQ publisher and writes results to Tiled
 
 With all that, the system can be started with a single command:

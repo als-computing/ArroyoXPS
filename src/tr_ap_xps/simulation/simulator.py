@@ -12,7 +12,7 @@ from ..log_utils import setup_logger
 
 IMAGE_METADATA = {"Frame Number": 0, "Width": 1000, "Height": 100, "Type": "I32"}
 
-app = typer.Typer()
+app = typer.Typer(help="Labview frame simulator")
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class LabViewSimulator:
             for file_name, data in sorted_messages.items():
                 logger.debug(f"  {file_name=}")
                 self.socket.send(data)
-                time.sleep(0.05)
+                time.sleep(0.01)
             logger.info(f"send {len(sorted_messages.keys())} message")
             time.sleep(5)
 
@@ -105,6 +105,7 @@ def start(
 ) -> None:
     setup_logger(logger)
     logger.setLevel(log_level.upper())
+    logger.info(f"{log_level=}")
     logger.debug("DEBUG LOGGING SET")
     logger.info(f"zmq_pub_address: {zmq_pub_address}")
     logger.info(f"zmq_pub_port: {zmq_pub_port}")
@@ -122,4 +123,4 @@ def start(
 
 
 if __name__ == "__main__":
-    start()
+    app()

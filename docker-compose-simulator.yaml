@@ -1,14 +1,12 @@
-
 version: "3.3"
 services:
   simulator:
+    command: ["python", "-m", "tr_ap_xps.simulation.simulator", "--log-level", "INFO"]
     build:
       context: .
       dockerfile: Dockerfile_labviewsim
-    restart: unless-stopped
     volumes:
-      - .:/app
-      - /home/dmcreynolds/scan2:/app/sample_data/pickled_scan
+      - ${SIMULATOR_DATA_FOLDER-./sample_data/pickled_scan}:/app/sample_data/pickled_scan
     networks:
       aps_net:
 networks:

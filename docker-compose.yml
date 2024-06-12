@@ -17,7 +17,6 @@ services:
 
   processor:
     # command: python -m tr_ap_xps.processor.cli --zmq-pub-address tcp://simulator
-    command: sleep 888888
     build:
       context: .
       dockerfile: Dockerfile_processor
@@ -28,27 +27,18 @@ services:
       aps_net:
 
   wspublisher:
-    command: sleep 9899999
     build:
       context: .
       dockerfile: Dockerfile_wspublisher
     restart: unless-stopped
+    ports:
+      - "8001:8001"
     volumes:
       - .:/app:Z
     networks:
       aps_net:
 
 
-  simulator:
-    build:
-      context: .
-      dockerfile: Dockerfile_labviewsim
-    restart: unless-stopped
-    volumes:
-      - .:/app
-      - /home/dmcreynolds/scan2:/app/sample_data/pickled_scan
-    networks:
-      aps_net:
 networks:
   aps_net:
     driver: bridge

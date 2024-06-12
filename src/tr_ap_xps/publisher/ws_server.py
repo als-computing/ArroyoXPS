@@ -92,7 +92,6 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             result = await subscriber.receive_message()
-            logger.info("message received")
             raw = buffer_to_jpeg(
                 result.raw,
                 result.result_info["shape"],

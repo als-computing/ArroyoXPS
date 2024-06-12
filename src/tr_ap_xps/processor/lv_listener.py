@@ -1,14 +1,17 @@
 import json
 import logging
+import queue
 import signal
 import threading
+import time
 from uuid import uuid4
 
 import numpy as np
 import zmq
 
 from ..model import Event, Start, Stop
-from .shared_queue import raw_message_queue
+from .processor import XPSProcessor
+from .shared_queue import processed_message_queue, raw_message_queue
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -112,3 +115,47 @@ class LabviewListener:
 
     def stop(self):
         self.stop = True
+
+
+def monitor_runs():
+    message = None
+    processor = None
+    logger.info("Listening for messages from raw_message_queue")
+    issue_mid_scan_startup_warning = True
+    while True:
+        try:
+            message = raw_message_queue.get(
+                timeout=1
+            )  # Timeout to prevent indefinite blocking
+        except queue.Empty:
+            continue
+
+        try:
+            if isinstance(message, Start):
+                processor = XPSProcessor(
+                    message.metadata["scan_name"],
+                    message.metadata["frame_per_cycle"],
+                )
+                issue_mid_scan_startup_warning = False
+                continue
+
+            if isinstance(message, Event):
+                if issue_mid_scan_startup_warning:
+                    logger.warning("Was scan start before we were listening?")
+                    issue_mid_scan_startup_warning = False
+                if not processor:
+                    continue
+                result = processor.process_frame(message)
+                if result:
+                    if processed_message_queue.qsize() > 100:
+                        processed_message_queue.get()
+                    processed_message_queue.put(result)
+                continue
+            if isinstance(message, Stop):
+                if processor:
+                    processor.finish(message)
+                issue_mid_scan_startup_warning = True
+                processor = None
+        except Exception as e:
+            logger.exception(e)
+        time.sleep(0.01)

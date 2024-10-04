@@ -14,7 +14,16 @@ classifiers = [
 ]
 
 dependencies = [
-
+    "arroyo@git+https://github.com/als-computing/arroyo.git",
+    "astropy",
+    "dynaconf",
+    "python-dotenv",
+    "pandas",
+    "numpy",
+    "pyzmq",
+    "tiled[client]==v0.1.a122",
+    "typer",
+    "zarr"
 ]
 
 [project.optional-dependencies]

@@ -1,29 +1,22 @@
+import asyncio
 import functools
 import logging
 import time
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 import pandas as pd
+from arroyo.operator import AbstractOperator
+from arroyo.publisher import AbstractPublisher
 from tiled.client import node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
+from .schemas import XPSMessage, XPSRawEvent, XPSStart, XPSStop
 
 logger = logging.getLogger("tr-ap-xps.writer")
-
-
-@dataclass
-class Result:
-    frame_number: int
-    integrated_frame: np.ndarray
-    detected_peaks: pd.DataFrame
-    vfft: np.ndarray
-    ifft: np.ndarray
-    sum: np.ndarray
 
 
 class TimingDecorator:
@@ -71,15 +64,86 @@ class TiledStruct:
     timing_node: node
 
 
+class XPSOperator(AbstractOperator):
+    """
+    XPSOperator is responsible for handling XPS-related messages and processing frames.
+    Attributes:
+        publisher (AbstractPublisher): The publisher used to publish messages.
+        tiled_runs_node (node): The node containing tiled runs data.
+        xps_processor (XPSProcessor, optional): The processor used to handle XPS frames.
+    Methods:
+        __init__(publisher: AbstractPublisher, tiled_runs_node: node) -> None:
+            Initializes the XPSOperator with a publisher and a tiled runs node.
+        run(message: Message) -> None:
+            Asynchronously handles incoming messages. Depending on the message type,
+            it either starts the XPS processing, processes a frame, or stops the XPS processing.
+    """
+
+    def __init__(self, publisher: AbstractPublisher, tiled_runs_node: node) -> None:
+        self.publisher = publisher
+        self.tiled_runs_node = tiled_runs_node
+        self.xps_processor = None
+
+    async def run(self, message: XPSMessage) -> None:
+        """
+        Asynchronously handles different types of XPS messages. Handles the lifecycle of an XPSProcessor,
+        which is tied to the start and end of a run.
+
+        Args:
+            message (Message): The message to be processed. It can be one of the following types:
+                - XPSStart: Initializes the XPSProcessor and publishes the start message.
+                - XPSRawEvent: Processes a frame using the XPSProcessor and publishes the result.
+                - XPSStop: Finalizes the XPSProcessor and publishes the stop message.
+
+        Returns:
+            None
+        """
+        if isinstance(message, XPSStart):
+            self.publisher.publish(message)
+            self.xps_processor = XPSProcessor(self.tiled_runs_node, message)
+        elif isinstance(message, XPSRawEvent):
+            result: XPSRawEvent = await asyncio.to_thread(
+                self.xps_processor.process_frame, message
+            )
+            if result:
+                self.publisher.publish(XPSRawEvent)
+        elif isinstance(message, XPSStop):
+            self.publisher.publish(message)
+            self.xps_processor.finish()
+            self.xps_processor = None
+
+
 class XPSProcessor:
+    """
+    A class to process XPS (X-ray Photoelectron Spectroscopy) data.
+    Attributes
+    ----------
+    run_id : str
+        Identifier for the current run.
+    tiled_struct : TiledStruct
+        Structure to hold tiled data nodes.
+    write_tiled_nth_frame : int
+        Frequency of writing tiled frames.
+    integrated_frames_df : pd.DataFrame
+        DataFrame to store integrated frames.
+    integrated_filtered_frames_df : pd.DataFrame
+        DataFrame to store integrated filtered frames.
+    detected_peaks : pd.DataFrame
+        DataFrame to store detected peaks.
+    vfft : pd.DataFrame
+        DataFrame to store vertical FFT results.
+    ifft : pd.DataFrame
+        DataFrame to store inverse FFT results.
+    sum : pd.DataFrame
+        DataFrame to store sum results
+    """
+
     def __init__(
         self,
-        results_function: Callable[[Result], None],
         tiled_runs_node: node,
         run_id: str,
         write_tiled_nth_frame: int = 10,
     ):
-        self.results_function = results_function
         self.run_id = run_id
         self.tiled_struct = TiledStruct(
             runs_node=tiled_runs_node,
@@ -169,12 +233,13 @@ class XPSProcessor:
         return integrated_filtered_frames_df.iloc[:, 1:].to_numpy()
 
     @timer
-    def _send_result(self, result: Result):
+    def _send_result(self, result: XPSRawEvent):
         self.results_function(result)
 
-    def process_frame(self, frame_info: dict, curr_frame: np.array):
+    # def process_frame(self, frame_info: dict, curr_frame: np.array):
+    def process_frame(self, message: XPSRawEvent) -> None:
         # Compute horizontally-integrated frame
-        new_integrated_frame = self._compute_mean(curr_frame)
+        new_integrated_frame = self._compute_mean(message.frame)
 
         # Peak detection on new_integrated_frame
         detected_peaks_df = peak_fit(new_integrated_frame)
@@ -185,7 +250,7 @@ class XPSProcessor:
         )
 
         # Column names for the dataframes
-        frame_number = frame_info["Frame Number"]
+        frame_number = message.frame_number
         column_names = self._create_column_names(new_integrated_frame)
         new_integrated_df = self._create_dataframe(
             frame_number, new_integrated_frame, column_names
@@ -217,7 +282,7 @@ class XPSProcessor:
                 integrated_frames_np, repeat_factor=20, width=0
             )
 
-            result = Result(
+            result = XPSRawEvent(
                 frame_number,
                 integrated_frames_np,
                 detected_peaks_df,
@@ -225,10 +290,9 @@ class XPSProcessor:
                 ifft_np,
                 sum_np,
             )
-            self._send_result(result)
             self._tiled_update_lines_raw(new_integrated_df)
             self._tiled_update_lines_filtered(new_filtered_df)
-            # TODO: update
+            return result
 
         timer.end_frame()
 

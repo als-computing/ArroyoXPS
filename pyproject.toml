@@ -14,7 +14,9 @@ classifiers = [
 ]
 
 dependencies = [
+    "arroyo@git+https://github.com/als-computing/arroyo.git",
     "astropy",
+    "dynaconf",
     "python-dotenv",
     "pandas",
     "numpy",

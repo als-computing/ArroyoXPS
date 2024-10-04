@@ -177,3 +177,6 @@ zarr_utils.py
 data/
 
 .vscode/
+
+# Ignore dynaconf secret files
+.secrets.*

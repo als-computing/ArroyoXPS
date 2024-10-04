@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from tr_ap_xps.processor import Result, XPSProcessor
+from tr_ap_xps.operator import Result, XPSProcessor
 
 
 @pytest.fixture

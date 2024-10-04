@@ -167,5 +167,5 @@ data/
 
 .vscode/
 
-
-node_modules/
+# Ignore dynaconf secret files
+.secrets.*

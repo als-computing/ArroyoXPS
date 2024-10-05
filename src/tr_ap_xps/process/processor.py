@@ -1,4 +1,3 @@
-import asyncio
 import functools
 import logging
 import time
@@ -6,17 +5,27 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from arroyo.operator import AbstractOperator
-from arroyo.publisher import AbstractPublisher
-from tiled.client import node
+from tiled.client.node import Node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
-from .fft import calculate_fft_items
-from .peak_fitting import peak_fit
-from .schemas import XPSMessage, XPSRawEvent, XPSStart, XPSStop
+from ..schemas import XPSRawEvent
+from .pipeline.fft import calculate_fft_items
+from .pipeline.peak_fitting import peak_fit
+
+# from ..tiled import create_array_node, create_table_node
+
 
 logger = logging.getLogger("tr-ap-xps.writer")
+
+
+@dataclass
+class TiledStruct:
+    runs_node: Node
+    run_node: Node
+    lines_raw_node: Node
+    lines_filtered_node: Node
+    timing_node: Node
 
 
 class TimingDecorator:
@@ -55,64 +64,6 @@ class TimingDecorator:
 timer = TimingDecorator()
 
 
-@dataclass
-class TiledStruct:
-    runs_node: node
-    run_node: node
-    lines_raw_node: node
-    lines_filtered_node: node
-    timing_node: node
-
-
-class XPSOperator(AbstractOperator):
-    """
-    XPSOperator is responsible for handling XPS-related messages and processing frames.
-    Attributes:
-        publisher (AbstractPublisher): The publisher used to publish messages.
-        tiled_runs_node (node): The node containing tiled runs data.
-        xps_processor (XPSProcessor, optional): The processor used to handle XPS frames.
-    Methods:
-        __init__(publisher: AbstractPublisher, tiled_runs_node: node) -> None:
-            Initializes the XPSOperator with a publisher and a tiled runs node.
-        run(message: Message) -> None:
-            Asynchronously handles incoming messages. Depending on the message type,
-            it either starts the XPS processing, processes a frame, or stops the XPS processing.
-    """
-
-    def __init__(self, publisher: AbstractPublisher, tiled_runs_node: node) -> None:
-        self.publisher = publisher
-        self.tiled_runs_node = tiled_runs_node
-        self.xps_processor = None
-
-    async def run(self, message: XPSMessage) -> None:
-        """
-        Asynchronously handles different types of XPS messages. Handles the lifecycle of an XPSProcessor,
-        which is tied to the start and end of a run.
-
-        Args:
-            message (Message): The message to be processed. It can be one of the following types:
-                - XPSStart: Initializes the XPSProcessor and publishes the start message.
-                - XPSRawEvent: Processes a frame using the XPSProcessor and publishes the result.
-                - XPSStop: Finalizes the XPSProcessor and publishes the stop message.
-
-        Returns:
-            None
-        """
-        if isinstance(message, XPSStart):
-            self.publisher.publish(message)
-            self.xps_processor = XPSProcessor(self.tiled_runs_node, message)
-        elif isinstance(message, XPSRawEvent):
-            result: XPSRawEvent = await asyncio.to_thread(
-                self.xps_processor.process_frame, message
-            )
-            if result:
-                self.publisher.publish(XPSRawEvent)
-        elif isinstance(message, XPSStop):
-            self.publisher.publish(message)
-            self.xps_processor.finish()
-            self.xps_processor = None
-
-
 class XPSProcessor:
     """
     A class to process XPS (X-ray Photoelectron Spectroscopy) data.
@@ -140,7 +91,7 @@ class XPSProcessor:
 
     def __init__(
         self,
-        tiled_runs_node: node,
+        tiled_runs_node: Node,
         run_id: str,
         write_tiled_nth_frame: int = 10,
     ):
@@ -167,7 +118,7 @@ class XPSProcessor:
         return tiled_node.create_container(name)
 
     def create_tiled_table_node(
-        self, parent_node: node, data_frame: pd.DataFrame, name: str
+        self, parent_node: Node, data_frame: pd.DataFrame, name: str
     ):
         if name not in parent_node:
             structure = TableStructure.from_pandas(data_frame)

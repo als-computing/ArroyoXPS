@@ -54,15 +54,7 @@ processor = [
 ]
 
 ws_publisher = [
-    "fastapi",
-    "python-dotenv",
-    "pandas",
-    "numpy",
-    "Pillow",
-    "pyzmq",
-    "tiled[client]==v0.1.a122",
-    "typer",
-    "uvicorn"
+    "websockets"
 ]
 
 [project.urls]

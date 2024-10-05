@@ -2,4 +2,4 @@ zmq_xps:
   log_level: "DEBUG"
   lv_zmq_pub_address: "tcp://127.0.0.1"
   lv_zmq_pub_port: 5555
-  tiled_url: "http://localhost:8080"
+  tiled_uri: "http://localhost:8000"

@@ -1,5 +1,5 @@
 import numpy as np
-from als_arroyo.message import Event, Message, Start, Stop
+from als_arroyo.message import Event, Start, Stop
 from pydantic import BaseModel, field_validator
 
 
@@ -21,25 +21,22 @@ class NumpyArrayModel(BaseModel):
         arbitrary_types_allowed = True  # Allow numpy.ndarray type
 
 
-class XPSMessage(Message):
-    pass
-
-
-class XPSStart(XPSMessage, Start):
+class XPSStart(Start):
     scan_name: str
 
 
-class XPSRawEvent(XPSMessage, Event):
+class XPSRawEvent(Event):
     frame_number: int
     cycle_number: int
     frame: NumpyArrayModel
 
 
-class XPSStop(XPSMessage, Stop):
-    num_frames: int
+class XPSStop(Stop):
+    # num_frames: int
+    pass
 
 
-class XPSResult(XPSMessage):
+class XPSResult(Event):
     frame_number: int
     shape: tuple
     dtype: str

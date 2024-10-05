@@ -1,7 +1,7 @@
 import zmq
 from arroyo.publisher import AbstractPublisher
 
-from .schemas import XPSResult
+from ..schemas import XPSResult
 
 
 class XPSZMQResultPublisher(AbstractPublisher):
@@ -15,7 +15,7 @@ class XPSZMQResultPublisher(AbstractPublisher):
     def __init__(self, zmq_socket: zmq.Socket):
         self.zmq_socket = zmq_socket
 
-    def publish(self, message: XPSResult) -> None:
+    async def publish(self, message: XPSResult) -> None:
         self.socket.send_json(
             {
                 "frame_number": message.frame_number,

@@ -6,7 +6,7 @@ from uuid import uuid4
 import numpy as np
 from arroyo.zmq import ZMQListener
 
-from ..schemas import XPSRawEvent, XPSStart, XPSStop
+from ..schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -50,30 +50,34 @@ class XPSLabviewZMQListener(ZMQListener):
                     break
                 json_message = None
                 raw_message = await self.zmq_socket.recv()
+                # print(raw_message[0:300])
                 try:
                     json_message = json.loads(raw_message.decode("utf-8"))
                 except json.JSONDecodeError:
                     pass
                 if json_message:
-                    json_message = json.loads(raw_message)
-
                     message_type = json_message["msg_type"]
                     if message_type == "start":
                         await self.operator.process(self._build_start(json_message))
                         continue
-                    if message_type == "metadata":
+                    elif message_type == "metadata":
                         await self.operator.process(self._build_stop(json_message))
                         continue
-                    if message_type != "image":
+                    elif message_type == "image":
+                        pass
+                        # Don't continue, the next message should be an image
+                    else:
                         logger.error(f"Received unexpected message: {json_message}")
-                        continue
-                else:
-                    # Must be an event with an image
-                    if logger.getEffectiveLevel() == logging.DEBUG:
-                        logger.debug(f"event: {json_message}")
-                    # Image should be the next thing received
-                    buffer = await self.zmq_socket.recv()
-                    await self.operator.process(self._build_event(json_message, buffer))
+
+                buffer = await self.zmq_socket.recv()
+                # Must be an event with an image
+                if logger.getEffectiveLevel() == logging.DEBUG:
+                    logger.debug(f"event: {json_message}")
+                # Image should be the next thing received
+                if not json_message or not buffer:
+                    logger.error("Received unexpected message")
+                    continue
+                await self.operator.process(self._build_event(json_message, buffer))
 
             except Exception as e:
                 logger.error(e)
@@ -93,7 +97,8 @@ class XPSLabviewZMQListener(ZMQListener):
                 f"received: {frame_number=} {shape=} {dtype=} {array_received}"
             )
         return XPSRawEvent(
-            frame_number=frame_number, image=array_received, metadata=image_info
+            image=NumpyArrayModel(array=array_received),
+            image_info=XPSImageInfo(**image_info),
         )
 
     @staticmethod
@@ -102,11 +107,10 @@ class XPSLabviewZMQListener(ZMQListener):
 
         if logger.getEffectiveLevel() == logging.DEBUG:
             logger.debug(f"start: {message}")
-        return XPSStart(scan_name=message["scan_name"], metadata=message)
+        return XPSStart(**message)
 
     @staticmethod
     def _build_stop(message: dict) -> XPSStop:
         if logger.getEffectiveLevel() == logging.DEBUG:
-            logger.debug(f"start: {message}")
-        metadata = json.loads(message["metadata"])
-        return XPSStop(metadata=metadata)
+            logger.debug(f"stop: {message}")
+        return XPSStop(**message)

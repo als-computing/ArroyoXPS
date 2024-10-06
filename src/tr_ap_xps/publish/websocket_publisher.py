@@ -3,7 +3,7 @@ import asyncio
 import websockets
 from arroyo.publisher import AbstractPublisher
 
-from ..schemas import XPSResult
+from ..schemas import XPSMessage, XPSResult
 
 
 class XPSWSResultPublisher(AbstractPublisher):
@@ -17,10 +17,13 @@ class XPSWSResultPublisher(AbstractPublisher):
 
     websocket = None
 
-    async def publish(self, message: XPSResult) -> None:
+    async def publish(self, message: XPSMessage) -> None:
         if self.websocket:  # websocket isn't set until a client connects
-            await self.websocket.send(message.model_dump_json())
-        print("ldsfjlsdfjsdlkfj")
+            if isinstance(message, XPSResult):
+                image = message.image
+                image_info = message.image_info
+                await self.websocket.send(image_info.model_dump_json())
+                await self.websocket.send(image)
 
     async def receive(self, websocket) -> None:
         async for message in websocket:

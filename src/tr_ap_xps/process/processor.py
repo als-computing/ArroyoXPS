@@ -9,7 +9,7 @@ from tiled.client.node import Node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
-from ..schemas import XPSRawEvent
+from ..schemas import DataFrameModel, NumpyArrayModel, XPSRawEvent, XPSResult, XPSStart
 from .pipeline.fft import calculate_fft_items
 from .pipeline.peak_fitting import peak_fit
 
@@ -69,8 +69,8 @@ class XPSProcessor:
     A class to process XPS (X-ray Photoelectron Spectroscopy) data.
     Attributes
     ----------
-    run_id : str
-        Identifier for the current run.
+    start : XPSStart
+        Start message
     tiled_struct : TiledStruct
         Structure to hold tiled data nodes.
     write_tiled_nth_frame : int
@@ -89,24 +89,16 @@ class XPSProcessor:
         DataFrame to store sum results
     """
 
-    def __init__(
-        self,
-        tiled_runs_node: Node,
-        run_id: str,
-        write_tiled_nth_frame: int = 10,
-    ):
-        self.run_id = run_id
+    def __init__(self, tiled_runs_node: Node, start: XPSStart):
+        self.start = start
         self.tiled_struct = TiledStruct(
             runs_node=tiled_runs_node,
-            run_node=tiled_runs_node.create_container(run_id),
+            run_node=tiled_runs_node.create_container(start.scan_name),
             lines_raw_node=None,
             lines_filtered_node=None,
             timing_node=None,
         )
-        self.write_tiled_nth_frame = write_tiled_nth_frame
-        # self.lines_raw_node: node = None
-        # self.lines_filtered_node: node = None
-        # self.timing_node: node = None
+        self.start = start
         self.integrated_frames_df: pd.DataFrame = None
         self.integrated_filtered_frames_df: pd.DataFrame = None
         self.detected_peaks: pd.DataFrame = None
@@ -190,7 +182,7 @@ class XPSProcessor:
     # def process_frame(self, frame_info: dict, curr_frame: np.array):
     def process_frame(self, message: XPSRawEvent) -> None:
         # Compute horizontally-integrated frame
-        new_integrated_frame = self._compute_mean(message.frame)
+        new_integrated_frame = self._compute_mean(message.image.array)
 
         # Peak detection on new_integrated_frame
         detected_peaks_df = peak_fit(new_integrated_frame)
@@ -201,7 +193,7 @@ class XPSProcessor:
         )
 
         # Column names for the dataframes
-        frame_number = message.frame_number
+        frame_number = message.image_info.frame_number
         column_names = self._create_column_names(new_integrated_frame)
         new_integrated_df = self._create_dataframe(
             frame_number, new_integrated_frame, column_names
@@ -224,7 +216,7 @@ class XPSProcessor:
         )
 
         # Things to do every so often
-        if frame_number % self.write_tiled_nth_frame == 0:
+        if frame_number % self.start.frames_per_cycle == 0:
             integrated_frames_np = self._integrated_frames_pd_to_np(
                 self.integrated_frames_df
             )
@@ -233,13 +225,13 @@ class XPSProcessor:
                 integrated_frames_np, repeat_factor=20, width=0
             )
 
-            result = XPSRawEvent(
-                frame_number,
-                integrated_frames_np,
-                detected_peaks_df,
-                vfft_np,
-                ifft_np,
-                sum_np,
+            result = XPSResult(
+                frame_number=frame_number,
+                integrated_frames=NumpyArrayModel(array=integrated_frames_np),
+                detected_peaks=DataFrameModel(df=detected_peaks_df),
+                vfft=NumpyArrayModel(array=vfft_np),
+                ifft=NumpyArrayModel(array=ifft_np),
+                sum=NumpyArrayModel(array=sum_np),
             )
             self._tiled_update_lines_raw(new_integrated_df)
             self._tiled_update_lines_filtered(new_filtered_df)

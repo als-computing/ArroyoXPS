@@ -59,5 +59,5 @@ class XPSOperator(AbstractOperator):
         elif isinstance(message, XPSStop):
             await self.publish(message)
             if self.xps_processor:
-                self.xps_processor.finish()
+                self.xps_processor.finish(message)
             self.xps_processor = None

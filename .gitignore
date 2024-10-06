@@ -167,6 +167,11 @@ data/
 
 .vscode/
 
+# Ignore dynaconf secret files
+.secrets.*
+
+# Ignore .env file
+..env
 
 node_modules/
 # Ignore dynaconf secret files

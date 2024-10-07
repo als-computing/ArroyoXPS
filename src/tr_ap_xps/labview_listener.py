@@ -1,3 +1,4 @@
+import json
 import logging
 import signal
 from uuid import uuid4
@@ -5,7 +6,7 @@ from uuid import uuid4
 import numpy as np
 from arroyo.zmq import ZMQListener
 
-from .schemas import XPSRawEvent, XPSStart, XPSStop
+from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -38,40 +39,50 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 
 
 class XPSLabviewZMQListener(ZMQListener):
+    stop_signal = False
+
     async def start(self):
         logger.info("Listener started")
         while True:
             try:
-                message = self.zmq_socket.recv()
-
-                if self.stop or received_sigterm["received"]:
+                if self.stop_signal or received_sigterm["received"]:
                     logger.info("Stopping listener.")
                     break
+                json_message = None
+                raw_message = await self.zmq_socket.recv()
+                # print(raw_message[0:300])
+                try:
+                    json_message = json.loads(raw_message.decode("utf-8"))
+                except json.JSONDecodeError:
+                    pass
+                if json_message:
+                    message_type = json_message["msg_type"]
+                    if message_type == "start":
+                        await self.operator.process(self._build_start(json_message))
+                        continue
+                    elif message_type == "metadata":
+                        await self.operator.process(self._build_stop(json_message))
+                        continue
+                    elif message_type == "image":
+                        pass
+                        # Don't continue, the next message should be an image
+                    else:
+                        logger.error(f"Received unexpected message: {json_message}")
 
-                message = self.zmq_socket.recv_json()
-                logger.info(f"{message=}")
-                message_type = message["msg_type"]
-                if message_type == "start":
-                    return self._build_start(message)
-                if message_type == "metadata":
-                    return self._build_stop(message)
-
-                if message_type != "image":
-                    logger.error(f"Received unexpected message: {message}")
-                    continue
-
+                buffer = await self.zmq_socket.recv()
                 # Must be an event with an image
-                image_info = message
                 if logger.getEffectiveLevel() == logging.DEBUG:
-                    logger.debug(f"event: {image_info}")
+                    logger.debug(f"event: {json_message}")
                 # Image should be the next thing received
-                buffer = self.zmq_socket.recv()
-                return self._build_event(image_info, buffer)
+                if not json_message or not buffer:
+                    logger.error("Received unexpected message")
+                    continue
+                await self.operator.process(self._build_event(json_message, buffer))
 
             except Exception as e:
                 logger.error(e)
-                if message:
-                    logger.exception(f"Error dealing with {message=}")
+                if json_message:
+                    logger.exception(f"Error dealing with {json_message=}")
 
     @staticmethod
     def _build_event(image_info: dict, buffer: bytes) -> XPSRawEvent:
@@ -85,21 +96,21 @@ class XPSLabviewZMQListener(ZMQListener):
             logger.debug(
                 f"received: {frame_number=} {shape=} {dtype=} {array_received}"
             )
-        return XPSRawEvent(frame_number=frame_number, image=array_received)
+        return XPSRawEvent(
+            image=NumpyArrayModel(array=array_received),
+            image_info=XPSImageInfo(**image_info),
+        )
 
     @staticmethod
-    def _build_start(self, message: dict) -> XPSStart:
+    def _build_start(message: dict) -> XPSStart:
         message["scan_name"] = f"temporary scan name{uuid4()}"  # temporary
 
         if logger.getEffectiveLevel() == logging.DEBUG:
             logger.debug(f"start: {message}")
-        return XPSStart(scan_name=message["scan_name"])
+        return XPSStart(**message)
 
     @staticmethod
-    def _build_stop(
-        self,
-        message: dict,
-    ) -> XPSStop:
+    def _build_stop(message: dict) -> XPSStop:
         if logger.getEffectiveLevel() == logging.DEBUG:
-            logger.debug(f"start: {message}")
-        return XPSStop(num_frames=message["num_frames"])
+            logger.debug(f"stop: {message}")
+        return XPSStop(**message)

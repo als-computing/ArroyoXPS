@@ -6,7 +6,7 @@ import time
 
 import numpy as np
 
-from tr_ap_xps.processor.lv_listener import ZMQLabviewListener
+from tr_ap_xps.listen import XPSLabviewZMQListener
 
 
 @contextlib.contextmanager
@@ -39,7 +39,7 @@ def test_listen_zmq_interface():
         run["stop"] = stop_doc
 
     with run_simulator("tr_ap_xps.simulator"):
-        image_dispatcher = ZMQLabviewListener(
+        image_dispatcher = XPSLabviewZMQListener(
             start_function=start, event_function=event, stop_function=stop
         )
         thread = threading.Thread(target=image_dispatcher.start)

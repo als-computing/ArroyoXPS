@@ -9,14 +9,14 @@ from tiled.client.node import Node
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
-from ..schemas import DataFrameModel, NumpyArrayModel, XPSRawEvent, XPSResult, XPSStart
 from .pipeline.fft import calculate_fft_items
 from .pipeline.peak_fitting import peak_fit
+from .schemas import DataFrameModel, NumpyArrayModel, XPSRawEvent, XPSResult, XPSStart
 
 # from ..tiled import create_array_node, create_table_node
 
 
-logger = logging.getLogger("tr-ap-xps.writer")
+logger = logging.getLogger("tr-ap-xps.processor")
 
 
 @dataclass
@@ -67,26 +67,7 @@ timer = TimingDecorator()
 class XPSProcessor:
     """
     A class to process XPS (X-ray Photoelectron Spectroscopy) data.
-    Attributes
-    ----------
-    start : XPSStart
-        Start message
-    tiled_struct : TiledStruct
-        Structure to hold tiled data nodes.
-    write_tiled_nth_frame : int
-        Frequency of writing tiled frames.
-    integrated_frames_df : pd.DataFrame
-        DataFrame to store integrated frames.
-    integrated_filtered_frames_df : pd.DataFrame
-        DataFrame to store integrated filtered frames.
-    detected_peaks : pd.DataFrame
-        DataFrame to store detected peaks.
-    vfft : pd.DataFrame
-        DataFrame to store vertical FFT results.
-    ifft : pd.DataFrame
-        DataFrame to store inverse FFT results.
-    sum : pd.DataFrame
-        DataFrame to store sum results
+
     """
 
     def __init__(self, tiled_runs_node: Node, start: XPSStart):

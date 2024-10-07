@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from tr_ap_xps.operator import Result, XPSProcessor
+from tr_ap_xps.operator import XPSProcessor
+from tr_ap_xps.schemas import XPSStart
 
 
 @pytest.fixture
@@ -10,13 +11,12 @@ def integrated_frame():
 
 
 def test_XPSDataSet(client, integrated_frame):
-    def results_function(result: Result):
-        pass
-
     if "runs" not in client:
         runs_node = client.create_container("runs")
     runs_node = client["runs"]
-    xps_dataset = XPSProcessor(results_function, runs_node, "42")
+    xps_start = XPSStart(binding_energy=2.0, frames_per_cycle=2, scan_name="test")
+
+    xps_dataset = XPSProcessor(runs_node, xps_start)
     assert xps_dataset.run_id == "42"
     assert xps_dataset.tiled_struct.run_node == client["runs"]["42"]
 

@@ -1,6 +1,6 @@
 import numpy
 import pandas
-from als_arroyo.message import Event, Message, Start, Stop
+from arroyo.schemas import Event, Message, Start, Stop
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -47,7 +47,7 @@ class XPSMessage(Message):
 class XPSStart(Start, XPSMessage):
     binding_energy: float = Field(..., alias="Binding Energy (eV)")
     frames_per_cycle: int = Field(..., alias="frame_per_cycle")
-    msg_type: str = Field(..., alias="msg_type")
+    msg_type: str = Field("start", alias="msg_type")
     scan_name: str = Field(..., alias="scan_name")
 
 
@@ -63,9 +63,32 @@ class XPSRawEvent(Event, XPSMessage):
     image_info: XPSImageInfo
 
 
+class Rectangle(BaseModel):
+    left: int = Field(..., alias="F_Trigger")
+    top: int = Field(..., alias="F_Trigger")
+    right: int = Field(..., alias="F_Trigger")
+    bottom: int = Field(..., alias="F_Trigger")
+    rotation: int = Field(..., alias="F_Trigger")
+
+
 class XPSStop(Stop, XPSMessage):
-    # num_frames: int
-    pass
+    f_trigger: int = Field(..., alias="F_Trigger")
+    f_untrigger: int = Field(..., alias="F_Un-Trigger")
+    f_dead: int = Field(..., alias="F_Dead")
+    f_reset: int = Field(..., alias="F_Reset")
+    ccd_nx: int = Field(..., alias="CCD_nx")
+    ccd_ny: int = Field(..., alias="CCD_ny")
+    pass_energy: int = Field(..., alias="Pass Energy")
+    center_energy: int = Field(..., alias="Center Energy")
+    offset_energy: int = Field(..., alias="Offset Energy")
+    lens_mode: str = Field(..., alias="Lens Mode")
+    rectangle: Rectangle = Field(..., alias="Rectangle")
+    notes: str = Field(..., alias="Notes")
+    dt: float = Field(..., alias="dt")
+    photon_energy: float = Field(..., alias="Photon Engergy")
+    binding_energy: float = Field(..., alias="Binding Energy")
+    file_ver: str = Field(..., alias="File Ver")
+    stream: str = Field(..., alias="Strean")
 
 
 class XPSResult(Event, XPSMessage):

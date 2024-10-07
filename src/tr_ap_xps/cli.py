@@ -7,9 +7,9 @@ from tiled.client import from_uri
 from tiled.client.node import Node
 
 from .config import settings
-from .listen.labview_listener import XPSLabviewZMQListener
+from .labview_listener import XPSLabviewZMQListener
 from .log_utils import setup_logger
-from .process.operator import XPSOperator
+from .operator import XPSOperator
 from .publish.websocket_publisher import XPSWSResultPublisher
 
 app = typer.Typer()

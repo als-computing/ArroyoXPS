@@ -6,7 +6,7 @@ import time
 
 import numpy as np
 
-from tr_ap_xps.listen import XPSLabviewZMQListener
+from tr_ap_xps.labview_listener import XPSLabviewZMQListener
 
 
 @contextlib.contextmanager

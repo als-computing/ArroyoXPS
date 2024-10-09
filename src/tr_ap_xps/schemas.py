@@ -34,13 +34,6 @@ class XPSMessage(Message):
     pass
 
 
-class XPSImageInfo(BaseModel):
-    frame_number: int
-    width: int
-    height: int
-    data_type: str
-
-
 class XPSStart(Start, XPSMessage):
     msg_type: str = Literal["start"]
     binding_energy: float = Field(..., alias="Binding Energy")
@@ -126,6 +119,31 @@ class XPSStop(Stop, XPSMessage):
     """
 
     num_frames: int = Field(..., alias="Num Frames")
+
+
+class XPSImageInfo(BaseModel):
+    """
+    LabVIEW Message:
+
+        Incoming mesesage with every frame.
+        For each frame, LabVIEW sends a json document with frame information.
+        Expects incoming message to be JSON.
+        An example with nonsense values:
+
+        {
+            "XPSImageInfo": {
+                "Frame Number": 42,
+                "Width": 1042,
+                "Height": 1042,
+                "Data Type": "U8"
+            }
+        }
+    """
+
+    frame_number: int = Field(..., alias="Frame Number")
+    width: int = Field(..., alias="Width")
+    height: int = Field(..., alias="Height")
+    data_type: str = Field(..., alias="data_type")
 
 
 class XPSResult(Event, XPSMessage):

@@ -1,11 +1,14 @@
 # Real Time AP-XPS Service
 This repository maintains a service that will the integrate with Beamline Control System for the new Real Time Ambient Pressure XRay Photon Spectroscopy instrument at the ALS.
 ``` mermaid
+
 graph LR
-    A[LabVIEW] -->|ZMQ PUB| B[Processor]
-    B -->|ZMQ SUB| C[WebSocket Server]
-    B -->|ZMQ SUB| D[Tiled Server]
-    C -->|WebSocket| E[Browser]
+    LabVIEW -->|ZMQ PUB| LabviewListener
+    LabviewListener --> XPSO[XPSOperator]
+    XPSO --> XPWS[XPSWSResultPublisher]
+    XPWS -->|WebSocket| Browser
+    XPSO --> TiledPublisher
+    TiledPublisher-->|HTTP| Tiled
 
 
 ```

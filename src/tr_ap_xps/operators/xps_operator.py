@@ -1,34 +1,23 @@
 import asyncio
 import logging
 
-from arroyo.operator import AbstractOperator
-from arroyo.publisher import AbstractPublisher
+from arroyo.operator import Operator
 from arroyo.schemas import Message
 from tiled.client import node
 
-from .processor import XPSProcessor
-from .schemas import XPSRawEvent, XPSStart, XPSStop
+from ..pipeline.xps_processor import timer, XPSProcessor
+from ..schemas import XPSRawEvent, XPSStart, XPSResultStop
 
-logger = logging.getLogger("tr-ap-xps.writer")
+logger = logging.getLogger(__name__)
 
 
-class XPSOperator(AbstractOperator):
+class XPSOperator(Operator):
     """
     XPSOperator is responsible for handling XPS-related messages and processing frames.
-    Attributes:
-        publisher (AbstractPublisher): The publisher used to publish messages.
-        tiled_runs_node (node): The node containing tiled runs data.
-        xps_processor (XPSProcessor, optional): The processor used to handle XPS frames.
-    Methods:
-        __init__(publisher: AbstractPublisher, tiled_runs_node: node) -> None:
-            Initializes the XPSOperator with a publisher and a tiled runs node.
-        run(message: Message) -> None:
-            Asynchronously handles incoming messages. Depending on the message type,
-            it either starts the XPS processing, processes a frame, or stops the XPS processing.
+  
     """
 
-    def __init__(self, publisher: AbstractPublisher, tiled_runs_node: node) -> None:
-        self.tiled_runs_node = tiled_runs_node
+    def __init__(self) -> None:
         self.xps_processor = None
 
     async def process(self, message: Message) -> None:
@@ -46,17 +35,22 @@ class XPSOperator(AbstractOperator):
             None
         """
         if isinstance(message, XPSStart):
+            timer.reset()
             await self.publish(message)
-            self.xps_processor = XPSProcessor(self.tiled_runs_node, message)
+            self.xps_processor = XPSProcessor(message)
+
         elif isinstance(message, XPSRawEvent):
             if not self.xps_processor:
+                logger.error("Received XPSRawEvent without an active XPSProcessor. Started after labview started?")
                 return
             result: XPSRawEvent = await asyncio.to_thread(
                 self.xps_processor.process_frame, message
             )
             if result:
-                await self.publish(XPSRawEvent)
-        elif isinstance(message, XPSStop):
+                await self.publish(result)
+
+        elif isinstance(message, XPSResultStop):
+            message.function_timings = timer.timing_dataframe
             await self.publish(message)
             if self.xps_processor:
                 self.xps_processor.finish(message)

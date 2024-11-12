@@ -176,3 +176,5 @@ data/
 node_modules/
 # Ignore dynaconf secret files
 .secrets.*
+
+.archive/

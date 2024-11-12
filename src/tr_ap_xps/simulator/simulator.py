@@ -1,5 +1,6 @@
 import logging
 import time
+from uuid import uuid4
 
 import numpy as np
 import typer
@@ -16,47 +17,83 @@ app = typer.Typer(help="Labview frame simulator")
 
 logger = logging.getLogger(__name__)
 
-# class RandomLabViewSimulator:
-#     def __init__(
-#         self, zmq_pub_address: str = "tcp://127.0.0.1", zmq_pub_port: int = 5555
-#     ):
-#         self.ctx = zmq.Context()
-#         self.socket = self.ctx.socket(zmq.PUB)
-#         self.socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
-#         print(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 
-#     def _send_image(self, image: np.ndarray):
-#         self.socket.send(image)
+start_example = {
+    "msg_type": "start",
+    "Binding Energy (eV)": 5.0,
+    "frames_per_cycle": 10,
+    "msg_type": "start",
+    "scan_name": f"test_scan{uuid4()}",
+    "scan_id": "12345",
+}
 
-#     def start(self, sleep_interval: int = 5):
-#         while True:
-#             image_metadata = IMAGE_METADATA
-#             image = np.random.randint(
-#                 0,
-#                 2000,
-#                 size=(IMAGE_METADATA["Width"], IMAGE_METADATA["Height"]),
-#                 dtype=np.int32,
-#             )
-#             start = {"start": {"scan_name": f"test_scan{uuid4()}"}}
-#             self.socket.send_json(start)
-#             print(start)
-#             num_frames = 100
-#             for i in range(num_frames):
-#                 image_metadata["Frame Number"] = i
-#                 self.socket.send_json({"event": image_metadata})
-#                 self._send_image(image.byteswap().newbyteorder())
-#                 time.sleep(0.1)
-#             stop = {"stop": {"num_frames": num_frames}}
-#             self.socket.send_json(stop)
-#             print(stop)
-#             time.sleep(sleep_interval)
+event_example = {
+    "msg_type": "event",
+    "timestamp": time.time(),
+    "Frame Number": 0,
+    "Width": 1024,
+    "Height": 1024,
+    "Type": "U8"  
 
-#     def finish(self):
-#         self.socket.close()
-#         self.ctx.term()
+}
+
+stop_example = {
+            "msg_type": "stop",
+            "F_Trigger": 1,
+            "F_Un-Trigger": 2,
+            "F_Dead": 3,
+            "F_Reset": 4,
+            "CCD_nx": 1024,
+            "CCD_ny": 768,
+            "Pass Energy": 20,
+            "Center Energy": 1000,
+            "Offset Energy": 0,
+            "Lens Mode": "Mode1",
+            "Rectangle": {
+                "F_Trigger": 1,
+                "F_Trigger": 2,
+                "F_Trigger": 3,
+                "F_Trigger": 4,
+                "F_Trigger": 5
+            },
+            "Notes": "Sample notes",
+            "dt": 0.1,
+            "Photon Engergy": 1486.6,
+            "Binding Energy": 0.0,
+            "File Ver": "1.0",
+            "Strean": "stream1"
+        }
+
+class RandomLabViewSimulator:
+    def __init__(
+        self,
+        zmq_socket: zmq.Socket
+    ):
+        self.zmq_socket = zmq_socket
+
+    def _send_image(self, image: np.ndarray):
+        self.zmq_socket.send(image)
+
+    def start(self, sleep_interval: int = 5):
+        while True:
+            self.zmq_socket.send_json(start_example)
+            print(start_example)
+            num_frames = 1000
+            for i in range(num_frames):
+                event_example["Frame Number"] = i
+                self.zmq_socket.send_json(event_example)
+                self.zmq_socket.send(np.random.randint(0, 255, (1024, 1024), dtype=np.uint8))
+                time.sleep(0.01)
+
+            self.zmq_socket.send_json(stop_example)
+            print(stop_example)
+            time.sleep(sleep_interval)
+
+    def finish(self):
+        self.zmq_socket.close()
 
 
-class LabViewSimulator:
+class LabViewPickleSimulator:
     def __init__(self, zmq_socket: zmq.Socket, pickle_dir: str):
         self.socket = zmq_socket
         self.pickle_dir = pickle_dir
@@ -115,7 +152,8 @@ def start(
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
     pickle_dir = pickle_dir
 
-    simulator = LabViewSimulator(socket, pickle_dir)
+    # simulator = LabViewPickleSimulator(socket, pickle_dir)
+    simulator = RandomLabViewSimulator(socket)
     print("starting labview simulator")
     simulator.start()
     simulator.finish()

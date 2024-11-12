@@ -20,8 +20,9 @@ dependencies = [
     "python-dotenv",
     "pandas",
     "numpy",
+    "Pillow",
     "pyzmq",
-    "tiled[client]==v0.1.a122",
+    "tiled[client]==v0.1.0b10",
     "typer",
     "zarr"
 ]
@@ -42,16 +43,6 @@ notebook = [
     "python-dotenv"
 ]
 
-processor = [
-    "astropy",
-    "python-dotenv",
-    "pandas",
-    "numpy",
-    "pyzmq",
-    "tiled[client]==v0.1.a122",
-    "typer",
-    "uvicorn"
-]
 
 ws_publisher = [
     "websockets"

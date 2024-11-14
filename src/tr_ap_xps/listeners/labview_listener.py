@@ -74,7 +74,6 @@ class XPSLabviewZMQListener(ZMQListener):
                         await self.operator.process(self._build_stop(json_message))
                         continue
                     elif message_type == "event":
-                        print("event")
                         buffer = await self.zmq_socket.recv()
                         # Must be an event with an image
                         if logger.getEffectiveLevel() == logging.DEBUG:

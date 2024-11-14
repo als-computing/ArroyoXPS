@@ -51,7 +51,7 @@ stop_example = {
     "Rectangle": {
         "Left": 1,
         "Top": 2,
-        "Tight": 3,
+        "Right": 3,
         "Rotation": 4,
         "Bottom": 5,
     },

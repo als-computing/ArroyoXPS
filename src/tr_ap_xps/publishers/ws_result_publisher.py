@@ -6,11 +6,12 @@ import logging
 from typing import Union
 
 import numpy as np
+import pandas as pd
 import websockets
 from arroyo.publisher import Publisher
 from PIL import Image
 
-from ..schemas import XPSResult, XPSStart, XPSStop
+from ..schemas import XPSResult, XPSStart, XPSResultStop
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,8 @@ class XPSWSResultPublisher(Publisher):
         super().__init__()
 
     async def start(self, host: str = "localhost", port: int = 8765):
-        server = await websockets.serve(self.websocket_handler, host, port)
+        # Use partial to bind `self` while matching the expected handler signature
+        server = await websockets.serve(self.websocket_handler, host, port, )
         logger.info(f"Websocket server started at ws://{host}:{port}")
         await server.wait_closed()
 
@@ -42,10 +44,13 @@ class XPSWSResultPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[XPSResult | XPSStart | XPSStop],
+        message: Union[XPSResult | XPSStart | XPSResultStop],
     ) -> None:
-        if isinstance(message, XPSStart) or isinstance(message, XPSStop):
-            await client.send_json(message.model_dump())
+        if isinstance(message, XPSResultStop):
+            return
+
+        if isinstance(message, XPSStart):
+            await client.send(json.dumps(message.model_dump()))
             return
 
         raw = buffer_to_jpeg(message.integrated_frames.array)
@@ -53,7 +58,7 @@ class XPSWSResultPublisher(Publisher):
         vfft = buffer_to_jpeg(message.vfft.array)
 
         # sum_json = df_to_json(result.sum)
-        detected_peaks = json.dumps(peaks_output(message.fitted))
+        detected_peaks = json.dumps(peaks_output(message.detected_peaks.df))
 
         # send basic info
         # await client .send_json(
@@ -64,13 +69,14 @@ class XPSWSResultPublisher(Publisher):
         # )
 
         # send image data separately to client memory issues
-        await client.send({"raw": raw})
-        await client.send({"fitted": detected_peaks})
-        await client.send({"vfft": vfft})
-        await client.send({"ifft": ifft})
+        await client.send(json.dumps({"raw": raw}))
+        await client.send(json.dumps({"fitted": detected_peaks}))
+        await client.send(json.dumps({"vfft": vfft}))
+        await client.send(json.dumps({"ifft": ifft}))
 
-    async def websocket_handler(self, websocket, path):
+    async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
+        self.connected_clients.add(websocket)
         try:
             # Keep the connection open and do nothing until the client disconnects
             await websocket.wait_closed()
@@ -92,14 +98,13 @@ def buffer_to_jpeg(arra_: np.ndarray):
     return img_str
 
 
-def peaks_output(json_str):
+def peaks_output(peaks: pd.DataFrame):
     #     [
     # {"x": 235, "h": 433.3: "fwhm": 4334},
-    # {"x": 235, "h": 433.3: "fwhm": 4334}
+    # {"x": 235, "h": 433.3: "f whm": 4334}
     # ]
-    obj = json.loads(json_str)
-    data = [{"x": data[0], "h": data[1], "fwhm": data[2]} for data in obj["data"]]
-    return data
+    peaks.columns = ["x", "h", "fwhm"]
+    return peaks.to_dict(orient="records")
 
 
 # import asyncio
@@ -147,7 +152,6 @@ def peaks_output(json_str):
 #     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 #     return img_str
-
 
 # def buffer_to_jpeg_scaled_down(arr_buffer, shape: list, dtype: str):
 #     shape = tuple(shape)

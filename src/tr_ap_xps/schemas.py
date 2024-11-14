@@ -1,7 +1,7 @@
-import numpy
-import pandas
 from typing import Literal
 
+import numpy
+import pandas
 from arroyo.schemas import Event, Message, Start, Stop
 from pydantic import BaseModel, Field, field_validator
 
@@ -52,7 +52,6 @@ class XPSStart(Start, XPSMessage):
     frames_per_cycle: int = Field(..., alias="frames_per_cycle")
     msg_type: str = Field("start", alias="msg_type")
     scan_name: str = Field(..., alias="scan_name")
-    
 
 
 class XPSImageInfo(BaseModel):
@@ -66,15 +65,14 @@ class XPSRawEvent(Event, XPSMessage):
     msg_type: str = Literal["event"]
     image: NumpyArrayModel
     image_info: XPSImageInfo
-    
 
 
 class Rectangle(BaseModel):
-    left: int = Field(..., alias="F_Trigger")
-    top: int = Field(..., alias="F_Trigger")
-    right: int = Field(..., alias="F_Trigger")
-    bottom: int = Field(..., alias="F_Trigger")
-    rotation: int = Field(..., alias="F_Trigger")
+    left: int = Field(..., alias="Left")
+    top: int = Field(..., alias="Top")
+    right: int = Field(..., alias="Right")
+    bottom: int = Field(..., alias="Bottom")
+    rotation: int = Field(..., alias="Rotation")
 
 
 class XPSStop(Stop, XPSMessage):
@@ -98,7 +96,6 @@ class XPSStop(Stop, XPSMessage):
     stream: str = Field(..., alias="Strean")
 
 
-
 class XPSResult(Event, XPSMessage):
     frame_number: int
     integrated_frames: NumpyArrayModel
@@ -106,6 +103,7 @@ class XPSResult(Event, XPSMessage):
     vfft: NumpyArrayModel
     ifft: NumpyArrayModel
     sum: NumpyArrayModel
+
 
 class XPSResultStop(Stop, XPSMessage):
     msg_type: str = Literal["result_stop"]

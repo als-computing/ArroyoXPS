@@ -1,63 +1,17 @@
-import functools
 import logging
-import time
-from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from tiled.client.node import Node
-from tiled.structures.data_source import DataSource
-from tiled.structures.table import TableStructure
 
+from ..schemas import DataFrameModel, NumpyArrayModel, XPSRawEvent, XPSResult, XPSStart
+from ..timing import timer
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
-from ..schemas import (
-    DataFrameModel,
-    NumpyArrayModel,
-    XPSRawEvent,
-    XPSResult,
-    XPSStart)
 
 # from ..tiled import create_array_node, create_table_node
 
 
 logger = logging.getLogger("tr-ap-xps.processor")
-
-
-class TimingDecorator:
-    def __init__(self):
-        self.accumulated_timings = []
-        self.frame_timings = {}
-
-    def __call__(self, func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            start_time = time.time()
-            result = func(*args, **kwargs)
-            end_time = time.time()
-            duration = end_time - start_time
-            self.frame_timings[func.__name__] = duration
-            # print(f"{func.__name__} took {duration:.4f} seconds")
-            return result
-
-        return wrapper
-
-    def end_frame(self):
-        if self.frame_timings:
-            self.accumulated_timings.append(self.frame_timings)
-        self.frame_timings = {}
-
-    @property
-    def timing_dataframe(self):
-        return pd.DataFrame(self.accumulated_timings)
-
-    def reset(self):
-        self.accumulated_timings = []
-        self.frame_timings = {}
-
-
-# Create a global instance of the TimingDecorator
-timer = TimingDecorator()
 
 
 class XPSProcessor:
@@ -75,7 +29,6 @@ class XPSProcessor:
         self.ifft: pd.DataFrame = None
         self.sum: pd.DataFrame = None
 
- 
     @timer
     def _compute_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
@@ -91,8 +44,6 @@ class XPSProcessor:
         df = pd.DataFrame([data], columns=["frame_number"] + column_names)
         df["frame_number"] = df["frame_number"].astype(int)
         return df
-
- 
 
     # TODO: we do not have filtered, but 4 the other instead. So, update this part?
     @timer
@@ -113,7 +64,6 @@ class XPSProcessor:
         self, integrated_filtered_frames_df: pd.DataFrame
     ):
         return integrated_filtered_frames_df.iloc[:, 1:].to_numpy()
-
 
     # def process_frame(self, frame_info: dict, curr_frame: np.array):
     def process_frame(self, message: XPSRawEvent) -> None:

@@ -3,10 +3,10 @@ import logging
 
 from arroyo.operator import Operator
 from arroyo.schemas import Message
-from tiled.client import node
 
-from ..pipeline.xps_processor import timer, XPSProcessor
-from ..schemas import XPSRawEvent, XPSStart, XPSResultStop
+from ..pipeline.xps_processor import XPSProcessor
+from ..schemas import DataFrameModel, XPSRawEvent, XPSResultStop, XPSStart, XPSStop
+from ..timing import timer
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class XPSOperator(Operator):
     """
     XPSOperator is responsible for handling XPS-related messages and processing frames.
-  
+
     """
 
     def __init__(self) -> None:
@@ -36,12 +36,14 @@ class XPSOperator(Operator):
         """
         if isinstance(message, XPSStart):
             timer.reset()
-            await self.publish(message)
             self.xps_processor = XPSProcessor(message)
+            await self.publish(message)
 
         elif isinstance(message, XPSRawEvent):
             if not self.xps_processor:
-                logger.error("Received XPSRawEvent without an active XPSProcessor. Started after labview started?")
+                logger.error(
+                    "Received XPSRawEvent without an active XPSProcessor. Started after labview started?"
+                )
                 return
             result: XPSRawEvent = await asyncio.to_thread(
                 self.xps_processor.process_frame, message
@@ -49,9 +51,8 @@ class XPSOperator(Operator):
             if result:
                 await self.publish(result)
 
-        elif isinstance(message, XPSResultStop):
-            message.function_timings = timer.timing_dataframe
-            await self.publish(message)
-            if self.xps_processor:
-                self.xps_processor.finish(message)
+        elif isinstance(message, XPSStop):
+            data_frame_model = DataFrameModel(df=timer.timing_dataframe)
+            new_msg = XPSResultStop(function_timings=data_frame_model)
+            await self.publish(new_msg)
             self.xps_processor = None

@@ -1,15 +1,14 @@
 import asyncio
 import base64
-import json
 import io
+import json
 import logging
 from typing import Union
 
-from arroyo.publisher import Publisher
 import numpy as np
-from PIL import Image
 import websockets
-
+from arroyo.publisher import Publisher
+from PIL import Image
 
 from ..schemas import XPSResult, XPSStart, XPSStop
 
@@ -21,32 +20,34 @@ class XPSWSResultPublisher(Publisher):
     A publisher class for sending XPSResult messages over a web sockets.
 
     """
+
     websocket_server = None
     connected_clients = set()
 
     def __init__(self):
         super().__init__()
 
-    async def start(self, host: str="localhost", port:int=8765):
+    async def start(self, host: str = "localhost", port: int = 8765):
         server = await websockets.serve(self.websocket_handler, host, port)
         logger.info(f"Websocket server started at ws://{host}:{port}")
         await server.wait_closed()
 
-
     async def publish(self, message: XPSResult) -> None:
         if self.connected_clients:  # Only send if there are clients connected
-            asyncio.gather(*(self.publish_ws(client, message) for client in self.connected_clients))
-            
+            asyncio.gather(
+                *(self.publish_ws(client, message) for client in self.connected_clients)
+            )
 
-    async def publish_ws(self,
-                        #  client: websockets.client.ClientConnection,
-                        client,
-                         message: Union[XPSResult | XPSStart | XPSStop]) -> None:
-        
+    async def publish_ws(
+        self,
+        #  client: websockets.client.ClientConnection,
+        client,
+        message: Union[XPSResult | XPSStart | XPSStop],
+    ) -> None:
         if isinstance(message, XPSStart) or isinstance(message, XPSStop):
             await client.send_json(message.model_dump())
             return
-    
+
         raw = buffer_to_jpeg(message.integrated_frames.array)
         ifft = buffer_to_jpeg(message.ifft.array)
         vfft = buffer_to_jpeg(message.vfft.array)
@@ -68,8 +69,6 @@ class XPSWSResultPublisher(Publisher):
         await client.send({"vfft": vfft})
         await client.send({"ifft": ifft})
 
-    
-
     async def websocket_handler(self, websocket, path):
         logger.info(f"New connection from {websocket.remote_address}")
         try:
@@ -80,16 +79,18 @@ class XPSWSResultPublisher(Publisher):
             self.connected_clients.remove(websocket)
             logger.info("Client disconnected")
 
+
 def buffer_to_jpeg(arra_: np.ndarray):
     if arra_.dtype != np.uint8:
         arra_ = (arra_ * 255).astype(np.uint8)
-  
+
     img = Image.fromarray(arra_, "L")
     # Convert image to base64
     buffered = io.BytesIO()
     img.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
     return img_str
+
 
 def peaks_output(json_str):
     #     [
@@ -296,4 +297,4 @@ def peaks_output(json_str):
 
 #     uvicorn.run(
 #         "tr_ap_xps.publisher.ws_server:app", host="0.0.0.0", port=8001, reload=True
-    # )
+# )

@@ -3,17 +3,11 @@ import logging
 from uuid import uuid4
 
 import numpy as np
-from arroyo.zmq import ZMQListener
 import zmq.asyncio
+from arroyo.zmq import ZMQListener
 
 from ..config import settings
-from ..schemas import (
-    NumpyArrayModel,
-    XPSImageInfo,
-    XPSRawEvent,
-    XPSStart,
-    XPSStop
-)
+from ..schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.
@@ -34,6 +28,7 @@ DATATYPE_MAP = {
 app_settings = settings.xps
 
 logger = logging.getLogger(__name__)
+
 
 def setup_zmq():
     ctx = zmq.asyncio.Context()
@@ -68,15 +63,18 @@ class XPSLabviewZMQListener(ZMQListener):
                 if json_message:
                     message_type = json_message.get("msg_type")
                     if message_type == "start":
-                        logger.info(f"Start message processed: {json_message['scan_name']}")
+                        logger.info(
+                            f"Start message processed: {json_message['scan_name']}"
+                        )
                         await self.operator.process(self._build_start(json_message))
                         continue
-                
+
                     elif message_type == "stop":
                         logger.info("Stop message received")
                         await self.operator.process(self._build_stop(json_message))
                         continue
                     elif message_type == "event":
+                        print("event")
                         buffer = await self.zmq_socket.recv()
                         # Must be an event with an image
                         if logger.getEffectiveLevel() == logging.DEBUG:
@@ -85,11 +83,14 @@ class XPSLabviewZMQListener(ZMQListener):
                         if not json_message or not buffer:
                             logger.error("Received unexpected message")
                             continue
-                        await self.operator.process(self._build_event(json_message, buffer))
+                        await self.operator.process(
+                            self._build_event(json_message, buffer)
+                        )
+                        logger.debug("event processed")
             except Exception as e:
                 logger.error(e)
                 if json_message:
-                    logger.exception(f"Error dealing with  message")
+                    logger.exception("Error dealing with  message")
 
     @staticmethod
     def _build_event(message: dict, buffer: bytes) -> XPSRawEvent:
@@ -100,8 +101,7 @@ class XPSLabviewZMQListener(ZMQListener):
             logger.error(f"Received unexpected data type: {image_info}")
         array_received = np.frombuffer(buffer, dtype=dtype).reshape(shape)
         return XPSRawEvent(
-                    image=NumpyArrayModel(array=array_received),
-                    image_info=image_info
+            image=NumpyArrayModel(array=array_received), image_info=image_info
         )
 
     @staticmethod

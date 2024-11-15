@@ -76,7 +76,7 @@ class RandomLabViewSimulator:
         # while True:
         self.zmq_socket.send_json(start_example)
         print(start_example)
-        num_frames = 10
+        num_frames = 10000
         for i in range(num_frames):
             event_example["Frame Number"] = i
             self.zmq_socket.send_json(event_example)
@@ -148,6 +148,7 @@ def start(
     logger.info(f"zmq_pub_port: {zmq_pub_port}")
     ctx = zmq.Context()
     socket = ctx.socket(zmq.PUB)
+    socket.setsockopt(zmq.SNDHWM, 10000) 
     socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
     pickle_dir = pickle_dir

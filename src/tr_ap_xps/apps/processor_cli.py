@@ -20,7 +20,7 @@ setup_logger(logger)
 app_settings = settings.xps
 
 
-def tiled_runs_Container() -> Container:
+def tiled_runs_container() -> Container:
     client = from_uri(app_settings.tiled_uri, api_key=app_settings.tiled_api_key)
     if client.get("runs") is None:  # TODO test case
         client.create_container("runs")
@@ -43,7 +43,7 @@ async def listen() -> None:
     # setup websocket server
     operator = XPSOperator()
     ws_publisher = XPSWSResultPublisher()
-    tiled_pub = TiledPublisher(tiled_runs_Container())
+    tiled_pub = TiledPublisher(tiled_runs_container())
 
     operator.add_publisher(ws_publisher)
     operator.add_publisher(tiled_pub)

@@ -2,7 +2,6 @@
 name = "tr-ap-xps"
 version = "0.0.1"
 authors = [
-    { name="Runbo Jiang", email="rjiang2@lbl.gov"},
     { name="Dylan McReynolds", email="dmcreynolds@lbl.gov"},
 ]
 description = "a package to perform computations and suggestion during a time-resolved AP-XPS experiment"
@@ -14,7 +13,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "arroyo@git+https://github.com/als-computing/arroyo.git",
+    # "arroyo",
     "astropy",
     "dynaconf",
     "python-dotenv",
@@ -23,6 +22,7 @@ dependencies = [
     "Pillow",
     "pyzmq",
     "tiled[client]==v0.1.0b10",
+    "tqdm",
     "typer",
     "zarr"
 ]
@@ -43,10 +43,6 @@ notebook = [
     "python-dotenv"
 ]
 
-
-ws_publisher = [
-    "websockets"
-]
 
 [project.urls]
 Homepage = "https://github.com/als-computing/AP-XPS"

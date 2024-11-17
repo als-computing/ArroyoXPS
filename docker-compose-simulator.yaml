@@ -1,7 +1,7 @@
 version: "3.3"
 services:
   simulator:
-    command: ["python", "-m", "tr_ap_xps.simulation.simulator", "--log-level", "INFO"]
+    command: ["python", "-m", "tr_ap_xps.simulator.simulator", "--log-level", "INFO"]
     build:
       context: .
       dockerfile: Dockerfile_labviewsim

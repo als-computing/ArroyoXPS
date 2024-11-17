@@ -178,3 +178,5 @@ node_modules/
 .secrets.*
 
 .archive/
+
+arroyo/

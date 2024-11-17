@@ -16,7 +16,7 @@ services:
       aps_net:
 
   processor:
-    # command: python -m tr_ap_xps.processor.cli --zmq-pub-address tcp://simulator
+    command: python -m tr_ap_xps.apps.processor_cli --zmq-pub-address tcp://simulator --zmq-pub-port 5555
     build:
       context: .
       dockerfile: Dockerfile_processor
@@ -26,25 +26,18 @@ services:
     networks:
       aps_net:
 
-  # wspublisher:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile_wspublisher
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8001:8001"
-  #   volumes:
-  #     - .:/app:Z
-  #   networks:
-  #     aps_net:
 
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile_frontend
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8080:80"
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile_frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - .:/app:Z
+    networks:
+      aps_net:
 
 networks:
   aps_net:

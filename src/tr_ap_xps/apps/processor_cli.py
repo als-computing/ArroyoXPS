@@ -21,49 +21,57 @@ app_settings = settings.xps
 
 
 def tiled_runs_container() -> Container:
-    client = from_uri(app_settings.tiled_uri, api_key=app_settings.tiled_api_key)
-    if client.get("runs") is None:  # TODO test case
-        client.create_container("runs")
-    return client["runs"]
+    try:
+        client = from_uri(app_settings.tiled_uri, api_key=app_settings.tiled_api_key)
+        if client.get("runs") is None:  # TODO test case
+            client.create_container("runs")
+        return client["runs"]
+    except Exception as e:
+        logger.error(f"Error connecting to Tiled: {e}")
+        raise e
 
 
 @app.command()
 async def listen() -> None:
-    logger.setLevel(app_settings.log_level.upper())
-    logger.debug("DEBUG LOGGING SET")
-    logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_address}")
-    logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_port}")
-    logger.info(f"tiled_uri: {app_settings.tiled_uri}")
-    logger.info(
-        f"tiled_api_key: {'****' if app_settings.tiled_api_key else 'NOT SET!!!'}"
-    )
+    try:
 
-    received_sigterm = {"received": False}  # Define the variable received_sigterm
+        logger.setLevel(app_settings.log_level.upper())
+        logger.debug("DEBUG LOGGING SET")
+        logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_address}")
+        logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_port}")
+        logger.info(f"tiled_uri: {app_settings.tiled_uri}")
+        logger.info(
+            f"tiled_api_key: {'****' if app_settings.tiled_api_key else 'NOT SET!!!'}"
+        )
 
-    # setup websocket server
-    operator = XPSOperator()
-    ws_publisher = XPSWSResultPublisher()
-    tiled_pub = TiledPublisher(tiled_runs_container())
+        received_sigterm = {"received": False}  # Define the variable received_sigterm
 
-    operator.add_publisher(ws_publisher)
-    operator.add_publisher(tiled_pub)
-    # connect to labview zmq
+        # setup websocket server
+        operator = XPSOperator()
+        ws_publisher = XPSWSResultPublisher()
+        tiled_pub = TiledPublisher(tiled_runs_container())
 
-    lv_zmq_socket = setup_zmq()
-    listener = XPSLabviewZMQListener(operator=operator, zmq_socket=lv_zmq_socket)
+        operator.add_publisher(ws_publisher)
+        operator.add_publisher(tiled_pub)
+        # connect to labview zmq
 
-    # Wait for both tasks to complete
-    await asyncio.gather(listener.start(), ws_publisher.start())
+        lv_zmq_socket = setup_zmq()
+        listener = XPSLabviewZMQListener(operator=operator, zmq_socket=lv_zmq_socket)
 
-    def handle_sigterm(signum, frame):
-        logger.info("SIGTERM received, stopping...")
-        received_sigterm["received"] = True
-        asyncio.create_task(listener.stop())
-        asyncio.create_task(ws_publisher.stop())
+        # Wait for both tasks to complete
+        await asyncio.gather(listener.start(), ws_publisher.start())
 
-    # Register the handler for SIGTERM
-    signal.signal(signal.SIGTERM, handle_sigterm)
+        def handle_sigterm(signum, frame):
+            logger.info("SIGTERM received, stopping...")
+            received_sigterm["received"] = True
+            asyncio.create_task(listener.stop())
+            asyncio.create_task(ws_publisher.stop())
 
+        # Register the handler for SIGTERM
+        signal.signal(signal.SIGTERM, handle_sigterm)
+    except Exception as e:
+        logger.error(f"Error setting up XPS processor {e}")
+        raise e
 
 if __name__ == "__main__":
     asyncio.run(listen())

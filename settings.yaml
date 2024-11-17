@@ -1,6 +1,6 @@
 xps:
   log_level: "INFO"
-  tiled_uri: "http://localhost:8000"
+  tiled_uri: "http://tiled:8000"
   lv_zmq_listener:
-    zmq_pub_address: "tcp://127.0.0.1"
+    zmq_pub_address: "tcp://simulator"
     zmq_pub_port: 5555

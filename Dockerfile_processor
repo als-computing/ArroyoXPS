@@ -6,4 +6,4 @@ COPY . /app
 RUN pip install ./arroyo
 RUN pip install --no-cache-dir --upgrade .
 
-CMD ["python", "-m", "tr_ap_xps.processor.cli"]
+CMD ["python", "-m", "tr_ap_xps.apps.processor_cli"]

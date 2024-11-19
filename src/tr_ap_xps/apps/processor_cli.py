@@ -28,7 +28,6 @@ def tiled_runs_container() -> Container:
         return client["runs"]
     except Exception as e:
         logger.error(f"Error connecting to Tiled: {e}")
-        raise e
 
 
 @app.command()

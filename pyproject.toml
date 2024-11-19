@@ -21,7 +21,7 @@ dependencies = [
     "numpy",
     "Pillow",
     "pyzmq",
-    "tiled[client] @ git+https://github.com/dylanmcreynolds/tiled@append_zarr",
+    "tiled[client] @ git+https://github.com/bluesky/tiled.git",
     "tqdm",
     "typer",
     "websockets",

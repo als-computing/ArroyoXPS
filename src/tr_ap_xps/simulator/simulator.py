@@ -78,20 +78,19 @@ class RandomLabViewSimulator:
         time.sleep(5) # pause to let clients connect...without this the first message is lost
         while True:
             self.zmq_socket.send_json(start_example)
-            progress_bar = tqdm.tqdm(total=self.num_frames, desc="Sending frames", unit="frame")
+            progress_bar = tqdm.tqdm(total=self.num_frames, desc="Sending frames", unit=" ")
             for i in range(self.num_frames):
                 event_example["Frame Number"] = i
                 self.zmq_socket.send_json(event_example)
                 self.zmq_socket.send(
                     np.random.randint(0, 255, (1024, 1024), dtype=np.uint8)
                 )
-                progress_bar.update(i)
-                time.sleep(0.001)
-
+                progress_bar.update(1)
+                time.sleep(0.01)
             self.zmq_socket.send_json(stop_example)
             logger.info(f"finished sending messages pausing for {self.scan_pause} seconds")
             time.sleep(self.scan_pause)
-        
+            progress_bar.close()
 
     def finish(self):
         self.zmq_socket.close()
@@ -131,6 +130,7 @@ class LabViewPickleSimulator:
                 time.sleep(0.01)
             logger.info(f"send {len(sorted_messages.keys())} message")
             time.sleep(5)
+        
 
     def finish(self):
         self.socket.close()
@@ -142,8 +142,8 @@ def start(
     zmq_pub_address: str = "tcp://*",
     zmq_pub_port: int = 5555,
     log_level: str ="DEBUG",
-    scan_pause: int = 5,
-    num_frames: int = 10000
+    scan_pause: int = 600,
+    num_frames: int = 1000
 ) -> None:
     setup_logger(logger)
     logger.setLevel(log_level.upper())

@@ -9,7 +9,7 @@ from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
 
 
-logger = logging.getLogger("tr-ap-xps.processor")
+logger = logging.getLogger("tr_ap_xps.processor")
 
 
 class XPSProcessor:
@@ -52,9 +52,9 @@ class XPSProcessor:
             self.integrated_frames = np.vstack(
                 (self.integrated_frames, new_integrated_frame)
             )
-
         # Things to do every so often
         if message.image_info.frame_number % self.frames_per_cycle == 0:
+            logger.info(f"Processing frame {message.image_info.frame_number}")
             # Peak detection on new_integrated_frame
             detected_peaks_df = peak_fit(new_integrated_frame)
             # TODO: allow user to select repeat factor and width on UI

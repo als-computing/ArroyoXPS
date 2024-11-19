@@ -52,7 +52,6 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
             return
 
         elif isinstance(message, XPSResultStop):
-            logger.info("  stop")
             await asyncio.to_thread(
                 create_tiled_table_node,
                 self.current_tiled_scan.run_node,
@@ -63,7 +62,6 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
 
         elif not isinstance(message, XPSResult):
             raise KeyError(f"Unsupported message type {type(message)}")
-        logger.info("  event")
 
         # First frame, create data nodes. Has to be now to get the shapes
 

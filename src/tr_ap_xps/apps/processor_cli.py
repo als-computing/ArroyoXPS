@@ -47,7 +47,9 @@ async def listen() -> None:
 
         # setup websocket server
         operator = XPSOperator()
-        ws_publisher = XPSWSResultPublisher()
+        ws_publisher = XPSWSResultPublisher(
+            host=app_settings.websockets_publisher.host,
+            port=app_settings.websockets_publisher.port)
         tiled_pub = TiledPublisher(tiled_runs_container())
 
         operator.add_publisher(ws_publisher)

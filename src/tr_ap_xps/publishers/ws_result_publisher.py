@@ -25,13 +25,15 @@ class XPSWSResultPublisher(Publisher):
     websocket_server = None
     connected_clients = set()
 
-    def __init__(self):
+    def __init__(self, host: str = "localhost", port: int = 8001):
         super().__init__()
+        self.host = host
+        self.port = port
 
-    async def start(self, host: str = "localhost", port: int = 8001):
+    async def start(self,):
         # Use partial to bind `self` while matching the expected handler signature
-        server = await websockets.serve(self.websocket_handler, host, port, )
-        logger.info(f"Websocket server started at ws://{host}:{port}")
+        server = await websockets.serve(self.websocket_handler, self.host, self.port, )
+        logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
     async def publish(self, message: XPSResult) -> None:

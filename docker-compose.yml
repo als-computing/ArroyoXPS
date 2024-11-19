@@ -21,6 +21,8 @@ services:
       context: .
       dockerfile: Dockerfile_processor
     restart: unless-stopped
+    ports:
+      - "8001:8001"
     volumes:
       - .:/app:Z
       - ./settings_container.yaml:/app/settings.yaml:Z

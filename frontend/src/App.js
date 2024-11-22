@@ -236,7 +236,7 @@ export default function App() {
             return (
               <section key={item.id} className="my-8 flex flex-col">
                 <h2 className="text-center">{item.title}</h2>
-                <div className="h-96 border shadow-md flex items-end">
+                <div className="min-h-96 border shadow-md flex items-end">
                   <canvas className='border  w-96' ref={item.canvasRef} width={item.width} height={item.height} />
                 </div>
               </section>

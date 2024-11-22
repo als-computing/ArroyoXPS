@@ -28,6 +28,8 @@ services:
       - ./settings_container.yaml:/app/settings.yaml:Z
     networks:
       aps_net:
+    depends_on:
+      - tiled
 
 
   frontend:

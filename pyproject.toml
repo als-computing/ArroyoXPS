@@ -44,6 +44,9 @@ notebook = [
     "python-dotenv"
 ]
 
+simulator = [
+    "h5py"
+]
 
 [project.urls]
 Homepage = "https://github.com/als-computing/AP-XPS"

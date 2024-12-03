@@ -171,7 +171,7 @@ data/
 .secrets.*
 
 # Ignore .env file
-..env
+.env
 
 node_modules/
 # Ignore dynaconf secret files
@@ -180,3 +180,4 @@ node_modules/
 .archive/
 
 arroyo/
+

@@ -52,6 +52,8 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
             return
 
         elif isinstance(message, XPSResultStop):
+            if not self.current_tiled_scan:
+                return
             await asyncio.to_thread(
                 create_tiled_table_node,
                 self.current_tiled_scan.run_node,

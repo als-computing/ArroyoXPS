@@ -19,26 +19,13 @@ class XPSProcessor:
     """
 
     def __init__(self, message: XPSStart):
-        self.frames_per_cycle = message.frames_per_cycle
+        self.frames_per_cycle = message.f_reset
         self.integrated_frames: np.ndarray = None
-        # self.detected_peaks: pd.DataFrame = None
-        # self.vfft: pd.DataFrame = None
-        # self.ifft: pd.DataFrame = None
-        # self.sum: pd.DataFrame = None
+
 
     @timer
     def _compute_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
-
-    # TODO: we do not have filtered, but 4 the other instead. So, update this part?
-    # @timer
-    # def _tiled_update_lines_filtered(self, new_integrated_df: pd.DataFrame):
-    #     if "lines_filtered" not in self.tiled_nodes.run_node:
-    #         self.tiled_nodes.lines_filtered_node = self.create_tiled_table_node(
-    #             self.tiled_nodes.run_node, new_integrated_df, "lines_filtered"
-    #         )
-    #     else:
-            # self.tiled_nodes.lines_filtered_node.append_partition(new_integrated_df, 0)
 
     @timer
     def process_frame(self, message: XPSRawEvent) -> None:

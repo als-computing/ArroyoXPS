@@ -1,5 +1,3 @@
-
-version: "3.3"
 services:
   tiled:
     # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
@@ -12,6 +10,11 @@ services:
       - ./services/tiled/deploy:/deploy:Z
       - ./data:/data:Z
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       aps_net:
 
@@ -29,8 +32,8 @@ services:
     networks:
       aps_net:
     depends_on:
-      - tiled
-
+      tiled:
+        condition: service_healthy
 
   frontend:
     build:

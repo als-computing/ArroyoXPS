@@ -46,12 +46,36 @@ class XPSMessage(Message):
     pass
 
 
+class Rectangle(BaseModel):
+    left: int = Field(..., alias="Left")
+    top: int = Field(..., alias="Top")
+    right: int = Field(..., alias="Right")
+    bottom: int = Field(..., alias="Bottom")
+    rotation: int = Field(..., alias="Rotation")
+
+
 class XPSStart(Start, XPSMessage):
     msg_type: str = Literal["start"]
-    binding_energy: float = Field(..., alias="Binding Energy (eV)")
-    frames_per_cycle: int = Field(..., alias="frames_per_cycle")
+    binding_energy: float = Field(..., alias="Binding Energy")
     msg_type: str = Field("start", alias="msg_type")
     scan_name: str = Field(..., alias="scan_name")
+    f_trigger: int = Field(..., alias="F_Trigger")
+    f_untrigger: int = Field(..., alias="F_Un-Trigger")
+    f_dead: int = Field(..., alias="F_Dead")
+    f_reset: int = Field(..., alias="F_Reset")
+    ccd_nx: int = Field(..., alias="CCD_nx")
+    ccd_ny: int = Field(..., alias="CCD_ny")
+    pass_energy: float = Field(..., alias="Pass Energy")
+    center_energy: float = Field(..., alias="Center Energy")
+    offset_energy: float = Field(..., alias="Offset Energy")
+    lens_mode: str = Field(..., alias="Lens Mode")
+    rectangle: Rectangle = Field(..., alias="Rectangle")
+    notes: str = Field(..., alias="Notes")
+    dt: float = Field(..., alias="dt")
+    photon_energy: float = Field(..., alias="Photon Energy")
+    binding_energy: float = Field(..., alias="Binding Energy")
+    file_ver: str = Field(..., alias="File Ver")
+    stream: str = Field(..., alias="Stream")
 
 
 class XPSImageInfo(BaseModel):
@@ -67,33 +91,9 @@ class XPSRawEvent(Event, XPSMessage):
     image_info: XPSImageInfo
 
 
-class Rectangle(BaseModel):
-    left: int = Field(..., alias="Left")
-    top: int = Field(..., alias="Top")
-    right: int = Field(..., alias="Right")
-    bottom: int = Field(..., alias="Bottom")
-    rotation: int = Field(..., alias="Rotation")
-
 
 class XPSStop(Stop, XPSMessage):
-    msg_type: str = Literal["sttop"]
-    f_trigger: int = Field(..., alias="F_Trigger")
-    f_untrigger: int = Field(..., alias="F_Un-Trigger")
-    f_dead: int = Field(..., alias="F_Dead")
-    f_reset: int = Field(..., alias="F_Reset")
-    ccd_nx: int = Field(..., alias="CCD_nx")
-    ccd_ny: int = Field(..., alias="CCD_ny")
-    pass_energy: int = Field(..., alias="Pass Energy")
-    center_energy: int = Field(..., alias="Center Energy")
-    offset_energy: int = Field(..., alias="Offset Energy")
-    lens_mode: str = Field(..., alias="Lens Mode")
-    rectangle: Rectangle = Field(..., alias="Rectangle")
-    notes: str = Field(..., alias="Notes")
-    dt: float = Field(..., alias="dt")
-    photon_energy: float = Field(..., alias="Photon Engergy")
-    binding_energy: float = Field(..., alias="Binding Energy")
-    file_ver: str = Field(..., alias="File Ver")
-    stream: str = Field(..., alias="Strean")
+    pass
 
 
 class XPSResult(Event, XPSMessage):

@@ -106,8 +106,6 @@ class XPSLabviewZMQListener(ZMQListener):
 
     @staticmethod
     def _build_start(message: dict) -> XPSStart:
-        message["scan_name"] = f"temporary scan name{uuid4()}"  # temporary
-
         if logger.getEffectiveLevel() == logging.DEBUG:
             logger.debug(f"start: {message}")
         return XPSStart(**message)

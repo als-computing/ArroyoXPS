@@ -1,11 +1,13 @@
 import subprocess
 import time
-import zmq
-import pytest
 from multiprocessing import Process
+
+import zmq
+
 
 def start_processor_cli():
     subprocess.run(["python", "processor_cli.py"])
+
 
 def start_zmq_publisher():
     context = zmq.Context()
@@ -15,8 +17,10 @@ def start_zmq_publisher():
         socket.send_string("test message")
         time.sleep(1)
 
+
 def start_tiled_server():
     subprocess.run(["python", "tiled_server.py"])
+
 
 def test_integration():
     # Start processor_cli in a background process
@@ -39,7 +43,7 @@ def test_integration():
     socket = context.socket(zmq.SUB)
     socket.connect("tcp://localhost:5555")
     socket.setsockopt_string(zmq.SUBSCRIBE, "")
-#
+    #
     # Check if messages are received and processed
     message = socket.recv_string()
     assert message == "test message"

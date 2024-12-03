@@ -2,8 +2,9 @@ from typing import Literal
 
 import numpy
 import pandas
-from arroyo.schemas import Event, Message, Start, Stop
 from pydantic import BaseModel, Field, field_validator
+
+from arroyo.schemas import Event, Message, Start, Stop
 
 
 class DataFrameModel(BaseModel):
@@ -89,7 +90,6 @@ class XPSRawEvent(Event, XPSMessage):
     msg_type: str = Literal["event"]
     image: NumpyArrayModel
     image_info: XPSImageInfo
-
 
 
 class XPSStop(Stop, XPSMessage):

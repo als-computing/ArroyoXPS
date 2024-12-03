@@ -1,9 +1,9 @@
 import json
 import logging
-from uuid import uuid4
 
 import numpy as np
 import zmq.asyncio
+
 from arroyo.zmq import ZMQListener
 
 from ..config import settings
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def setup_zmq():
     ctx = zmq.asyncio.Context()
     lv_zmq_socket = ctx.socket(zmq.SUB)
-    lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000) 
+    lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
     logger.info(
         f"binding to: {app_settings.lv_zmq_listener.zmq_pub_address}:{app_settings.lv_zmq_listener.zmq_pub_port}"
     )

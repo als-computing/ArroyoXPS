@@ -33,10 +33,11 @@ def tiled_runs_container() -> Container:
 @app.command()
 async def listen() -> None:
     try:
-
         logger.setLevel(app_settings.log_level.upper())
         logger.debug("DEBUG LOGGING SET")
-        logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_address}")
+        logger.info(
+            f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_address}"
+        )
         logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_port}")
         logger.info(f"tiled_uri: {app_settings.tiled_uri}")
         logger.info(
@@ -49,7 +50,8 @@ async def listen() -> None:
         operator = XPSOperator()
         ws_publisher = XPSWSResultPublisher(
             host=app_settings.websockets_publisher.host,
-            port=app_settings.websockets_publisher.port)
+            port=app_settings.websockets_publisher.port,
+        )
         tiled_pub = TiledPublisher(tiled_runs_container())
 
         operator.add_publisher(ws_publisher)
@@ -73,6 +75,7 @@ async def listen() -> None:
     except Exception as e:
         logger.error(f"Error setting up XPS processor {e}")
         raise e
+
 
 if __name__ == "__main__":
     asyncio.run(listen())

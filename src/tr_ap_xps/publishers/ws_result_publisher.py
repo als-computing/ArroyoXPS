@@ -8,10 +8,11 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import websockets
-from arroyo.publisher import Publisher
 from PIL import Image
 
-from ..schemas import XPSResult, XPSStart, XPSResultStop
+from arroyo.publisher import Publisher
+
+from ..schemas import XPSResult, XPSResultStop, XPSStart
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +31,15 @@ class XPSWSResultPublisher(Publisher):
         self.host = host
         self.port = port
 
-    async def start(self,):
+    async def start(
+        self,
+    ):
         # Use partial to bind `self` while matching the expected handler signature
-        server = await websockets.serve(self.websocket_handler, self.host, self.port, )
+        server = await websockets.serve(
+            self.websocket_handler,
+            self.host,
+            self.port,
+        )
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
@@ -61,14 +68,16 @@ class XPSWSResultPublisher(Publisher):
 
         # sum_json = df_to_json(result.sum)
         detected_peaks = json.dumps(peaks_output(message.detected_peaks.df))
-        
+
         # send basic info
-        await client.send(json.dumps(
-            {
-                # "result_info": message.result_info,
-                "frame_number": message.frame_number,
-            }
-        ))
+        await client.send(
+            json.dumps(
+                {
+                    # "result_info": message.result_info,
+                    "frame_number": message.frame_number,
+                }
+            )
+        )
 
         # send image data separately to client memory issues
         await client.send(json.dumps({"raw": raw}))
@@ -79,7 +88,9 @@ class XPSWSResultPublisher(Publisher):
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
         if websocket.request.path != "/simImages":
-            logger.info(f"Invalid path: {websocket.request.path}, we only support /simImages")
+            logger.info(
+                f"Invalid path: {websocket.request.path}, we only support /simImages"
+            )
             return
         self.connected_clients.add(websocket)
         try:

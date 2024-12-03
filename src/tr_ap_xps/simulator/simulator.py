@@ -66,7 +66,9 @@ stop_example = {
 
 
 class RandomLabViewSimulator:
-    def __init__(self, zmq_socket: zmq.Socket, scan_pause: int, num_frames: int = 10000):
+    def __init__(
+        self, zmq_socket: zmq.Socket, scan_pause: int, num_frames: int = 10000
+    ):
         self.zmq_socket = zmq_socket
         self.scan_pause = scan_pause
         self.num_frames = num_frames
@@ -75,10 +77,14 @@ class RandomLabViewSimulator:
         self.zmq_socket.send(image)
 
     def start(self, sleep_interval: int = 5):
-        time.sleep(5) # pause to let clients connect...without this the first message is lost
+        time.sleep(
+            5
+        )  # pause to let clients connect...without this the first message is lost
         while True:
             self.zmq_socket.send_json(start_example)
-            progress_bar = tqdm.tqdm(total=self.num_frames, desc="Sending frames", unit=" ")
+            progress_bar = tqdm.tqdm(
+                total=self.num_frames, desc="Sending frames", unit=" "
+            )
             for i in range(self.num_frames):
                 event_example["Frame Number"] = i
                 self.zmq_socket.send_json(event_example)
@@ -88,7 +94,9 @@ class RandomLabViewSimulator:
                 progress_bar.update(1)
                 time.sleep(0.01)
             self.zmq_socket.send_json(stop_example)
-            logger.info(f"finished sending messages pausing for {self.scan_pause} seconds")
+            logger.info(
+                f"finished sending messages pausing for {self.scan_pause} seconds"
+            )
             time.sleep(self.scan_pause)
             progress_bar.close()
 
@@ -130,7 +138,6 @@ class LabViewPickleSimulator:
                 time.sleep(0.01)
             logger.info(f"send {len(sorted_messages.keys())} message")
             time.sleep(5)
-        
 
     def finish(self):
         self.socket.close()
@@ -141,9 +148,9 @@ class LabViewPickleSimulator:
 def start(
     zmq_pub_address: str = "tcp://*",
     zmq_pub_port: int = 5555,
-    log_level: str ="DEBUG",
+    log_level: str = "DEBUG",
     scan_pause: int = 600,
-    num_frames: int = 1000
+    num_frames: int = 1000,
 ) -> None:
     setup_logger(logger)
     logger.setLevel(log_level.upper())
@@ -153,7 +160,7 @@ def start(
     logger.info(f"zmq_pub_port: {zmq_pub_port}")
     ctx = zmq.Context()
     socket = ctx.socket(zmq.PUB)
-    socket.setsockopt(zmq.SNDHWM, 10000) 
+    socket.setsockopt(zmq.SNDHWM, 10000)
     socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 

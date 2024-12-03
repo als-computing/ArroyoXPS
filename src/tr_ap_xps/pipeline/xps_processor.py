@@ -1,13 +1,11 @@
 import logging
 
 import numpy as np
-import pandas as pd
 
 from ..schemas import DataFrameModel, NumpyArrayModel, XPSRawEvent, XPSResult, XPSStart
 from ..timing import timer
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
-
 
 logger = logging.getLogger("tr_ap_xps.processor")
 
@@ -21,7 +19,6 @@ class XPSProcessor:
     def __init__(self, message: XPSStart):
         self.frames_per_cycle = message.f_reset
         self.integrated_frames: np.ndarray = None
-
 
     @timer
     def _compute_mean(self, curr_frame: np.array):

@@ -3,11 +3,10 @@ import logging
 
 import numpy as np
 import zmq.asyncio
-
 from arroyo.zmq import ZMQListener
 
-from ..config import settings
-from ..schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
+from .config import settings
+from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
 # and Numpy assumes LittleE, so adjust that too.

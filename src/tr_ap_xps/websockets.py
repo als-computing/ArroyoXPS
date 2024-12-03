@@ -8,11 +8,10 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import websockets
+from arroyo.publisher import Publisher
 from PIL import Image
 
-from arroyo.publisher import Publisher
-
-from ..schemas import XPSResult, XPSResultStop, XPSStart
+from .schemas import XPSResult, XPSResultStop, XPSStart
 
 logger = logging.getLogger(__name__)
 

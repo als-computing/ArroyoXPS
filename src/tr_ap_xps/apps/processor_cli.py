@@ -7,11 +7,11 @@ from tiled.client import from_uri
 from tiled.client.node import Container
 
 from ..config import settings
-from ..listeners.labview_listener import XPSLabviewZMQListener, setup_zmq
+from ..labview import XPSLabviewZMQListener, setup_zmq
 from ..log_utils import setup_logger
-from ..operators.xps_operator import XPSOperator
-from ..publishers.tiled_result_publisher import TiledPublisher
-from ..publishers.ws_result_publisher import XPSWSResultPublisher
+from ..pipeline.xps_operator import XPSOperator
+from ..tiled import TiledPublisher
+from ..websockets import XPSWSResultPublisher
 
 app = typer.Typer()
 logger = logging.getLogger("tr_ap_xps")

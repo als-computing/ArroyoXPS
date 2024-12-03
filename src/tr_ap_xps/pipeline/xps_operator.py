@@ -4,9 +4,9 @@ import logging
 from arroyo.operator import Operator
 from arroyo.schemas import Message
 
-from ..pipeline.xps_processor import XPSProcessor
 from ..schemas import DataFrameModel, XPSRawEvent, XPSResultStop, XPSStart, XPSStop
 from ..timing import timer
+from .xps_processor import XPSProcessor
 
 logger = logging.getLogger(__name__)
 

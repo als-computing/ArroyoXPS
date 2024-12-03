@@ -5,16 +5,15 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from arroyo.publisher import Publisher
 from tiled.client.array import ArrayClient
 from tiled.client.dataframe import DataFrameClient
 from tiled.client.node import Container
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
-from arroyo.publisher import Publisher
-
-from ..config import settings
-from ..schemas import XPSResult, XPSResultStop, XPSStart
+from .config import settings
+from .schemas import XPSResult, XPSResultStop, XPSStart
 
 app_settings = settings.xps
 

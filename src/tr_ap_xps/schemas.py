@@ -2,9 +2,8 @@ from typing import Literal
 
 import numpy
 import pandas
-from pydantic import BaseModel, Field, field_validator
-
 from arroyo.schemas import Event, Message, Start, Stop
+from pydantic import BaseModel, Field, field_validator
 
 
 class DataFrameModel(BaseModel):

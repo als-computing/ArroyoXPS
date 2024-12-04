@@ -1,6 +1,9 @@
 import numpy as np
 
+from ..timing import timer
 
+
+@timer
 def get_vfft(array: np.array):
     """
     Perform fft along colmns
@@ -9,10 +12,12 @@ def get_vfft(array: np.array):
     return np.abs(np.log(np.abs(np.fft.fft(array[:, :], axis=0)) + epsilon))
 
 
+@timer
 def get_sum(array: np.array):
     return np.sum(array[:, :], axis=1)
 
 
+@timer
 def get_ifft(array: np.array, repeat_factor: int = 25, width: int = 0):
     """
     Perform IFFT filtering on the input array.
@@ -45,6 +50,7 @@ def get_ifft(array: np.array, repeat_factor: int = 25, width: int = 0):
     return np.abs(ifcarray)
 
 
+@timer
 def calculate_fft_items(array: np.array, repeat_factor: int = 20, width: int = 0):
     assert (
         isinstance(repeat_factor, int) and repeat_factor > 0

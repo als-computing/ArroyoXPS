@@ -12,6 +12,8 @@ import pandas as pd
 from astropy.modeling import fitting, models
 from scipy import signal
 
+from ..timing import timer
+
 warnings.filterwarnings(
     "ignore",
     message="The fit may be unsuccessful; Maximum number of iterations reached.",
@@ -20,6 +22,7 @@ warnings.filterwarnings(
 )
 
 
+@timer
 # find the bins
 def bayesian_block_finder(
     x: np.ndarray = np.ones(
@@ -168,6 +171,7 @@ def bayesian_block_finder(
     return np.array(boundaries)
 
 
+@timer
 def peak_helper(x_data, y_data, num_peaks, peak_shape):
     x_data = np.array(x_data)
     y_data = np.array(y_data)
@@ -247,6 +251,7 @@ def peak_helper(x_data, y_data, num_peaks, peak_shape):
     return ind_peaks, FWHM_list, flag_list, g_unfit, g_fit, amplitude_list
 
 
+@timer
 def get_peaks(x_data, y_data, num_peaks, peak_shape):
     base_list = None
     unfit_list = [[], []]
@@ -291,6 +296,7 @@ def get_peaks(x_data, y_data, num_peaks, peak_shape):
     return return_list, unfit_list, fit_list, residual, base_list
 
 
+@timer
 def peak_fit(one_d_array: np.ndarray):
     assert one_d_array.ndim == 1, "Input array must be 1-dimensional"
     x = np.arange(one_d_array.shape[0])

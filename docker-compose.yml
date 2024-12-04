@@ -1,9 +1,7 @@
-
-version: "3.3"
 services:
   tiled:
     # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
-    image: ghcr.io/bluesky/tiled:v0.1.0a122
+    image: ghcr.io/bluesky/tiled:main
     ports:
       - "8000:8000"
     environment:
@@ -12,39 +10,42 @@ services:
       - ./services/tiled/deploy:/deploy:Z
       - ./data:/data:Z
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       aps_net:
 
   processor:
-    # command: python -m tr_ap_xps.processor.cli --zmq-pub-address tcp://simulator
+    command: python -m tr_ap_xps.apps.processor_cli --zmq-pub-address tcp://simulator --zmq-pub-port 5555
     build:
       context: .
       dockerfile: Dockerfile_processor
-    restart: unless-stopped
-    volumes:
-      - .:/app:Z
-    networks:
-      aps_net:
-
-  wspublisher:
-    build:
-      context: .
-      dockerfile: Dockerfile_wspublisher
     restart: unless-stopped
     ports:
       - "8001:8001"
     volumes:
       - .:/app:Z
+      - ./settings_container.yaml:/app/settings.yaml:Z
     networks:
       aps_net:
+    depends_on:
+      tiled:
+        condition: service_healthy
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile_frontend
-    restart: unless-stopped
     ports:
       - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - .:/app:Z
+    networks:
+      aps_net:
 
 networks:
   aps_net:

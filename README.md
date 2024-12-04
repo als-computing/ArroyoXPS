@@ -1,11 +1,14 @@
 # Real Time AP-XPS Service
 This repository maintains a service that will the integrate with Beamline Control System for the new Real Time Ambient Pressure XRay Photon Spectroscopy instrument at the ALS.
 ``` mermaid
+
 graph LR
-    A[LabVIEW] -->|ZMQ PUB| B[Processor]
-    B -->|ZMQ SUB| C[WebSocket Server]
-    B -->|ZMQ SUB| D[Tiled Server]
-    C -->|WebSocket| E[Browser]
+    LabVIEW -->|ZMQ PUB| LabviewListener
+    LabviewListener --> XPSO[XPSOperator]
+    XPSO --> XPWS[XPSWSResultPublisher]
+    XPWS -->|WebSocket| Browser
+    XPSO --> TiledPublisher
+    TiledPublisher-->|HTTP| Tiled
 
 
 ```
@@ -26,6 +29,13 @@ Project documentation is maintained in this repository. This includes:
 
 # How to Run
 For this section, we assume that you have `docker` or `podman`, and a way to run a `docker-compose` file. We reference the `docker-compose` command, but this could be `podman-compose` as well. However, `podman` is experimental for this.
+
+0. Until Arroyo is public, you'll need to clone it locally (assuming you have read permission on it). This has to be done for development, and to build and run the containers.
+
+```
+git clone git@github.com:als-computing/arroyo.git
+pip install
+```
 
 1. Adjust .env settings
 Copy the file `.env.example` to `.env`. These settings will be picked up by docker-compose. You'll need to provide a very unique token for `TILED_SINGLE_USER_API_KEY`. A good way to generate this is:

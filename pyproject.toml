@@ -2,7 +2,6 @@
 name = "tr-ap-xps"
 version = "0.0.1"
 authors = [
-    { name="Runbo Jiang", email="rjiang2@lbl.gov"},
     { name="Dylan McReynolds", email="dmcreynolds@lbl.gov"},
 ]
 description = "a package to perform computations and suggestion during a time-resolved AP-XPS experiment"
@@ -14,15 +13,18 @@ classifiers = [
 ]
 
 dependencies = [
-    "arroyo@git+https://github.com/als-computing/arroyo.git",
+    # "arroyo",
     "astropy",
     "dynaconf",
     "python-dotenv",
     "pandas",
     "numpy",
+    "Pillow",
     "pyzmq",
-    "tiled[client]==v0.1.a122",
+    "tiled[client] @ git+https://github.com/bluesky/tiled.git",
+    "tqdm",
     "typer",
+    "websockets",
     "zarr"
 ]
 
@@ -32,6 +34,7 @@ dependencies = [
 dev = [
     "flake8",
     "pre-commit",
+    "pytest-asyncio",
     "pytest-mock",
     "tiled[server]",
 ]
@@ -42,19 +45,8 @@ notebook = [
     "python-dotenv"
 ]
 
-processor = [
-    "astropy",
-    "python-dotenv",
-    "pandas",
-    "numpy",
-    "pyzmq",
-    "tiled[client]==v0.1.a122",
-    "typer",
-    "uvicorn"
-]
-
-ws_publisher = [
-    "websockets"
+simulator = [
+    "h5py"
 ]
 
 [project.urls]

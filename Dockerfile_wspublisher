@@ -1,8 +1,0 @@
-FROM python:3.12
-
-WORKDIR /app
-
-COPY . /app
-RUN pip install --no-cache-dir --upgrade .[ws_publisher]
-
-CMD ["python", "-m", "tr_ap_xps.publisher.ws_server"]

@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tr_ap_xps.process.pipeline.fft import calculate_fft_items
-from tr_ap_xps.process.pipeline.peak_fitting import get_peaks, peak_fit
+from tr_ap_xps.pipeline.fft import calculate_fft_items
+from tr_ap_xps.pipeline.peak_fitting import get_peaks, peak_fit
 
 
 @pytest.fixture

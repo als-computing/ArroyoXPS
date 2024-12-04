@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy
 import pandas
 from arroyo.schemas import Event, Message, Start, Stop
@@ -44,51 +46,51 @@ class XPSMessage(Message):
     pass
 
 
+class Rectangle(BaseModel):
+    left: int = Field(..., alias="Left")
+    top: int = Field(..., alias="Top")
+    right: int = Field(..., alias="Right")
+    bottom: int = Field(..., alias="Bottom")
+    rotation: int = Field(..., alias="Rotation")
+
+
 class XPSStart(Start, XPSMessage):
-    binding_energy: float = Field(..., alias="Binding Energy (eV)")
-    frames_per_cycle: int = Field(..., alias="frame_per_cycle")
+    msg_type: str = Literal["start"]
+    binding_energy: float = Field(..., alias="Binding Energy")
     msg_type: str = Field("start", alias="msg_type")
     scan_name: str = Field(..., alias="scan_name")
-
-
-class XPSImageInfo(BaseModel):
-    frame_number: int = Field(..., alias="Frame Number")
-    width: int = Field(..., alias="Width")
-    height: int = Field(..., alias="Height")
-    data_type: str = Field(..., alias="data_type")
-
-
-class XPSRawEvent(Event, XPSMessage):
-    image: NumpyArrayModel
-    image_info: XPSImageInfo
-
-
-class Rectangle(BaseModel):
-    left: int = Field(..., alias="F_Trigger")
-    top: int = Field(..., alias="F_Trigger")
-    right: int = Field(..., alias="F_Trigger")
-    bottom: int = Field(..., alias="F_Trigger")
-    rotation: int = Field(..., alias="F_Trigger")
-
-
-class XPSStop(Stop, XPSMessage):
     f_trigger: int = Field(..., alias="F_Trigger")
     f_untrigger: int = Field(..., alias="F_Un-Trigger")
     f_dead: int = Field(..., alias="F_Dead")
     f_reset: int = Field(..., alias="F_Reset")
     ccd_nx: int = Field(..., alias="CCD_nx")
     ccd_ny: int = Field(..., alias="CCD_ny")
-    pass_energy: int = Field(..., alias="Pass Energy")
-    center_energy: int = Field(..., alias="Center Energy")
-    offset_energy: int = Field(..., alias="Offset Energy")
+    pass_energy: float = Field(..., alias="Pass Energy")
+    center_energy: float = Field(..., alias="Center Energy")
+    offset_energy: float = Field(..., alias="Offset Energy")
     lens_mode: str = Field(..., alias="Lens Mode")
     rectangle: Rectangle = Field(..., alias="Rectangle")
     notes: str = Field(..., alias="Notes")
     dt: float = Field(..., alias="dt")
-    photon_energy: float = Field(..., alias="Photon Engergy")
+    photon_energy: float = Field(..., alias="Photon Energy")
     binding_energy: float = Field(..., alias="Binding Energy")
     file_ver: str = Field(..., alias="File Ver")
-    stream: str = Field(..., alias="Strean")
+    stream: str = Field(..., alias="Stream")
+    data_type: str = Field(..., alias="Type")
+
+
+class XPSImageInfo(BaseModel):
+    frame_number: int = Field(..., alias="Frame Number")
+
+
+class XPSRawEvent(Event, XPSMessage):
+    msg_type: str = Literal["event"]
+    image: NumpyArrayModel
+    image_info: XPSImageInfo
+
+
+class XPSStop(Stop, XPSMessage):
+    pass
 
 
 class XPSResult(Event, XPSMessage):
@@ -98,3 +100,8 @@ class XPSResult(Event, XPSMessage):
     vfft: NumpyArrayModel
     ifft: NumpyArrayModel
     sum: NumpyArrayModel
+
+
+class XPSResultStop(Stop, XPSMessage):
+    msg_type: str = Literal["result_stop"]
+    function_timings: DataFrameModel

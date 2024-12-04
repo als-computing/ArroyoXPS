@@ -11,10 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 def main(
-    zmq_pub_address: str = "tcp://192.168.1.84",
+    # zmq_pub_address: str = "tcp://192.168.1.84",
+    zmq_pub_address: str = "tcp://131.243.75.240",
     zmq_pub_port: int = 5555,
     zme_hwm: int = 5000,
-    scan_name="scan2",
+    scan_name="scan3",
     data_dir="./sample_data",
     log_level="debug",
 ):
@@ -37,6 +38,7 @@ def main(
         msg = socket.recv()
         logger.info(f"msg # {msg_index}")
         # logger.info(msg)
+        print(msg[0:200])
         scan_file = scan_dir / Path(str(msg_index) + ".pickle")
         with open(scan_file, "ab") as msg_file:
             pickle.dump(msg, msg_file)

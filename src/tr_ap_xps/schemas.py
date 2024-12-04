@@ -76,13 +76,11 @@ class XPSStart(Start, XPSMessage):
     binding_energy: float = Field(..., alias="Binding Energy")
     file_ver: str = Field(..., alias="File Ver")
     stream: str = Field(..., alias="Stream")
+    data_type: str = Field(..., alias="Type")
 
 
 class XPSImageInfo(BaseModel):
     frame_number: int = Field(..., alias="Frame Number")
-    width: int = Field(..., alias="Width")
-    height: int = Field(..., alias="Height")
-    data_type: str = Field(..., alias="Type")
 
 
 class XPSRawEvent(Event, XPSMessage):

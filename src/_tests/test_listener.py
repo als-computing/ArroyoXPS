@@ -1,12 +1,13 @@
+import asyncio
 import contextlib
 import subprocess
 import sys
-import threading
-import time
+from unittest.mock import AsyncMock
 
-import numpy as np
+import pytest
 
-from tr_ap_xps.listeners import XPSLabviewZMQListener
+from tr_ap_xps.labview import XPSLabviewZMQListener, setup_zmq
+from tr_ap_xps.schemas import XPSRawEvent, XPSStart, XPSStop
 
 
 @contextlib.contextmanager
@@ -21,32 +22,37 @@ def run_simulator(command):
     process.terminate()
 
 
-def test_listen_zmq_interface():
-    # Test that the listener can receive an image from the publisher
-    # and that the image is the correct shape and dtype.
-    # Starts a publisher as a sub processand a listener on a thread, sends an image from the publisher
-    # dictionary to store the received image
-    run = {}
+@pytest.fixture
+def mock_operator():
+    return AsyncMock()
 
-    def start(start_doc: dict):
-        run["start"] = start_doc
 
-    def event(image_info: dict, image: np.array):
-        run["image_info"] = image_info
-        run["image"] = image
+@pytest.mark.asyncio
+async def test_listen_zmq_interface(mock_operator):
+    # Start the listener coroutine
 
-    def stop(stop_doc: np.array):
-        run["stop"] = stop_doc
+    with run_simulator("tr_ap_xps.simulator.simulator --no-repeat --num-frames 5"):
+        zmq_socket = setup_zmq()
+        listener = XPSLabviewZMQListener(mock_operator, zmq_socket)
+        listener_task = await asyncio.create_task(listener.start())
+        # Give some time for the listener to start and process messages
+        await asyncio.sleep(7)
 
-    with run_simulator("tr_ap_xps.simulator"):
-        image_dispatcher = XPSLabviewZMQListener(
-            start_function=start, event_function=event, stop_function=stop
-        )
-        thread = threading.Thread(target=image_dispatcher.start)
-        thread.start()
-        time.sleep(2)
-        image_dispatcher.stop = True
-        time.sleep(2)
-        # TODO: fix test
-        # assert run["image"].shape == (10, 10)
-        # assert run["frame_number"]
+        # Stop the listener and wait for it to complete
+        await listener.stop()
+        await listener_task
+
+        # Verify the specific arguments for each call
+        assert mock_operator.process.call_count == 3
+
+        # Verify the arguments are instances of specific classes
+        for call_args in mock_operator.process.call_args_list:
+            assert isinstance(
+                call_args[0][0], XPSStart
+            ), f"First argument is not an instance of XPSStart: {call_args[0][0]}"
+            assert isinstance(
+                call_args[0][1], XPSRawEvent
+            ), f"Second argument is not an instance of XPSRawEvent: {call_args[0][1]}"
+            assert isinstance(
+                call_args[0][1], XPSStop
+            ), f"Second argument is not an instance of XPSStop: {call_args[0][1]}"

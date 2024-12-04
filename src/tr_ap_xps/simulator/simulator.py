@@ -20,24 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 start_example = {
-    "msg_type": "start",
-    "Binding Energy (eV)": 5.0,
-    "frames_per_cycle": 5,
-    "msg_type": "start",
-    "scan_name": f"test_scan{uuid4()}",
-    "scan_id": "12345",
-}
-
-event_example = {
-    "msg_type": "event",
-    "timestamp": time.time(),
-    "Frame Number": 0,
-    "Width": 1024,
-    "Height": 1024,
-    "Type": "U8",
-}
-
-stop_example = {
     "msg_type": "stop",
     "F_Trigger": 1,
     "F_Un-Trigger": 2,
@@ -64,19 +46,38 @@ stop_example = {
     "Strean": "stream1",
 }
 
+stop_example = {
+    "msg_type": "start",
+    "Binding Energy (eV)": 5.0,
+    "frames_per_cycle": 5,
+    "msg_type": "start",
+    "scan_name": f"test_scan{uuid4()}",
+    "scan_id": "12345",
+}
+
+event_example = {
+    "msg_type": "event",
+    "Type": "U8",
+}
+
 
 class RandomLabViewSimulator:
     def __init__(
-        self, zmq_socket: zmq.Socket, scan_pause: int, num_frames: int = 10000
+        self,
+        zmq_socket: zmq.Socket,
+        scan_pause: int,
+        num_frames: int = 5,
+        repeat: bool = False,
     ):
         self.zmq_socket = zmq_socket
         self.scan_pause = scan_pause
         self.num_frames = num_frames
+        self.repeat = repeat
 
     def _send_image(self, image: np.ndarray):
         self.zmq_socket.send(image)
 
-    def start(self, sleep_interval: int = 5):
+    def start(self):
         time.sleep(
             5
         )  # pause to let clients connect...without this the first message is lost
@@ -97,6 +98,8 @@ class RandomLabViewSimulator:
             logger.info(
                 f"finished sending messages pausing for {self.scan_pause} seconds"
             )
+            if not self.repeat:
+                break
             time.sleep(self.scan_pause)
             progress_bar.close()
 
@@ -105,9 +108,10 @@ class RandomLabViewSimulator:
 
 
 class LabViewPickleSimulator:
-    def __init__(self, zmq_socket: zmq.Socket, pickle_dir: str):
+    def __init__(self, zmq_socket: zmq.Socket, pickle_dir: str, repeat: bool = False):
         self.socket = zmq_socket
         self.pickle_dir = pickle_dir
+        self.repeat = repeat
 
     def _send_image(self, image: np.ndarray):
         self.socket.send(image)
@@ -137,6 +141,8 @@ class LabViewPickleSimulator:
                 self.socket.send(data)
                 time.sleep(0.01)
             logger.info(f"send {len(sorted_messages.keys())} message")
+            if not self.repeat:
+                break
             time.sleep(5)
 
     def finish(self):
@@ -149,7 +155,8 @@ def start(
     zmq_pub_address: str = "tcp://*",
     zmq_pub_port: int = 5555,
     log_level: str = "DEBUG",
-    scan_pause: int = 600,
+    repeat: bool = True,
+    scan_pause: int = 0,
     num_frames: int = 1000,
 ) -> None:
     setup_logger(logger)
@@ -165,7 +172,7 @@ def start(
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 
     # simulator = LabViewPickleSimulator(socket, pickle_dir)
-    simulator = RandomLabViewSimulator(socket, scan_pause, num_frames)
+    simulator = RandomLabViewSimulator(socket, scan_pause, num_frames, repeat=repeat)
     print("starting labview simulator")
     simulator.start()
     simulator.finish()

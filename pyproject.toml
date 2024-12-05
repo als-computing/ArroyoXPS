@@ -18,6 +18,7 @@ dependencies = [
     "dynaconf",
     "python-dotenv",
     "pandas",
+    "msgpack",
     "numpy",
     "Pillow",
     "pyzmq",

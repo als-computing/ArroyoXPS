@@ -1,0 +1,3 @@
+[submodule "arroyo"]
+	path = arroyo
+	url = git@github.com:als-computing/arroyo.git

@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Union
 
+import msgpack
 import numpy as np
 import pandas as pd
 import websockets
@@ -61,9 +62,9 @@ class XPSWSResultPublisher(Publisher):
             await client.send(json.dumps(message.model_dump()))
             return
 
-        raw = buffer_to_jpeg(message.integrated_frames.array)
-        ifft = buffer_to_jpeg(message.ifft.array)
-        vfft = buffer_to_jpeg(message.vfft.array)
+        # raw = buffer_to_jpeg(message.integrated_frames.array)
+        # ifft = buffer_to_jpeg(message.ifft.array)
+        # vfft = buffer_to_jpeg(message.vfft.array)
 
         # sum_json = df_to_json(result.sum)
         detected_peaks = json.dumps(peaks_output(message.detected_peaks.df))
@@ -79,10 +80,10 @@ class XPSWSResultPublisher(Publisher):
         )
 
         # send image data separately to client memory issues
-        await client.send(json.dumps({"raw": raw}))
-        await client.send(json.dumps({"fitted": detected_peaks}))
-        await client.send(json.dumps({"vfft": vfft}))
-        await client.send(json.dumps({"ifft": ifft}))
+        await client.send(msgpack.packb({"raw": message.integrated_frames.array}))
+        await client.send(msgpack.packb({"fitted": detected_peaks}))
+        await client.send(msgpack.packb({"vfft": message.vfft.array}))
+        await client.send(msgpack.packb({"ifft": message.ifft.array}))
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")

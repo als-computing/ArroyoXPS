@@ -26,6 +26,7 @@ class XPSWSResultPublisher(Publisher):
 
     websocket_server = None
     connected_clients = set()
+    current_start_message = None
 
     def __init__(self, host: str = "localhost", port: int = 8001):
         super().__init__()
@@ -57,17 +58,14 @@ class XPSWSResultPublisher(Publisher):
         message: Union[XPSResult | XPSStart | XPSResultStop],
     ) -> None:
         if isinstance(message, XPSResultStop):
+            self.current_start_message = None
             return
 
         if isinstance(message, XPSStart):
+            self.current_start_message = message
             await client.send(json.dumps(message.model_dump()))
             return
 
-        # raw = buffer_to_jpeg(message.integrated_frames.array)
-        # ifft = buffer_to_jpeg(message.ifft.array)
-        # vfft = buffer_to_jpeg(message.vfft.array)
-
-        # sum_json = df_to_json(result.sum)
         detected_peaks = json.dumps(peaks_output(message.detected_peaks.df))
 
         # send basic info
@@ -79,12 +77,16 @@ class XPSWSResultPublisher(Publisher):
                 }
             )
         )
-
+        image_info = {
+            "dtype": message.integrated_frames.array.dtype.str,
+            "width": message.integrated_frames.array.shape[0],
+            "height": message.integrated_frames.array.shape[1],
+        }
         # send image data separately to client memory issues
-        await client.send(msgpack.packb({"raw": message.integrated_frames.array.tobytes()}))
+        await client.send(msgpack.packb({"raw": message.integrated_frames.array.tobytes(), **image_info}))
         await client.send(json.dumps({"fitted": detected_peaks}))
-        await client.send(msgpack.packb({"vfft": message.vfft.array.tobytes()}))
-        await client.send(msgpack.packb({"ifft": message.ifft.array.tobytes()}))
+        await client.send(msgpack.packb({"vfft": message.vfft.array.tobytes(), **image_info}))
+        await client.send(msgpack.packb({"ifft": message.ifft.array.tobytes(), **image_info}))
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")

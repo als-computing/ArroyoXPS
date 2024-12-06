@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from '../component_library/Button';
+import msgpack from 'msgpack-lite';
 import TextField from '../component_library/TextField';
 import Plot from 'react-plotly.js';
 import dayjs from 'dayjs';
@@ -56,7 +57,8 @@ export default function Main() {
         }
 
         ws.current.onmessage = function (event) {
-            const data = JSON.parse(event.data);
+            // const data = JSON.parse(event.data);
+            const data = msgpack.decode(new Uint8Array(event.data));
             setTimeStamp(dayjs().format('hh:mm:ss:SSS'));
 
             const imageNames = ['raw', 'vfft', 'ifft'];

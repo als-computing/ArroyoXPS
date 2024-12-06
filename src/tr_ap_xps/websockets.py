@@ -78,7 +78,6 @@ class XPSWSResultPublisher(Publisher):
             )
         )
         image_info = {
-            "dtype": str(message.integrated_frames.array.dtype),
             "width": message.integrated_frames.array.shape[0],
             "height": message.integrated_frames.array.shape[1],
         }

@@ -1,7 +1,8 @@
 from typing import Literal
 
-from arroyo.schemas import DataFrameModel, Event, Message, NumpyArrayModel, Start, Stop
 from pydantic import BaseModel, Field
+
+from arroyo.schemas import DataFrameModel, Event, Message, NumpyArrayModel, Start, Stop
 
 """
     This module defines schemas for XPS (X-ray Photoelectron Spectroscopy) messages and events using
@@ -33,6 +34,13 @@ class XPSMessage(Message):
     pass
 
 
+class XPSImageInfo(BaseModel):
+    frame_number: int
+    width: int
+    height: int
+    data_type: str
+
+
 class XPSStart(Start, XPSMessage):
     msg_type: str = Literal["start"]
     binding_energy: float = Field(..., alias="Binding Energy")
@@ -45,39 +53,35 @@ class XPSStart(Start, XPSMessage):
     An example with nonsense values:
 
     {
-        "XPSStart": {
-            "Binding Energy (eV)": 42.0001,
-            "frame_per_cycle": 10,
-            "scan_name": "Don't panic!",
-            "F_trigger": 42,
-            "F_Un-Trigger": 42,
-            "F_Dead": 42,
-            "F_Reset": 42,
-            "CCD_nx": 42,
-            "CCD_ny": 42,
-            "Pass Energy": 42.0001,
-            "Center Energy": 42.001,
-            "Offset Energy": 42.001,
-            "Lens Mode: "Magrathea",
-            "Rectangle": {
-                "Left": 42,
-                "Top": 42,
-                "Right": 42,
-                "Bottom": 42
-            },
-            "Notes": "So long and thanks for all the fish",
-            "dt": 42.00001,
-            "Photon Energy": 42.0001,
-            "Binding Energy": 42.0001,
-            "File Ver": "Earth V2"
-            "Stream": "Heart of Gold"
-        }
+        "msg_type": "start",
+        "F_Trigger": 13,
+        "F_Un-Trigger": 38,
+        "F_Dead": 45,
+        "F_Reset": 46,
+        "CCD_nx": 1392,
+        "CCD_ny": 1040,
+        "Pass Energy": 200,
+        "Center Energy": 3308,
+        "Offset Energy": -0.837,
+        "Lens Mode": "X6-26Mar2022-test",
+        "Rectangle": {
+            "Left": 148,
+            "Top": 385,
+            "Right": 1279,
+            "Bottom": 654,
+            "Rotation": 0
+        },
+        "data_type": "U8",
+        "dt": 0.0820741786426572,
+        "Photon Energy": 3999.99740398402,
+        "Binding Energy": 90,
+        "File Ver": "1.0.0"
     }
+
 
     """
 
-    binding_energy: float = Field(..., alias="Binding Energy (eV)")
-    frames_per_cycle: int = Field(..., alias="frame_per_cycle")
+    binding_energy: float = Field(..., alias="Binding Energy")
     scan_name: str = Field(..., alias="scan_name")
     f_trigger: int = Field(..., alias="F_Trigger")
     f_untrigger: int = Field(..., alias="F_Un-Trigger")
@@ -90,52 +94,38 @@ class XPSStart(Start, XPSMessage):
     offset_energy: float = Field(..., alias="Offset Energy")
     lens_mode: str = Field(..., alias="Lens Mode")
     rectangle: Rectangle = Field(..., alias="Rectangle")
-    notes: str = Field(..., alias="Notes")
     dt: float = Field(..., alias="dt")
     photon_energy: float = Field(..., alias="Photon Energy")
     binding_energy: float = Field(..., alias="Binding Energy")
     file_ver: str = Field(..., alias="File Ver")
-    stream: str = Field(..., alias="Stream")
-    data_type: str = Field(..., alias="Type")
-
-
-class XPSImageInfo(BaseModel):
-    frame_number: int = Field(..., alias="Frame Number")
+    data_type: str = Field(..., alias="data_type")
 
 
 class XPSRawEvent(Event, XPSMessage):
+    """
+
+    LabVIEW Message:
+    {
+        "msg_type": "event",
+        "Frame Number": 1
+    }
+    """
+
     msg_type: str = Literal["event"]
     image: NumpyArrayModel
     image_info: XPSImageInfo
 
 
 class XPSStop(Stop, XPSMessage):
-    pass
-
-
-class XPSImageInfo(BaseModel):
     """
-    LabVIEW Message:
+    {
+        "msg_type": "stop",
+        "Num Frames": 1
+    }
 
-        Incoming mesesage with every frame.
-        For each frame, LabVIEW sends a json document with frame information.
-        Expects incoming message to be JSON.
-        An example with nonsense values:
-
-        {
-            "XPSImageInfo": {
-                "Frame Number": 42,
-                "Width": 1042,
-                "Height": 1042,
-                "Data Type": "U8"
-            }
-        }
     """
 
-    frame_number: int = Field(..., alias="Frame Number")
-    width: int = Field(..., alias="Width")
-    height: int = Field(..., alias="Height")
-    data_type: str = Field(..., alias="data_type")
+    num_frames: int = Field(..., alias="Num Frames")
 
 
 class XPSResult(Event, XPSMessage):

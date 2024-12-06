@@ -1,6 +1,6 @@
 import logging
 import time
-from uuid import uuid4
+from enum import Enum
 
 import numpy as np
 import tqdm
@@ -20,45 +20,31 @@ logger = logging.getLogger(__name__)
 
 
 start_example = {
-    "msg_type": "stop",
-    "F_Trigger": 1,
-    "F_Un-Trigger": 2,
-    "F_Dead": 3,
-    "F_Reset": 4,
-    "CCD_nx": 1024,
-    "CCD_ny": 768,
-    "Pass Energy": 20,
-    "Center Energy": 1000,
-    "Offset Energy": 0,
-    "Lens Mode": "Mode1",
-    "Rectangle": {
-        "Left": 1,
-        "Top": 2,
-        "Right": 3,
-        "Rotation": 4,
-        "Bottom": 5,
-    },
-    "Notes": "Sample notes",
-    "dt": 0.1,
-    "Photon Engergy": 1486.6,
-    "Binding Energy": 0.0,
-    "File Ver": "1.0",
-    "Strean": "stream1",
+    "msg_type": "start",
+    "F_Trigger": 13,
+    "F_Un-Trigger": 38,
+    "F_Dead": 45,
+    "F_Reset": 46,
+    "CCD_nx": 1392,
+    "CCD_ny": 1040,
+    "Pass Energy": 200,
+    "Center Energy": 3308,
+    "Offset Energy": -0.837,
+    "Lens Mode": "X6-26Mar2022-test",
+    "Rectangle": {"Left": 148, "Top": 385, "Right": 1279, "Bottom": 654, "Rotation": 0},
+    "data_type": "U8",
+    "dt": 0.0820741786426572,
+    "Photon Energy": 3999.99740398402,
+    "Binding Energy": 90,
+    "File Ver": "1.0.0",
 }
 
 stop_example = {
-    "msg_type": "start",
-    "Binding Energy (eV)": 5.0,
-    "frames_per_cycle": 5,
-    "msg_type": "start",
-    "scan_name": f"test_scan{uuid4()}",
-    "scan_id": "12345",
+    "msg_type": "stop",
+    "Num Frames": 1000,
 }
 
-event_example = {
-    "msg_type": "event",
-    "Type": "U8",
-}
+event_example = {"msg_type": "event", "Frame Number": 0}
 
 
 class RandomLabViewSimulator:
@@ -86,14 +72,18 @@ class RandomLabViewSimulator:
             progress_bar = tqdm.tqdm(
                 total=self.num_frames, desc="Sending frames", unit=" "
             )
+            rectangle = start_example["Rectangle"]
+            height = rectangle["Bottom"] - rectangle["Top"]
+            width = rectangle["Right"] - rectangle["Left"]
             for i in range(self.num_frames):
                 event_example["Frame Number"] = i
                 self.zmq_socket.send_json(event_example)
                 self.zmq_socket.send(
-                    np.random.randint(0, 255, (1024, 1024), dtype=np.uint8)
+                    np.random.randint(0, 255, (width, height), dtype=np.uint8)
                 )
                 progress_bar.update(1)
                 time.sleep(0.01)
+            stop_example["Number of Frames"] = self.num_frames
             self.zmq_socket.send_json(stop_example)
             logger.info(
                 f"finished sending messages pausing for {self.scan_pause} seconds"
@@ -150,14 +140,20 @@ class LabViewPickleSimulator:
         self.ctx.term()
 
 
+class SimType(Enum):
+    h5 = "h5"
+    random = "random"
+
+
 @app.command()
 def start(
     zmq_pub_address: str = "tcp://*",
     zmq_pub_port: int = 5555,
     log_level: str = "DEBUG",
     repeat: bool = True,
-    scan_pause: int = 0,
+    scan_pause: int = 5,
     num_frames: int = 1000,
+    sim_type: SimType = SimType.random.value,
 ) -> None:
     setup_logger(logger)
     logger.setLevel(log_level.upper())
@@ -172,7 +168,14 @@ def start(
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 
     # simulator = LabViewPickleSimulator(socket, pickle_dir)
-    simulator = RandomLabViewSimulator(socket, scan_pause, num_frames, repeat=repeat)
+    match sim_type:
+        case SimType.h5:
+            simulator = LabViewPickleSimulator(socket, "sample_dir", repeat=repeat)
+        case SimType.random:
+            simulator = RandomLabViewSimulator(
+                socket, scan_pause, num_frames, repeat=repeat
+            )
+
     print("starting labview simulator")
     simulator.start()
     simulator.finish()

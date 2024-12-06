@@ -1,3 +1,4 @@
+import json
 import logging
 import pickle
 from pathlib import Path
@@ -15,7 +16,7 @@ def main(
     zmq_pub_address: str = "tcp://131.243.75.240",
     zmq_pub_port: int = 5555,
     zme_hwm: int = 5000,
-    scan_name="scan3",
+    scan_name="scan4",
     data_dir="./sample_data",
     log_level="debug",
 ):
@@ -38,7 +39,7 @@ def main(
         msg = socket.recv()
         logger.info(f"msg # {msg_index}")
         # logger.info(msg)
-        print(msg[0:200])
+        print_json(msg)
         scan_file = scan_dir / Path(str(msg_index) + ".pickle")
         with open(scan_file, "ab") as msg_file:
             pickle.dump(msg, msg_file)
@@ -46,6 +47,14 @@ def main(
         msg_index += 1
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug(msg)
+
+
+def print_json(msg: bytes) -> None:
+    try:
+        json_dict = json.loads(msg.decode("utf-8"))
+        print(json.dumps(json_dict, indent=4))
+    except Exception:
+        print("frame")
 
 
 if __name__ == "__main__":

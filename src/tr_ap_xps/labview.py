@@ -1,8 +1,10 @@
 import json
 import logging
+import uuid
 
 import numpy as np
 import zmq.asyncio
+
 from arroyo.zmq import ZMQListener
 
 from .config import settings
@@ -48,6 +50,7 @@ class XPSLabviewZMQListener(ZMQListener):
 
     async def start(self):
         logger.info("Listener started")
+        current_image_info: XPSImageInfo = None
         while True:
             json_message = None
             try:
@@ -63,14 +66,18 @@ class XPSLabviewZMQListener(ZMQListener):
                 if json_message:
                     message_type = json_message.get("msg_type")
                     if message_type == "start":
+                        json_message["scan_name"] = f"temp name {uuid.uuid4()}"
                         logger.info(
                             f"Start message processed: {json_message['scan_name']}"
                         )
-                        await self.operator.process(self._build_start(json_message))
+                        start_msg, image_info = self._build_start(json_message)
+                        current_image_info = image_info
+                        await self.operator.process(start_msg)
                         continue
 
                     elif message_type == "stop":
                         logger.info("Stop message received")
+                        current_image_info = None
                         await self.operator.process(self._build_stop(json_message))
                         continue
                     elif message_type == "event":
@@ -83,7 +90,7 @@ class XPSLabviewZMQListener(ZMQListener):
                             logger.error("Received unexpected message")
                             continue
                         await self.operator.process(
-                            self._build_event(json_message, buffer)
+                            self._build_event(json_message, current_image_info, buffer)
                         )
                         logger.debug("event processed")
             except Exception as e:
@@ -92,13 +99,15 @@ class XPSLabviewZMQListener(ZMQListener):
                     logger.exception("Error dealing with  message")
 
     @staticmethod
-    def _build_event(message: dict, buffer: bytes) -> XPSRawEvent:
-        image_info = XPSImageInfo(**message)
+    def _build_event(
+        message: dict, image_info: XPSImageInfo, buffer: bytes
+    ) -> XPSRawEvent:
         shape = (image_info.width, image_info.height)
         dtype = DATATYPE_MAP.get(image_info.data_type)
         if not dtype:
             logger.error(f"Received unexpected data type: {image_info}")
         array_received = np.frombuffer(buffer, dtype=dtype).reshape(shape)
+        image_info.frame_number = message.get("Frame Number")
         return XPSRawEvent(
             image=NumpyArrayModel(array=array_received), image_info=image_info
         )
@@ -107,7 +116,16 @@ class XPSLabviewZMQListener(ZMQListener):
     def _build_start(message: dict) -> XPSStart:
         if logger.getEffectiveLevel() == logging.DEBUG:
             logger.debug(f"start: {message}")
-        return XPSStart(**message)
+        start = XPSStart(**message)
+        rectangle = start.rectangle
+        image_info = XPSImageInfo(
+            frame_number=0,
+            width=rectangle.right - rectangle.left,
+            height=rectangle.bottom
+            - rectangle.top,  # rectangle is from top-left corner
+            data_type=start.data_type,
+        )
+        return start, image_info
 
     @staticmethod
     def _build_stop(message: dict) -> XPSStop:

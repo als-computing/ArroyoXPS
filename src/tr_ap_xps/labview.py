@@ -81,6 +81,9 @@ class XPSLabviewZMQListener(ZMQListener):
                         await self.operator.process(self._build_stop(json_message))
                         continue
                     elif message_type == "event":
+                        if current_image_info is None:
+                            logger.error("Received event without a start message")
+                            continue
                         buffer = await self.zmq_socket.recv()
                         # Must be an event with an image
                         if logger.getEffectiveLevel() == logging.DEBUG:

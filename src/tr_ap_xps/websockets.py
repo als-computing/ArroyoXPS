@@ -81,10 +81,10 @@ class XPSWSResultPublisher(Publisher):
         )
 
         # send image data separately to client memory issues
-        await client.send(msgpack.packb({"raw": message.integrated_frames.array}))
-        await client.send(msgpack.packb({"fitted": detected_peaks}))
-        await client.send(msgpack.packb({"vfft": message.vfft.array}))
-        await client.send(msgpack.packb({"ifft": message.ifft.array}))
+        await client.send(msgpack.packb({"raw": message.integrated_frames.array.tobytes()}))
+        await client.send(json.dumps({"fitted": detected_peaks}))
+        await client.send(msgpack.packb({"vfft": message.vfft.array.tobytes()}))
+        await client.send(msgpack.packb({"ifft": message.ifft.array.tobytes()}))
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")

@@ -28,35 +28,8 @@ export default function Main() {
 
     const defaultCanvasHeight = 512;
 
-    const startWebSocket = () => {
-      setWarningMessage('');
-        const canvases = {
-          raw: canvasRef1.current,
-          vfft: canvasRef2.current,
-          ifft: canvasRef3.current
-        }
-
-        const setGaussianFunctions = {
-          cumulative: setGaussianData1,
-          fitted: setGaussianData2
-        }
-
-
-        ws.current = new WebSocket(wsUrl);
-
-        ws.current.onopen = (event) => {
-            setSocketStatus('Open');
-        }
-
-        ws.current.onerror = function (error) {
-          console.log("error with ws");
-          console.log({error});
-          alert("Unable to connect to websocket");
-          setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
-        }
-
-        ws.current.onmessage = function (event) {
-            const data = JSON.parse(event.data);
+    const handleWebsocketMessage=(event, canvases, setGaussianFunctions) => {
+        const data = JSON.parse(event.data);
             setTimeStamp(dayjs().format('hh:mm:ss:SSS'));
 
             const imageNames = ['raw', 'vfft', 'ifft'];
@@ -147,8 +120,37 @@ export default function Main() {
                 setFrameCount(data[key]);
               }
             }
+    }
+
+    const startWebSocket = () => {
+        setWarningMessage('');
+        const canvases = {
+            raw: canvasRef1.current,
+            vfft: canvasRef2.current,
+            ifft: canvasRef3.current
+        }
+
+        const setGaussianFunctions = {
+            cumulative: setGaussianData1,
+            fitted: setGaussianData2
+        }
 
 
+        ws.current = new WebSocket(wsUrl);
+
+        ws.current.onopen = (event) => {
+            setSocketStatus('Open');
+        }
+
+        ws.current.onerror = function (error) {
+            console.log("error with ws");
+            console.log({error});
+            alert("Unable to connect to websocket");
+            setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
+        }
+
+        ws.current.onmessage = function (event, canvases, setGaussianFunctions) {
+            handleWebsocketMessage(event, canvases, setGaussianFunctions);
         };
     }
 

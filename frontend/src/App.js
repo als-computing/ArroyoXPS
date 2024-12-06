@@ -1,9 +1,14 @@
 import Main from "./components/Main";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
-import { Fragment } from "react";
+
+import { useAPXPS } from "./hooks/useAPXPS";
 export default function App() {
-    
+
+  const {
+
+  } = useAPXPS({});
+  
     return (
       <div className="flex-col h-screen w-screen">
         <div className="h-16">

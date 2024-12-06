@@ -3,6 +3,8 @@ import Button from '../component_library/Button';
 import TextField from '../component_library/TextField';
 import Plot from 'react-plotly.js';
 import dayjs from 'dayjs';
+import Widget from './Widget';
+import ConsoleViewer from './ConsoleViewer';
 
 import { useAPXPS } from '../hooks/useAPXPS';
 
@@ -11,6 +13,8 @@ export default function Main() {
     const {
 
     } = useAPXPS({});
+
+    const { messages, setMessages } = useState([]);
 
     const canvasRef1 = useRef(null);
     const canvasRef2 = useRef(null);
@@ -28,7 +32,52 @@ export default function Main() {
 
     const defaultCanvasHeight = 512;
 
-    const handleWebsocketMessage=(event, canvases, setGaussianFunctions) => {
+    const handleNewWebsocketMessages = (event) => {
+        //process with webpack and set to messages.
+        try {
+            let newMessage;
+
+            // Check if the message is binary (Msgpack encoded)
+            if (event.data instanceof ArrayBuffer) {
+                // Example: process Msgpack binary data (requires 'msgpack-lite' or similar library)
+                const msgpack = require('msgpack-lite');
+                newMessage = msgpack.decode(new Uint8Array(event.data));
+            } else {
+                // Assume JSON if not binary
+                newMessage = JSON.parse(event.data);
+            }
+
+            // Update the messages state with the new message
+            setMessages((prevMessages) => [...prevMessages, newMessage]);
+        } catch (error) {
+            console.error('Error processing WebSocket message:', error);
+        }
+    }
+
+
+
+    const startWebSocket = () => {
+        setWarningMessage('');
+
+        ws.current = new WebSocket(wsUrl);
+
+        ws.current.onopen = (event) => {
+            setSocketStatus('Open');
+        }
+
+        ws.current.onerror = function (error) {
+            console.log("error with ws");
+            console.log({error});
+            alert("Unable to connect to websocket");
+            setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
+        }
+
+        ws.current.onmessage = function (event) {
+            handleNewWebsocketMessages(event);
+        };
+    };
+/* 
+    const handleWebsocketMessageOld=(event, canvases, setGaussianFunctions) => {
         const data = JSON.parse(event.data);
             setTimeStamp(dayjs().format('hh:mm:ss:SSS'));
 
@@ -120,9 +169,9 @@ export default function Main() {
                 setFrameCount(data[key]);
               }
             }
-    }
+    };
 
-    const startWebSocket = () => {
+    const startWebSocketOld = () => {
         setWarningMessage('');
         const canvases = {
             raw: canvasRef1.current,
@@ -150,10 +199,11 @@ export default function Main() {
         }
 
         ws.current.onmessage = function (event, canvases, setGaussianFunctions) {
-            handleWebsocketMessage(event, canvases, setGaussianFunctions);
+            //handleWebsocketMessage(event, canvases, setGaussianFunctions);
+            handleNewWebsocketMessages(event);
         };
     }
-
+ */
     const updateCumulativePlot = (newPlot) => {
       //append the newest plot data to the existing data for the cumulative plot
       setGaussianData1((data) => {
@@ -228,7 +278,9 @@ export default function Main() {
 
     return (
         <main className="bg-slate-500 h-full flex-grow overflow-y-auto">
-
+            <Widget title='Websocket Output' width='w-[500px]' defaultHeight='h-[500px]'>
+                <ConsoleViewer messages={messages}/>
+            </Widget>
             <div name="canvas and plot container" className="flex flex-wrap justify-around">
             {canvasData.map((item) => {
                 return (

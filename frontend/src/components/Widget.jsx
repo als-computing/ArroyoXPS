@@ -11,11 +11,11 @@ export default function Widget({
         <div className={`bg-white shadow-md rounded-md ${width} ${defaultHeight} ${maxHeight} ${maxWidth}`}>
             {/* Title */}
             <header className="bg-sky-950 h-10 flex justify-start items-center rounded-t-md">
-                <h3 className="text-white text-md font-semibold pl-4">{title}</h3>
+                <h3 className="text-white text-lg font-semibold pl-4">{title}</h3>
             </header>
 
             {/* Main Body */}
-            <div>
+            <div className="h-[calc(100%-2.5rem)]">
                 {children}
             </div>
         </div>

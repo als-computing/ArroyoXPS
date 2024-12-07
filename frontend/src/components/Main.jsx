@@ -5,6 +5,8 @@ import Plot from 'react-plotly.js';
 import dayjs from 'dayjs';
 import Widget from './Widget';
 import ConsoleViewer from './ConsoleViewer';
+import msgpack from 'msgpack-lite';
+import PlotlyHeatMap from './PlotlyHeatMap';
 
 import { useAPXPS } from '../hooks/useAPXPS';
 
@@ -14,11 +16,13 @@ export default function Main() {
 
     } = useAPXPS({});
 
-    const { messages, setMessages } = useState([]);
+    const [ messages, setMessages ] = useState([]);
 
     const canvasRef1 = useRef(null);
     const canvasRef2 = useRef(null);
     const canvasRef3 = useRef(null);
+
+    
 
     const [gaussianData1, setGaussianData1] = useState([]); //persistent values
     const [gaussianData2, setGaussianData2] = useState([]); //fitted values
@@ -32,26 +36,38 @@ export default function Main() {
 
     const defaultCanvasHeight = 512;
 
-    const handleNewWebsocketMessages = (event) => {
+    const handleNewWebsocketMessages = async (event) => {
         //process with webpack and set to messages.
         try {
             let newMessage;
 
-            // Check if the message is binary (Msgpack encoded)
-            if (event.data instanceof ArrayBuffer) {
-                // Example: process Msgpack binary data (requires 'msgpack-lite' or similar library)
-                const msgpack = require('msgpack-lite');
+            if (event.data instanceof Blob) {
+                // Convert Blob to ArrayBuffer for binary processing
+                const arrayBuffer = await event.data.arrayBuffer();
+                newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
+            } else if (event.data instanceof ArrayBuffer) {
+                // Process ArrayBuffer directly
                 newMessage = msgpack.decode(new Uint8Array(event.data));
             } else {
-                // Assume JSON if not binary
+                // Assume JSON string for non-binary data
                 newMessage = JSON.parse(event.data);
             }
-
+            //create a message with the keys provided.
             // Update the messages state with the new message
-            setMessages((prevMessages) => [...prevMessages, newMessage]);
+            console.log({newMessage});
+            var keyList = '';
+            for (const key in newMessage) {
+                console.log(key);
+                keyList = keyList.concat(', ', key);
+                console.log(keyList);
+            };
+            console.log(keyList)
+            setMessages((prevMessages) => [...prevMessages, keyList]);
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
         }
+        
+
     }
 
 
@@ -277,10 +293,23 @@ export default function Main() {
     ];
 
     return (
-        <main className="bg-slate-500 h-full flex-grow overflow-y-auto">
-            <Widget title='Websocket Output' width='w-[500px]' defaultHeight='h-[500px]'>
+        <main className="bg-slate-500 h-full flex-grow overflow-y-auto flex flex-wrap">
+            <Widget title='Websocket Message Keys' width='w-[500px]' defaultHeight='h-[500px]'>
                 <ConsoleViewer messages={messages}/>
             </Widget>
+
+            <Widget title='test heatmap hardcoded data' width='w-[800px]' defaultHeight='h-[900px]'>
+                <PlotlyHeatMap />
+            </Widget>
+
+            {/* Everything below to be removed and re configured into widgets with custom hooks, leaving in for now*/}
+            <div className="m-auto w-fit my-8">
+                <div className="flex border border-slate-700 rounded-md items-center justify-center space-x-6 py-8 px-8 bg-slate-200 shadow-sm">
+                    <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-72' />
+                    {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
+                </div>
+            </div>
+            
             <div name="canvas and plot container" className="flex flex-wrap justify-around">
             {canvasData.map((item) => {
                 return (
@@ -303,12 +332,6 @@ export default function Main() {
                 )
             })}
 
-            </div>
-            <div className="m-auto w-fit my-8">
-            <div className="flex border border-slate-700 rounded-md items-center justify-center space-x-6 py-8 px-8 bg-slate-200 shadow-sm">
-                <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-72' />
-                {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
-            </div>
             </div>
             <p className="text-red-500 text-center">{warningMessage}</p>
       </main>

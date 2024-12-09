@@ -212,26 +212,26 @@ export default function Main() {
 
     //to do: make main render children, lift up everything into app.js
     return (
-        <main className="bg-slate-500 h-full flex-grow overflow-y-auto flex flex-wrap">
+        <main className="bg-slate-500 h-full flex-grow overflow-y-auto flex flex-wrap justify-around">
 
             {/* TO DO: lift this all up into app.js*/}
-            <Widget title='Raw' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+            <Widget title='Raw' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
                 <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
 
-            <Widget title='VFFT' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+            <Widget title='VFFT' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
                 <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
 
-            <Widget title='IFFT' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+            <Widget title='IFFT' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
                 <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
 
-            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='w-[600px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
                 <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
 
-            <Widget title='Cumulative Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+            <Widget title='Cumulative Fitted Peaks' width='w-1/2' maxWidth='w-[600px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
                 <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
 

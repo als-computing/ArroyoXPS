@@ -39,7 +39,7 @@ export default function PlotlyScatterSingle({dataX=[], dataY=[], marker={color: 
 
 
     return (
-        <div className="h-full w-full" ref={plotContainer}>
+        <div className="h-full w-full pb-4" ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{

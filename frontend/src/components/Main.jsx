@@ -6,7 +6,7 @@ import Plot from 'react-plotly.js';
 import dayjs from 'dayjs';
 import Widget from './Widget';
 import ConsoleViewer from './ConsoleViewer';
-import msgpack from 'msgpack-lite';
+//import msgpack from 'msgpack-lite';
 import PlotlyHeatMap from './PlotlyHeatMap';
 import PlotlyScatterSingle from './PlotlyScatterSingle';
 
@@ -23,6 +23,13 @@ export default function Main() {
     const canvasRef1 = useRef(null);
     const canvasRef2 = useRef(null);
     const canvasRef3 = useRef(null);
+
+    const [ rawArray, setRawArray ] = useState([]);
+    const [ vfftArray, setVfftArray ] = useState([]);
+    const [ ifftArray, setIfftArray ] = useState([]);
+
+    const [ singlePeakData, setSinglePeakData ] = useState({x:[], y:[]});
+    
 
     
 
@@ -53,23 +60,79 @@ export default function Main() {
             } else {
                 // Assume JSON string for non-binary data
                 newMessage = JSON.parse(event.data);
+                console.log({newMessage})
+                //handle fitted data
             }
             //create a message with the keys provided.
             // Update the messages state with the new message
-            console.log({newMessage});
+            //console.log({newMessage});
             var keyList = '';
             for (const key in newMessage) {
-                console.log(key);
+                //console.log(key);
                 keyList = keyList.concat(', ', key);
-                console.log(keyList);
+                //console.log(keyList);
             };
-            console.log(keyList)
+            //console.log(keyList)
             setMessages((prevMessages) => [...prevMessages, keyList]);
+
+            //handle raw array so it can render in heatmap
+            if ('raw' in newMessage) {
+                console.log({newMessage})
+                //send in height as width and vice versa until height/width issues fixed
+                processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
+            }
+            if ('vfft' in newMessage) {
+                console.log({newMessage})
+                //send in height as width and vice versa until height/width issues fixed
+                processArrayData(newMessage.vfft, newMessage.height,  newMessage.width, setVfftArray)
+            }
+            if ('ifft' in newMessage) {
+                console.log({newMessage})
+                //send in height as width and vice versa until height/width issues fixed
+                processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray)
+            }
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
         }
-        
+    }
 
+    const processArrayData = (data=[], width, height, cb) => {
+        //convert a single dimensional array data into width and height to make suitable for heatmap
+        const newData = [];
+        for (let i = 0; i < height; i++) {
+            newData.push(data.slice(i * width, (i + 1) * width));
+        }
+        cb(newData);
+    };
+
+    const processPeakData = (data={}, singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
+        //process the json message, get data, put data into both the single plot and the cumulativeplot
+        var singlePlot = {
+            x: [],
+            y: []
+          };
+          //to do: refactor this to accept the newest plot data
+/*           const x_peak = plot.x;
+          const y_peak = plot.h;
+          const fwhm = plot.fwhm;
+
+          const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
+          const xValues = [];
+          const yValues = [];
+          const x_min = x_peak - 5 * sigma;
+          const x_max = x_peak + 5 * sigma;
+          const step = (x_max - x_min) / 100;
+
+          for (let x = x_min; x <= x_max; x += step) {
+            const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
+            xValues.push(x);
+            yValues.push(y);
+          }
+          singlePlot.x = xValues;
+          singlePlot.y = yValues; */
+
+          singlePlotCallback(singlePlot);
+          multiPlotCallback()
     }
 
 
@@ -94,134 +157,7 @@ export default function Main() {
             handleNewWebsocketMessages(event);
         };
     };
-/* 
-    const handleWebsocketMessageOld=(event, canvases, setGaussianFunctions) => {
-        const data = JSON.parse(event.data);
-            setTimeStamp(dayjs().format('hh:mm:ss:SSS'));
 
-            const imageNames = ['raw', 'vfft', 'ifft'];
-            const plotNames = ['sum', 'fitted']
-            for (const key in data) {
-              if ( imageNames.includes(key) ) {
-                //handle image update
-                const image = new Image();
-                image.onload = function () {
-                  const imgWidth = image.width;
-                  const imgHeight = image.height;
-
-                  const canvas = canvases[key];
-                  const context = canvas.getContext('2d');
-
-                  //reset the canvas height to match the height/width ratio of the image
-                  canvas.height = (imgHeight/imgWidth) * defaultCanvasHeight;
-                  context.clearRect(0, 0, canvas.width, canvas.height);
-                  context.drawImage(image, 0, 0, canvas.width, canvas.height);
-                };
-                image.src = 'data:image/jpeg;base64,' + data[key];
-              } else {
-
-                if ( plotNames.includes(key)) {
-                  //---------handle plot update -----------------------
-                  var allPlots = [];
-                  var plotData;
-
-                  //allow for arrays or a JSON stringified array
-                  if (Array.isArray(data[key])) {
-                    plotData = data[key];
-                  } else {
-                    if (typeof data[key] === 'string') {
-                      plotData = JSON.parse(data[key]);
-                    }
-                  }
-
-                    //check if parsed JSON data is array
-                    if (Array.isArray(plotData)) {
-                      plotData.forEach((plot, index) => {
-                        //check the values of the x, y, fwhm keys, should be numbers
-                        if (typeof plot.x === 'number' && typeof plot.h === 'number' && typeof plot.fwhm === 'number') {
-                          var singlePlot = {
-                            x: [],
-                            y: [],
-                            mode: 'lines',
-                            type: 'scatter',
-                            name: `P${index} X: ${plot.x.toPrecision(3)}, H: ${plot.h.toPrecision(3)}, FWHM: ${plot.fwhm.toPrecision(3)}`
-                          };
-                          const x_peak = plot.x;
-                          const y_peak = plot.h;
-                          const fwhm = plot.fwhm;
-
-                          const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
-                          const xValues = [];
-                          const yValues = [];
-                          const x_min = x_peak - 5 * sigma;
-                          const x_max = x_peak + 5 * sigma;
-                          const step = (x_max - x_min) / 100;
-
-                          for (let x = x_min; x <= x_max; x += step) {
-                            const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
-                            xValues.push(x);
-                            yValues.push(y);
-                          }
-                          singlePlot.x = xValues;
-                          singlePlot.y = yValues;
-                          allPlots.push(singlePlot);
-                        } else {
-                          console.log('Received invalid plot key values, should be integers');
-                          console.log({plot});
-                        }
-                      })
-                      const setGaussianDataFunction = setGaussianFunctions[key];
-                      setGaussianDataFunction(allPlots);
-                      var count;
-                      updateCumulativePlot(allPlots);
-                    } else {
-                      console.log('Received a non-array dataset from the ' + key + ' plot');
-                      console.log(data[key]);
-                    }
-                  }
-              }
-
-
-              //additional information
-              if (key === 'frame_number') {
-                setFrameCount(data[key]);
-              }
-            }
-    };
-
-    const startWebSocketOld = () => {
-        setWarningMessage('');
-        const canvases = {
-            raw: canvasRef1.current,
-            vfft: canvasRef2.current,
-            ifft: canvasRef3.current
-        }
-
-        const setGaussianFunctions = {
-            cumulative: setGaussianData1,
-            fitted: setGaussianData2
-        }
-
-
-        ws.current = new WebSocket(wsUrl);
-
-        ws.current.onopen = (event) => {
-            setSocketStatus('Open');
-        }
-
-        ws.current.onerror = function (error) {
-            console.log("error with ws");
-            console.log({error});
-            alert("Unable to connect to websocket");
-            setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
-        }
-
-        ws.current.onmessage = function (event, canvases, setGaussianFunctions) {
-            //handleWebsocketMessage(event, canvases, setGaussianFunctions);
-            handleNewWebsocketMessages(event);
-        };
-    }
- */
     const updateCumulativePlot = (newPlot) => {
       //append the newest plot data to the existing data for the cumulative plot
       setGaussianData1((data) => {
@@ -294,21 +230,23 @@ export default function Main() {
       },
     ];
 
+    //to do: make main render children, lift up everything into app.js
     return (
         <main className="bg-slate-500 h-full flex-grow overflow-y-auto flex flex-wrap">
 
-            <Widget title='test heatmap hardcoded data' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
-                <PlotlyHeatMap />
+            {/* TO DO: lift this all up into app.js*/}
+            <Widget title='Raw' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
-            <Widget title='test heatmap hardcoded data' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
-                <PlotlyHeatMap />
+            <Widget title='VFFT' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
-            <Widget title='test heatmap hardcoded data' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
-                <PlotlyHeatMap />
+            <Widget title='IFFT' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
 
             <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
-                <PlotlyScatterSingle dataX={[1, 2, 3]} dataY={[1, 2, 3]} />
+                <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} />
             </Widget>
             <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
                 <PlotlyScatterSingle dataX={[1, 2, 3]} dataY={[1, 2, 3]} />
@@ -323,7 +261,7 @@ export default function Main() {
 
 
 
-            {/* Everything below to be removed and re configured into widgets with custom hooks, leaving in for now*/}
+            {/* TO DO: put this into the left sidebar*/}
             <div className="m-auto w-fit my-8">
                 <div className="flex border border-slate-700 rounded-md items-center justify-center space-x-6 py-8 px-8 bg-slate-200 shadow-sm">
                     <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-72' />
@@ -331,30 +269,7 @@ export default function Main() {
                 </div>
             </div>
             
-            <div name="canvas and plot container" className="flex flex-wrap justify-around">
-            {canvasData.map((item) => {
-                return (
-                <section key={item.id} className="my-8 flex flex-col">
-                    <h2 className="text-center">{item.title}</h2>
-                    <div className="min-h-96 border shadow-md flex items-end">
-                    <canvas className='border  w-96' ref={item.canvasRef} width={item.width} height={item.height} />
-                    </div>
-                </section>
-                )
-            })}
-            {plotData.map((item) => {
-                return (
-                <Plot
-                    key = {item.id}
-                    className="w-3/4 h-96 my-12 shadow-md border"
-                    data={item.data}
-                    layout={{ title: `${item.title}`, xaxis: { title: 'X'}, yaxis: { title: 'Y' } }}
-                />
-                )
-            })}
-
-            </div>
-            <p className="text-red-500 text-center">{warningMessage}</p>
+           
       </main>
     )
 }

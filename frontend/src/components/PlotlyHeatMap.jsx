@@ -21,7 +21,8 @@ export default function PlotlyHeatMap() {
     import React, { useRef, useEffect, useState } from 'react';
     import Plot from 'react-plotly.js';
     
-    export default function PlotlyHeatMap() {
+    export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisTitle=''}) {
+        //console.log({array})
         const plotContainer = useRef(null);
         const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     
@@ -41,24 +42,25 @@ export default function PlotlyHeatMap() {
     
         const data = [
             {
-                z: [[1, 20, 30], [20, 1, 60], [30, 60, 1]],
+                z: array,
                 type: 'heatmap',
             },
         ];
     
         return (
-            <div className="h-full w-full rounded-b-md" ref={plotContainer}>
+            <div className="h-full w-full rounded-b-md pb-4" ref={plotContainer}>
                 <Plot
                     data={data}
                     layout={{
-                        title: `Sample Heatmap`,
-                        xaxis: { title: 'Average' },
-                        yaxis: { title: 'Time' },
+                        title: {title},
+                        xaxis: { title: xAxisTitle },
+                        yaxis: { title: yAxisTitle },
                         autosize: true,
                         width: dimensions.width,
                         height: dimensions.height,
                     }}
                     config={{ responsive: true }}
+                    className="rounded-b-md"
                 />
             </div>
         );

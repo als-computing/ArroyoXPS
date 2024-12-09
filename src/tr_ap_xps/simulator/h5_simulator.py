@@ -77,6 +77,7 @@ class H5LabViewSimulator:
                         progress_bar.update(1)
 
                 self.zmq_socket.send_json(stop_example)
+                logger.info(stop_example)
                 progress_bar.close()
             logger.info(
                 f"finished sending messages pausing for {self.scan_pause} seconds"

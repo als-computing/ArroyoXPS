@@ -70,14 +70,14 @@ export default function Main() {
 
             if ('frame_number' in newMessage) {
                 console.log({newMessage})
-                frameNumber.current = newMessage.frameNumber;
+                frameNumber.current = newMessage.frame_number;
             }
             
             //handle fitted data parameters for line plots
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
                 console.log({fittedData})
-                processPeakData(fittedData[1], setSinglePeakData)
+                processPeakData(fittedData[1], setSinglePeakData, updateCumulativePlot)
             }
 
             //handle heatmap data
@@ -133,8 +133,10 @@ export default function Main() {
 
         // Create single plot object
         const singlePlot = { x: xValues, y: yValues };
-        singlePlotCallback(singlePlot); // Pass single plot data to the callback
-      
+
+        //update state
+        singlePlotCallback(singlePlot);
+        multiPlotCallback(singlePlot);
     }
 
 
@@ -161,32 +163,31 @@ export default function Main() {
     };
 
     const updateCumulativePlot = (singlePlot) => {
-      //append the newest plot data to the existing data for the cumulative plot
-      //
-/*       setAllPeakData((data) => {
-        //copy by value to be safe
+        console.log({frameNumber})
+      setAllPeakData((data) => {
         var oldArrayData = Array.from(data);
         var newArrayData = [];
-        let total
+        let totalFrames = oldArrayData.length;
+        let colorNumber = 255; //the lightest color for the oldest entries
         oldArrayData.forEach((plot, index) => {
-            
-          plot.line = {
-            color: 'rgb(199, 199, 199)',
-            width: 1,
-          };
-          plot.name = `frame ${frameNumber.current ? frameNumber.current : 'NA'}`;
-          newArrayData.push(plot);
+            let colorWeight = (totalFrames - index) / totalFrames * colorNumber; //scale color based on index relative to total frames
+            plot.line = {
+                color: `rgb(${colorWeight}, ${colorWeight}, ${colorWeight})`,
+                width: 1,
+            };
+            plot.name = `frame ${frameNumber.current ? frameNumber.current : 'NA'}`;
+            newArrayData.push(plot);
         })
         const newestData = {
             x: singlePlot.x,
             y: singlePlot.y,
             line: {
-                color: 'rgb(199, 199, 199)',
+                color: 'rgb(0, 94, 245)',
                 width: 1,
             }
         }
-        return [...newArrayData, ...newPlot];
-      }) */
+        return [...newArrayData, newestData];
+      })
     };
 
     const closeWebSocket = () => {
@@ -228,8 +229,8 @@ export default function Main() {
                 <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
 
-            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
-                <PlotlyScatterMultiple dataX={[1, 2, 3]} dataY={[1, 2, 3]} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
+            <Widget title='Cumulative Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
+                <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
 
             <Widget title='Websocket Message Keys' width='w-[500px]' defaultHeight='h-[500px]'>

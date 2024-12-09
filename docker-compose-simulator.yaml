@@ -1,7 +1,8 @@
 version: "3.3"
 services:
   simulator:
-    command: ["python", "-m", "tr_ap_xps.simulator.simulator", "--log-level", "INFO", "--num-frames", "1000"]
+    # command: ["python", "-m", "tr_ap_xps.simulator.simulator", "--log-level", "INFO", "--num-frames", "1000"]
+    command: ["python", "-m", "tr_ap_xps.simulator.h5_simulator", "--log-level", "INFO", "--repeat-scans", "20"]
     build:
       context: .
       dockerfile: Dockerfile_labviewsim

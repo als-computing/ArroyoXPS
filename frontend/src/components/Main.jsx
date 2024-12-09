@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from '../component_library/Button';
+import msgpack from 'msgpack-lite';
 import TextField from '../component_library/TextField';
 import Plot from 'react-plotly.js';
 import dayjs from 'dayjs';

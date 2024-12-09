@@ -78,15 +78,14 @@ class XPSWSResultPublisher(Publisher):
             )
         )
         image_info = {
-            "dtype": str(message.integrated_frames.array.dtype),
             "width": message.integrated_frames.array.shape[0],
             "height": message.integrated_frames.array.shape[1],
         }
         # send image data separately to client memory issues
-        await client.send(msgpack.packb({"raw": message.integrated_frames.array.tobytes(), **image_info}))
+        await client.send(msgpack.packb({"raw": convert_to_uint8(message.integrated_frames.array), **image_info}))
         await client.send(json.dumps({"fitted": detected_peaks}))
-        await client.send(msgpack.packb({"vfft": message.vfft.array.tobytes(), **image_info}))
-        await client.send(msgpack.packb({"ifft": message.ifft.array.tobytes(), **image_info}))
+        await client.send(msgpack.packb({"vfft": convert_to_uint8(message.vfft.array), **image_info}))
+        await client.send(msgpack.packb({"ifft": convert_to_uint8(message.ifft.array), **image_info}))
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
@@ -104,17 +103,13 @@ class XPSWSResultPublisher(Publisher):
             self.connected_clients.remove(websocket)
             logger.info("Client disconnected")
 
-
-def buffer_to_jpeg(arra_: np.ndarray):
-    if arra_.dtype != np.uint8:
-        arra_ = (arra_ * 255).astype(np.uint8)
-
-    img = Image.fromarray(arra_, "L")
-    # Convert image to base64
-    buffered = io.BytesIO()
-    img.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return img_str
+def convert_to_uint8(image: np.ndarray) -> bytes:
+    """
+    Convert an image to uint8, scaling image
+    """
+    scaled = (image - image.min()) / (image.max() - image.min()) * 255
+    return scaled.astype(np.uint8).tobytes()
+    
 
 
 def peaks_output(peaks: pd.DataFrame):

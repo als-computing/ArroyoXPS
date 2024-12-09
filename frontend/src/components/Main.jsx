@@ -169,13 +169,14 @@ export default function Main() {
         var newArrayData = [];
         let totalFrames = oldArrayData.length;
         let colorNumber = 255; //the lightest color for the oldest entries
+
+        //TO DO: refactor this if its slowing the app down
         oldArrayData.forEach((plot, index) => {
             let colorWeight = (totalFrames - index) / totalFrames * colorNumber; //scale color based on index relative to total frames
             plot.line = {
                 color: `rgb(${colorWeight}, ${colorWeight}, ${colorWeight})`,
                 width: 1,
             };
-            plot.name = `frame ${frameNumber.current ? frameNumber.current : 'NA'}`;
             newArrayData.push(plot);
         })
         const newestData = {
@@ -184,7 +185,8 @@ export default function Main() {
             line: {
                 color: 'rgb(0, 94, 245)',
                 width: 1,
-            }
+            },
+            name: `frame ${frameNumber.current ? frameNumber.current : 'NA'}`
         }
         return [...newArrayData, newestData];
       })
@@ -225,11 +227,11 @@ export default function Main() {
                 <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
 
-            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
+            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
                 <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
 
-            <Widget title='Cumulative Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
+            <Widget title='Cumulative Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
                 <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
 

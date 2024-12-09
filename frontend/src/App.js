@@ -11,7 +11,7 @@ export default function App() {
   
     return (
       <div className="flex-col h-screen w-screen">
-        <div className="h-16">
+        <div className="h-16 shadow-lg">
           <Header />
         </div>
         <div className="flex h-[calc(100vh-4rem)]">

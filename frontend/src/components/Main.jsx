@@ -60,7 +60,11 @@ export default function Main() {
             } else {
                 // Assume JSON string for non-binary data
                 newMessage = JSON.parse(event.data);
-                console.log({newMessage})
+                console.log({newMessage});
+                console.log(newMessage.fitted);
+                const fittedData = JSON.parse(newMessage.fitted);
+                console.log({fittedData})
+                processPeakData(fittedData[1], setSinglePeakData)
                 //handle fitted data
             }
             //create a message with the keys provided.
@@ -105,12 +109,10 @@ export default function Main() {
         cb(newData);
     };
 
-    const processPeakData = (data={}, singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
+    //to do: revise data to be an object instead of array if only a single plot is needed
+    const processPeakData = (data={x:0, h:0, fwhm: 0}, singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
         //process the json message, get data, put data into both the single plot and the cumulativeplot
-        var singlePlot = {
-            x: [],
-            y: []
-          };
+
           //to do: refactor this to accept the newest plot data
 /*           const x_peak = plot.x;
           const y_peak = plot.h;
@@ -131,8 +133,33 @@ export default function Main() {
           singlePlot.x = xValues;
           singlePlot.y = yValues; */
 
-          singlePlotCallback(singlePlot);
-          multiPlotCallback()
+
+        const y_peak = data.y;
+        const x_peak = data.x;
+
+        // Calculate sigma and define x range
+        const sigma = data.fwhm / (2 * Math.sqrt(2 * Math.log(2)));
+        const x_min = x_peak - 5 * sigma;
+        const x_max = x_peak + 5 * sigma;
+        const step = (x_max - x_min) / 100;
+
+        // Generate x and y values for the single plot
+        const xValues = [];
+        const yValues = [];
+        for (let x = x_min; x <= x_max; x += step) {
+            const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
+            xValues.push(x);
+            yValues.push(y);
+        }
+
+        // Create single plot object
+        const singlePlot = { x: xValues, y: yValues };
+        singlePlotCallback(singlePlot); // Pass single plot data to the callback
+        console.log({singlePlot})
+      
+
+          //singlePlotCallback(singlePlot);
+         // multiPlotCallback()
     }
 
 

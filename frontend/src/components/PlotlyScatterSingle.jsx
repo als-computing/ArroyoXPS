@@ -11,7 +11,7 @@ const sampleData = [
     },
 ];
 
-export default function PlotlyScatterSingle({dataX=[], dataY=[], marker={color: 'red'}}) {
+export default function PlotlyScatterSingle({dataX=[], dataY=[], marker={color: 'red'}, title='', xAxisTitle='', yAxisTitle=''}) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     //const [ data, setData ] = useState(sampleData);
@@ -43,9 +43,9 @@ export default function PlotlyScatterSingle({dataX=[], dataY=[], marker={color: 
             <Plot
                 data={data}
                 layout={{
-                    title: `Sample Scatter`,
-                    xaxis: { title: 'dist' },
-                    yaxis: { title: 'height' },
+                    title: title,
+                    xaxis: { title: xAxisTitle },
+                    yaxis: { title: yAxisTitle },
                     autosize: true,
                     width: dimensions.width,
                     height: dimensions.height,

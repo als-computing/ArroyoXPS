@@ -11,7 +11,7 @@ const sampleData = [
     },
 ];
 
-export default function PlotlyScatterMultiple({data=[{}]}) {
+export default function PlotlyScatterMultiple({data=[{}]}, title='', xAxisTitle='', yAxisTitle='') {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     //const [ data, setData ] = useState(sampleData);
@@ -36,9 +36,9 @@ export default function PlotlyScatterMultiple({data=[{}]}) {
             <Plot
                 data={data}
                 layout={{
-                    title: `Sample Scatter`,
-                    xaxis: { title: 'dist' },
-                    yaxis: { title: 'height' },
+                    title: title,
+                    xaxis: { title: xAxisTitle },
+                    yaxis: { title: yAxisTitle },
                     autosize: true,
                     width: dimensions.width,
                     height: dimensions.height,

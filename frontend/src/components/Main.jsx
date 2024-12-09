@@ -9,6 +9,7 @@ import ConsoleViewer from './ConsoleViewer';
 //import msgpack from 'msgpack-lite';
 import PlotlyHeatMap from './PlotlyHeatMap';
 import PlotlyScatterSingle from './PlotlyScatterSingle';
+import PlotlyScatterMultiple from './PlotlyScatterMultiple';
 
 import { useAPXPS } from '../hooks/useAPXPS';
 
@@ -20,21 +21,17 @@ export default function Main() {
 
     const [ messages, setMessages ] = useState([]);
 
-    const canvasRef1 = useRef(null);
-    const canvasRef2 = useRef(null);
-    const canvasRef3 = useRef(null);
 
     const [ rawArray, setRawArray ] = useState([]);
     const [ vfftArray, setVfftArray ] = useState([]);
     const [ ifftArray, setIfftArray ] = useState([]);
 
     const [ singlePeakData, setSinglePeakData ] = useState({x:[], y:[]});
+    const [ allPeakData, setAllPeakData ] = useState([]);
+
+    const frameNumber = useRef(null);
     
 
-    
-
-    const [gaussianData1, setGaussianData1] = useState([]); //persistent values
-    const [gaussianData2, setGaussianData2] = useState([]); //fitted values
 
     const [socketStatus, setSocketStatus] = useState('closed');
     const [ wsUrl, setWsUrl ] = useState('ws://localhost:8001/simImages');
@@ -60,26 +57,28 @@ export default function Main() {
             } else {
                 // Assume JSON string for non-binary data
                 newMessage = JSON.parse(event.data);
-                console.log({newMessage});
-                console.log(newMessage.fitted);
+            }
+            //log keys
+            var keyList = '';
+            for (const key in newMessage) {
+                keyList = keyList.concat(', ', key);
+            };
+
+            setMessages((prevMessages) => [...prevMessages, keyList]);
+
+            if ('frame_number' in newMessage) {
+                console.log({newMessage})
+                frameNumber.current = newMessage.frameNumber;
+            }
+            
+            //handle fitted data parameters for line plots
+            if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
                 console.log({fittedData})
                 processPeakData(fittedData[1], setSinglePeakData)
-                //handle fitted data
             }
-            //create a message with the keys provided.
-            // Update the messages state with the new message
-            //console.log({newMessage});
-            var keyList = '';
-            for (const key in newMessage) {
-                //console.log(key);
-                keyList = keyList.concat(', ', key);
-                //console.log(keyList);
-            };
-            //console.log(keyList)
-            setMessages((prevMessages) => [...prevMessages, keyList]);
 
-            //handle raw array so it can render in heatmap
+            //handle heatmap data
             if ('raw' in newMessage) {
                 console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
@@ -111,30 +110,8 @@ export default function Main() {
 
     //to do: revise data to be an object instead of array if only a single plot is needed
     const processPeakData = (data={x:0, h:0, fwhm: 0}, singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
-        //process the json message, get data, put data into both the single plot and the cumulativeplot
 
-          //to do: refactor this to accept the newest plot data
-/*           const x_peak = plot.x;
-          const y_peak = plot.h;
-          const fwhm = plot.fwhm;
-
-          const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
-          const xValues = [];
-          const yValues = [];
-          const x_min = x_peak - 5 * sigma;
-          const x_max = x_peak + 5 * sigma;
-          const step = (x_max - x_min) / 100;
-
-          for (let x = x_min; x <= x_max; x += step) {
-            const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
-            xValues.push(x);
-            yValues.push(y);
-          }
-          singlePlot.x = xValues;
-          singlePlot.y = yValues; */
-
-
-        const y_peak = data.y;
+        const y_peak = data.h;
         const x_peak = data.x;
 
         // Calculate sigma and define x range
@@ -155,11 +132,7 @@ export default function Main() {
         // Create single plot object
         const singlePlot = { x: xValues, y: yValues };
         singlePlotCallback(singlePlot); // Pass single plot data to the callback
-        console.log({singlePlot})
       
-
-          //singlePlotCallback(singlePlot);
-         // multiPlotCallback()
     }
 
 
@@ -185,23 +158,34 @@ export default function Main() {
         };
     };
 
-    const updateCumulativePlot = (newPlot) => {
+    const updateCumulativePlot = (singlePlot) => {
       //append the newest plot data to the existing data for the cumulative plot
-      setGaussianData1((data) => {
+      //
+/*       setAllPeakData((data) => {
         //copy by value to be safe
         var oldArrayData = Array.from(data);
         var newArrayData = [];
+        let total
         oldArrayData.forEach((plot, index) => {
+            
           plot.line = {
             color: 'rgb(199, 199, 199)',
             width: 1,
           };
-          plot.name = `frame ${index}`;
+          plot.name = `frame ${frameNumber.current ? frameNumber.current : 'NA'}`;
           newArrayData.push(plot);
         })
+        const newestData = {
+            x: singlePlot.x,
+            y: singlePlot.y,
+            line: {
+                color: 'rgb(199, 199, 199)',
+                width: 1,
+            }
+        }
         return [...newArrayData, ...newPlot];
-      })
-    }
+      }) */
+    };
 
     const closeWebSocket = () => {
         try {
@@ -211,51 +195,15 @@ export default function Main() {
             return;
         }
         setSocketStatus('closed');
-    }
+    };
 
 
 
     useEffect(() => {
 
-
     }, []);
 
-    const canvasData = [
-      {
-        id: 1,
-        title: "raw",
-        canvasRef: canvasRef1,
-        height: defaultCanvasHeight,
-        width: 512
-      },
-      {
-        id: 2,
-        title: "vfft",
-        canvasRef: canvasRef2,
-        height: defaultCanvasHeight,
-        width: 512
-      },
-      {
-        id: 3,
-        title: "ifft",
-        canvasRef: canvasRef3,
-        height: defaultCanvasHeight,
-        width: 512
-      },
-    ];
 
-    const plotData = [
-      {
-        id: 'p2',
-        title: 'Fitted Peaks',
-        data: gaussianData2
-      },
-      {
-        id: 'p1',
-        title: 'Fitted peaks - Cumulative',
-        data: gaussianData1
-      },
-    ];
 
     //to do: make main render children, lift up everything into app.js
     return (
@@ -265,19 +213,23 @@ export default function Main() {
             <Widget title='Raw' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
                 <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
+
             <Widget title='VFFT' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
                 <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
+
             <Widget title='IFFT' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
                 <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
 
             <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
-                <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} />
+                <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
+
             <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
-                <PlotlyScatterSingle dataX={[1, 2, 3]} dataY={[1, 2, 3]} />
+                <PlotlyScatterMultiple dataX={[1, 2, 3]} dataY={[1, 2, 3]} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
             </Widget>
+
             <Widget title='Websocket Message Keys' width='w-[500px]' defaultHeight='h-[500px]'>
                 <ConsoleViewer messages={messages}/>
             </Widget>

@@ -10,6 +10,7 @@ import ConsoleViewer from './ConsoleViewer';
 import PlotlyHeatMap from './PlotlyHeatMap';
 import PlotlyScatterSingle from './PlotlyScatterSingle';
 import PlotlyScatterMultiple from './PlotlyScatterMultiple';
+import { getWsUrl } from '../utils/connectionHelper'
 
 import { useAPXPS } from '../hooks/useAPXPS';
 
@@ -33,8 +34,9 @@ export default function Main() {
     
 
 
+    const defaultWsUrl = getWsUrl();
     const [socketStatus, setSocketStatus] = useState('closed');
-    const [ wsUrl, setWsUrl ] = useState('ws://localhost:8001/simImages');
+    const [ wsUrl, setWsUrl ] = useState(defaultWsUrl);
     const [frameCount, setFrameCount ] = useState('');
     const [timeStamp, setTimeStamp] = useState('');
     const [ warningMessage, setWarningMessage ] = useState('');

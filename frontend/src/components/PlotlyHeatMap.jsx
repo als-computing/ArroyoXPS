@@ -3,10 +3,19 @@ import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis']
 
-export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisTitle='', colorScale='Viridis'}) {
+export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisTitle='', colorScale='Viridis', verticalScaleFactor=3500, minPlotHeight=200}) {
     //console.log({array})
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+    const getScaledHeight = (containerHeight, arrayHeight) => {
+        //return the new height as a ratio
+        //console.log({containerHeight})
+        //console.log({arrayHeight})
+        const scaledPlotContainerHeight = (arrayHeight/verticalScaleFactor)*containerHeight + minPlotHeight;
+        //console.log({scaledPlotContainerHeight})
+        return scaledPlotContainerHeight;
+    }
 
     // Hook to update dimensions dynamically
     useEffect(() => {
@@ -33,7 +42,7 @@ export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisT
     ];
 
     return (
-        <div className="h-full w-full rounded-b-md pb-4" ref={plotContainer}>
+        <div className="h-full w-full rounded-b-md pb-4 overflow-auto flex-col content-end" ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{
@@ -42,7 +51,7 @@ export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisT
                     yaxis: { title: yAxisTitle },
                     autosize: true,
                     width: dimensions.width,
-                    height: dimensions.height,
+                    height: getScaledHeight(dimensions.height, array.length),
                 }}
                 config={{ responsive: true }}
                 className="rounded-b-md"

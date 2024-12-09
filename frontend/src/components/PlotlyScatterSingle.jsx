@@ -11,7 +11,7 @@ const sampleData = [
     },
 ];
 
-export default function PlotlyScatterSingle({dataX=[], dataY=[], marker={color: 'red'}, title='', xAxisTitle='', yAxisTitle=''}) {
+export default function PlotlyScatterSingle({dataX=[], dataY=[], marker={color: 'blue'}, title='', xAxisTitle='', yAxisTitle=''}) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     //const [ data, setData ] = useState(sampleData);

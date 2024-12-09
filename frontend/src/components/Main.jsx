@@ -69,30 +69,30 @@ export default function Main() {
             setMessages((prevMessages) => [...prevMessages, keyList]);
 
             if ('frame_number' in newMessage) {
-                console.log({newMessage})
+                //console.log({newMessage})
                 frameNumber.current = newMessage.frame_number;
             }
             
             //handle fitted data parameters for line plots
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
-                console.log({fittedData})
+                //console.log({fittedData})
                 processPeakData(fittedData[1], setSinglePeakData, updateCumulativePlot)
             }
 
             //handle heatmap data
             if ('raw' in newMessage) {
-                console.log({newMessage})
+                //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
                 processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
             }
             if ('vfft' in newMessage) {
-                console.log({newMessage})
+                //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
                 processArrayData(newMessage.vfft, newMessage.height,  newMessage.width, setVfftArray)
             }
             if ('ifft' in newMessage) {
-                console.log({newMessage})
+                //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
                 processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray)
             }
@@ -163,7 +163,7 @@ export default function Main() {
     };
 
     const updateCumulativePlot = (singlePlot) => {
-        console.log({frameNumber})
+       //console.log({frameNumber})
       setAllPeakData((data) => {
         var oldArrayData = Array.from(data);
         var newArrayData = [];

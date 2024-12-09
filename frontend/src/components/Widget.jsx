@@ -8,15 +8,17 @@ export default function Widget({
     maxWidth='max-w-full'
 }) {
     return (
-        <div className={`bg-white shadow-md rounded-md ${width} ${defaultHeight} ${maxHeight} ${maxWidth}`}>
-            {/* Title */}
-            <header className="bg-sky-950 h-10 flex justify-start items-center rounded-t-md">
-                <h3 className="text-white text-lg font-semibold pl-4">{title}</h3>
-            </header>
+        <div className={` p-2 rounded-md ${width} ${defaultHeight} ${maxHeight} ${maxWidth}`}>
+            <div className="w-full h-full shadow-md bg-white rounded-md">
+                {/* Title */}
+                <header className="bg-sky-950 h-10 flex justify-start items-center rounded-t-md">
+                    <h3 className="text-white text-lg font-semibold pl-4">{title}</h3>
+                </header>
 
-            {/* Main Body */}
-            <div className="h-[calc(100%-2.5rem)]">
-                {children}
+                {/* Main Body */}
+                <div className="h-[calc(100%-2.5rem)] rounded-b-md">
+                    {children}
+                </div>
             </div>
         </div>
     )

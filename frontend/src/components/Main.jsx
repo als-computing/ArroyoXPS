@@ -7,6 +7,7 @@ import Widget from './Widget';
 import ConsoleViewer from './ConsoleViewer';
 import msgpack from 'msgpack-lite';
 import PlotlyHeatMap from './PlotlyHeatMap';
+import PlotlyScatterSingle from './PlotlyScatterSingle';
 
 import { useAPXPS } from '../hooks/useAPXPS';
 
@@ -294,13 +295,32 @@ export default function Main() {
 
     return (
         <main className="bg-slate-500 h-full flex-grow overflow-y-auto flex flex-wrap">
+
+            <Widget title='test heatmap hardcoded data' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+                <PlotlyHeatMap />
+            </Widget>
+            <Widget title='test heatmap hardcoded data' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+                <PlotlyHeatMap />
+            </Widget>
+            <Widget title='test heatmap hardcoded data' width='w-1/3' maxWidth='' defaultHeight='h-1/2' maxHeight=''>
+                <PlotlyHeatMap />
+            </Widget>
+
+            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
+                <PlotlyScatterSingle dataX={[1, 2, 3]} dataY={[1, 2, 3]} />
+            </Widget>
+            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='' defaultHeight='h-1/4' maxHeight=''>
+                <PlotlyScatterSingle dataX={[1, 2, 3]} dataY={[1, 2, 3]} />
+            </Widget>
             <Widget title='Websocket Message Keys' width='w-[500px]' defaultHeight='h-[500px]'>
                 <ConsoleViewer messages={messages}/>
             </Widget>
 
-            <Widget title='test heatmap hardcoded data' width='w-[800px]' defaultHeight='h-[900px]'>
-                <PlotlyHeatMap />
-            </Widget>
+
+
+
+
+
 
             {/* Everything below to be removed and re configured into widgets with custom hooks, leaving in for now*/}
             <div className="m-auto w-fit my-8">

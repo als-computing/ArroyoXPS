@@ -9,9 +9,8 @@ import tqdm
 import typer
 import zmq
 
+from .simulator import start_example, stop_example, event_example
 from ..log_utils import setup_logger
-
-# from uuid import uuid4
 
 
 app = typer.Typer(help="Labview H5 frame simulator")
@@ -27,7 +26,7 @@ event_msg = {
     "Type": "U8",
 }
 
-stop_msg = {"msg_type": "stop"}
+
 
 
 class H5LabViewSimulator:
@@ -57,17 +56,18 @@ class H5LabViewSimulator:
                 group = file[self.scan]
                 metadata = json.loads(group["Metadata"][()])
                 logger.info(metadata)
+                frames = group["Frame"]
                 metadata["msg_type"] = "start"
                 metadata["scan_name"] = self.scan + str(uuid4())
+                metadata["data_type"] = "U8"
                 self.zmq_socket.send_json(metadata)
-
-                frames = group["Frame"]
                 event_msg["Width"] = frames.shape[1]
                 event_msg["Height"] = frames.shape[2]
                 num_frames = frames.shape[0]
                 progress_bar = tqdm.tqdm(
                     total=num_frames, desc="Sending frames", unit=" "
                 )
+
                 for _ in range(self.repeat_scans):  # repeat the scan
                     logging.info(f"repeating scan {self.repeat_scans} times")
                     for i in range(num_frames):
@@ -76,7 +76,8 @@ class H5LabViewSimulator:
                         self.zmq_socket.send(frames[i])
                         progress_bar.update(1)
 
-                self.zmq_socket.send_json(stop_msg)
+                self.zmq_socket.send_json(stop_example)
+                logger.info(stop_example)
                 progress_bar.close()
             logger.info(
                 f"finished sending messages pausing for {self.scan_pause} seconds"

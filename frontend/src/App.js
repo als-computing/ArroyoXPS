@@ -44,30 +44,22 @@ export default function App() {
               </li>
           </Sidebar>
           <Main >
-            <Widget title='Raw' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
-                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
+            <Widget title='Live Images' width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]'>
+              <div className="w-full h-full overflow-auto flex">
+                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3'/>
+                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3'/>
+                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3'/>
+              </div>
             </Widget>
 
-            <Widget title='VFFT' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
-                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
-            </Widget>
-
-            <Widget title='IFFT' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
-                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
-            </Widget>
-
-            <Widget title='Fitted Peaks' width='w-1/2' maxWidth='w-[600px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
-                <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
-            </Widget>
-
-            <Widget title='Cumulative Fitted Peaks' width='w-1/2' maxWidth='w-[600px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
-                <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
-            </Widget>
-
-            <Widget title='Websocket Message Keys' width='w-[500px]' defaultHeight='h-[500px]'>
-                <ConsoleViewer messages={messages}/>
-            </Widget>
-
+            <div className='flex flex-wrap w-2/5'>
+              <Widget title='Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
+                  <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
+              </Widget>
+              <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
+                  <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
+              </Widget>
+            </div>
           </Main>
         </div>
       </div>

@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis']
 
-export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisTitle='', colorScale='Viridis', verticalScaleFactor=3500, minPlotHeight=200}) {
+export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisTitle='', colorScale='Viridis', verticalScaleFactor=3500, minPlotHeight=200, width='w-full'}) {
     //console.log({array})
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -42,7 +42,7 @@ export default function PlotlyHeatMap({array=[], title='', xAxisTitle='', yAxisT
     ];
 
     return (
-        <div className="h-full w-full rounded-b-md pb-4 overflow-auto flex-col content-end" ref={plotContainer}>
+        <div className={`h-full ${width} rounded-b-md pb-4 overflow-auto flex-col content-end`} ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{

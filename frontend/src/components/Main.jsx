@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../component_library/Button';
 import msgpack from 'msgpack-lite';
 import TextField from '../component_library/TextField';
-import Plot from 'react-plotly.js';
-import dayjs from 'dayjs';
 import Widget from './Widget';
 import ConsoleViewer from './ConsoleViewer';
 //import msgpack from 'msgpack-lite';
@@ -14,9 +12,9 @@ import { getWsUrl } from '../utils/connectionHelper'
 
 import { useAPXPS } from '../hooks/useAPXPS';
 
-export default function Main() {
+export default function Main({children}) {
 
-    const {
+   /*  const {
 
     } = useAPXPS({});
 
@@ -203,7 +201,7 @@ export default function Main() {
     };
 
 
-
+ */
     useEffect(() => {
 
     }, []);
@@ -213,8 +211,8 @@ export default function Main() {
     //to do: make main render children, lift up everything into app.js
     return (
         <main className="bg-slate-500 h-full flex-grow overflow-y-auto flex flex-wrap justify-around">
-
-            {/* TO DO: lift this all up into app.js*/}
+            {children}
+{/* 
             <Widget title='Raw' width='w-1/3' maxWidth='w-[400px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]'>
                 <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame'/>
             </Widget>
@@ -245,14 +243,13 @@ export default function Main() {
 
 
 
-            {/* TO DO: put this into the left sidebar*/}
             <div className="m-auto w-fit my-8">
                 <div className="flex border border-slate-700 rounded-md items-center justify-center space-x-6 py-8 px-8 bg-slate-200 shadow-sm">
                     <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-72' />
                     {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
                 </div>
             </div>
-            
+             */}
            
       </main>
     )

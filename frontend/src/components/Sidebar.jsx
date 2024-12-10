@@ -1,7 +1,7 @@
-export default function Sidebar() {
+export default function Sidebar({children}) {
     return (
-        <aside className="bg-slate-200 min-w-64 flex-shrink-0 shadow-md">
-            <h2>Websocket Controls (IP)</h2>
+        <aside className="bg-slate-200 min-w-64 flex-shrink-0 shadow-md h-full">
+            {children}
         </aside>
     )
 }

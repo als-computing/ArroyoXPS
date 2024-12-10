@@ -9,7 +9,7 @@ export default function PlotlyHeatMap({
     xAxisTitle = '', 
     yAxisTitle = '', 
     colorScale = 'Viridis', 
-    verticalScaleFactor = 0.5, // Scale factor for content growth
+    verticalScaleFactor = 0.1, // Scale factor for content growth
     width = 'w-full'
 }) {
     const plotContainer = useRef(null);

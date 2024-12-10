@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import Main from "./components/Main";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -34,6 +36,12 @@ export default function App() {
     heatmapSettings,
     handleHeatmapSettingChange
   } = useAPXPS({});
+
+  //Automatically start the websocket connection on page load
+  useEffect(() => {
+    startWebSocket();
+    return closeWebSocket;
+  }, []);
   
     return (
       <div className="flex-col h-screen w-screen">
@@ -70,8 +78,8 @@ export default function App() {
             </Widget>
 
             <div className='flex flex-wrap w-2/5'>
-              <Widget title='Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
-                  <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Current Fitted Peak' xAxisTitle='x' yAxisTitle='y'/>
+              <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
+                  <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
               <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>

@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import msgpack from 'msgpack-lite';
 import TextField from '../component_library/TextField';
-import { getWsUrl } from '../utils/connectionHelper'
+import { getWsUrl } from '../utils/connectionHelper';
+import dayjs from 'dayjs';
+
 
 export const useAPXPS = ({}) => {
 
@@ -54,6 +56,8 @@ export const useAPXPS = ({}) => {
 
 
     const frameNumber = useRef(null);
+
+    const isUserClosed = useRef(null);
     
 
 
@@ -105,7 +109,7 @@ export const useAPXPS = ({}) => {
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
                 console.log({fittedData})
-                processPeakData(fittedData[1], setSinglePeakData, updateCumulativePlot)
+                processPeakData(fittedData[0], setSinglePeakData, updateCumulativePlot)
             }
 
             //handle heatmap data
@@ -176,18 +180,74 @@ export const useAPXPS = ({}) => {
 
         ws.current.onopen = (event) => {
             setSocketStatus('Open');
+            isUserClosed.current = false;
         }
 
-        ws.current.onerror = function (error) {
+        ws.current.onerror = (error) => {
             console.log("error with ws");
             console.log({error});
             alert("Unable to connect to websocket");
             setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
         }
 
-        ws.current.onmessage = function (event) {
+        ws.current.onmessage = (event) => {
             handleNewWebsocketMessages(event);
         };
+
+        ws.current.onclose = (event) => {
+            handleWebsocketClose(event);
+        }
+    };
+
+    const handleWebsocketClose = (event) => {
+        ws.current = false;
+        if (isUserClosed.current === true) {
+            //do nothing, the user forced the websocket to close
+            console.log('user closed websocket');
+            return;
+        } else {
+            //if websocket closed due to external reason, send in warning and attempt reconnection
+            const maxAttempt = 2;
+            const time = 5; //time in seconds
+            //alert(`Websocket ${event.currentTarget.url} closed at ${dayjs().format('h:mm:ss A')} `)
+            console.log({event})
+
+            // Attempt to reconnect
+            setWarningMessage("WebSocket closed unexpectedly. Attempting to reconnect...");
+            console.log(`WebSocket ${event.currentTarget.url} closed unexpectedly at ${dayjs().format('h:mm:ss A')}`);
+
+            // Reconnection logic
+            const maxAttempts = 2; // Number of attempts to reconnect
+            let attempts = 0;
+
+            const tryReconnect = () => {
+                if (attempts >= maxAttempts) {
+                    setWarningMessage("Failed to reconnect to WebSocket after multiple attempts.");
+                    return;
+                }
+                if (ws.current !== false) {
+                    //ws has restarted
+                    return;
+                } else {
+                    attempts++;
+                    console.log(`Reconnection attempt ${attempts}`);
+                    startWebSocket();
+                }
+            };
+
+            setTimeout(tryReconnect, time*1000);
+        } 
+    }
+
+    const closeWebSocket = () => {
+        try {
+            ws.current.close();
+        } catch (error) {
+            console.log({error});
+            return;
+        }
+        setSocketStatus('closed');
+        isUserClosed.current = true; //this function is only able to be called by the user
     };
 
     const updateCumulativePlot = (singlePlot) => {
@@ -220,15 +280,7 @@ export const useAPXPS = ({}) => {
       })
     };
 
-    const closeWebSocket = () => {
-        try {
-            ws.current.close();
-        } catch (error) {
-            console.log({error});
-            return;
-        }
-        setSocketStatus('closed');
-    };
+
 
 
     return {

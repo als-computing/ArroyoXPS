@@ -16,7 +16,42 @@ export const useAPXPS = ({}) => {
     const [ singlePeakData, setSinglePeakData ] = useState({x:[], y:[]});
     const [ allPeakData, setAllPeakData ] = useState([]);
 
-    const [ status, setStatus ] = useState({scan: 'N/A', websocket: 'N/A'})
+    const [ status, setStatus ] = useState({scan: 'N/A', websocket: 'N/A'});
+
+    const type = {
+        float: 'float',
+        integer: 'integer',
+        string: 'string',
+        enum: 'enum',
+        file: 'file',
+        boolean: 'boolean'
+    };
+    const defaultHeatmapSettings = {
+        scaleFactor: {
+            label: 'Vertical Scale Factor',
+            type: type.float,
+            value: '1',
+            description: 'Factor to scale the vertical axis of Raw, VFFT, and IFFT images in the heatmap. Larger number will increase the vertical height.'
+        },
+        showTicks: {
+            label: 'Tick Marks',
+            type: type.boolean,
+            value: true,
+            description: 'Toggles the display of tickmarks on the heatmap graphs, where tickmarks represent the frame count at that row.'
+        }
+    };
+    const [ heatmapSettings, setHeatmapSettings ] = useState(defaultHeatmapSettings);
+
+    const handleHeatmapSettingChange = (newValue, key) => {
+        setHeatmapSettings((prevState) => ({
+            ...prevState,
+            [key]: {
+                ...prevState[key],
+                value: newValue
+            }
+        }));
+    };
+
 
     const frameNumber = useRef(null);
     
@@ -210,6 +245,8 @@ export const useAPXPS = ({}) => {
         startWebSocket,
         closeWebSocket,
         warningMessage,
-        status
+        status,
+        heatmapSettings,
+        handleHeatmapSettingChange
     }
 }

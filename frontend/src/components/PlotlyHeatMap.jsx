@@ -10,7 +10,9 @@ export default function PlotlyHeatMap({
     yAxisTitle = '', 
     colorScale = 'Viridis', 
     verticalScaleFactor = 0.1, // Scale factor for content growth
-    width = 'w-full'
+    width = 'w-full',
+    showTicks = false,
+    tickStep = 100
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -59,15 +61,16 @@ export default function PlotlyHeatMap({
                         title: yAxisTitle,
                         range: [0, array.length], // Dynamically adjust y-axis range
                         autorange: false,
-                        tickmode: 'linear', // Ensure tick marks appear
+                        tickmode: showTicks ? 'linear' : '', // tick marks should only appear when 
                         tick0: 0, // Starting tick
-                        dtick: 100, // Tick step
+                        dtick: showTicks ? tickStep : 10000, // Tick step,
+                        showticklabels: showTicks
                     },
                     autosize: true,
                     width: dimensions.width,
                     height: dynamicHeight, // Dynamically set height
                     margin: {
-                        l: 50,
+                        l: showTicks ? 50 : 10,
                         r: 10,
                         t: 0,
                         b: 0,

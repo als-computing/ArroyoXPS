@@ -10,6 +10,8 @@ import ConsoleViewer from "./components/ConsoleViewer";
 import Button from "./component_library/Button";
 import TextField from "./component_library/TextField";
 import Status from "./components/Status";
+import Settings from "./components/Settings";
+import FormContainer from "./component_library/FormContainer";
 
 import { useAPXPS } from "./hooks/useAPXPS";
 export default function App() {
@@ -28,14 +30,18 @@ export default function App() {
     startWebSocket,
     closeWebSocket,
     warningMessage,
-    status
+    status,
+    heatmapSettings,
+    handleHeatmapSettingChange
   } = useAPXPS({});
   
     return (
       <div className="flex-col h-screen w-screen">
+
         <div className="h-16 shadow-lg">
           <Header />
         </div>
+
         <div className="flex h-[calc(100vh-4rem)]">
           <Sidebar>
             <SidebarItem title="Websocket Connection">
@@ -47,13 +53,19 @@ export default function App() {
             <SidebarItem title='Scan Status'>
               <Status status={status}/>
             </SidebarItem>
+            <SidebarItem title='Live Image Settings'>
+              <Settings>
+                <FormContainer inputs={heatmapSettings} handleInputChange={handleHeatmapSettingChange}/>
+              </Settings>
+            </SidebarItem>
           </Sidebar>
+
           <Main >
             <Widget title='Live Images' width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]' expandedWidth='w-full'>
               <div className="w-full h-full overflow-auto flex">
-                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3'/>
-                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3'/>
-                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3'/>
+                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
               </div>
             </Widget>
 

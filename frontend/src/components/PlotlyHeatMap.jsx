@@ -9,7 +9,7 @@ export default function PlotlyHeatMap({
     xAxisTitle = '', 
     yAxisTitle = '', 
     colorScale = 'Viridis', 
-    verticalScaleFactor = 1, // Scale factor for content growth
+    verticalScaleFactor = 0.5, // Scale factor for content growth
     width = 'w-full'
 }) {
     const plotContainer = useRef(null);
@@ -41,7 +41,7 @@ export default function PlotlyHeatMap({
     ];
 
     // Calculate the height based on the number of rows in the array
-    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 200); // Minimum height is 200px
+    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 0); // Minimum height is 200px
 
     return (
         <div className={`h-full ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
@@ -53,19 +53,22 @@ export default function PlotlyHeatMap({
                     },
                     xaxis: {
                         title: xAxisTitle,
-                        scaleanchor: "y", // Ensure squares remain proportional
+                        //scaleanchor: "y", // Ensure squares remain proportional
                     },
                     yaxis: {
                         title: yAxisTitle,
                         range: [0, array.length], // Dynamically adjust y-axis range
                         autorange: false,
+                        tickmode: 'linear', // Ensure tick marks appear
+                        tick0: 0, // Starting tick
+                        dtick: 100, // Tick step
                     },
                     autosize: true,
                     width: dimensions.width,
                     height: dynamicHeight, // Dynamically set height
                     margin: {
-                        l: 4,
-                        r: 4,
+                        l: 50,
+                        r: 10,
                         t: 0,
                         b: 0,
                     },

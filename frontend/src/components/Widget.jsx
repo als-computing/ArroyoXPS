@@ -1,3 +1,6 @@
+import { useState } from "react";
+
+
 export default function Widget({
     children,
     title='',
@@ -5,14 +8,23 @@ export default function Widget({
     defaultHeight='h-1/4',
     maxHeight='max-h-3/4',
     width='w-1/4',
-    maxWidth='max-w-full'
+    maxWidth='max-w-full',
+    expandedWidth='w-full'
 }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const arrowsPointingIn = <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+  </svg>
+
+
     return (
-        <div className={` p-2 rounded-md ${width} ${defaultHeight} ${maxHeight} ${maxWidth}`}>
+        <div className={` p-2 rounded-md ${defaultHeight} ${maxHeight} ${isExpanded ? expandedWidth : `${width} ${maxWidth}`}`}>
             <div className="w-full h-full shadow-md bg-white rounded-md">
                 {/* Title */}
-                <header className="bg-sky-950 h-10 flex justify-start items-center rounded-t-md">
+                <header className="bg-sky-950 h-10 flex items-center rounded-t-md justify-between">
                     <h3 className="text-white text-lg font-semibold pl-4">{title}</h3>
+                    <p onClick={()=>setIsExpanded(!isExpanded)}>expand</p>
                 </header>
 
                 {/* Main Body */}

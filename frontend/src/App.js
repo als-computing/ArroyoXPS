@@ -54,6 +54,7 @@ export default function App() {
           <Sidebar>
             <SidebarItem title="Websocket Connection">
               <li className="flex flex-col w-full items-center justify-center space-x-6 space-y-4">
+                  {warningMessage.length > 0 ? <p className="text-red-500 text-lg">{warningMessage}</p> : ''}
                   <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-64' />
                   {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
               </li>

@@ -93,6 +93,7 @@ export const useAPXPS = ({}) => {
                 //console.log({newMessage});
             }
             //log keys
+            console.log({newMessage})
             var keyList = '';
             for (const key in newMessage) {
                 keyList = keyList.concat(', ', key);
@@ -108,7 +109,7 @@ export const useAPXPS = ({}) => {
             //handle fitted data parameters for line plots
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
-                console.log({fittedData})
+                //console.log({fittedData})
                 processPeakData(fittedData[0], setSinglePeakData, updateCumulativePlot)
             }
 
@@ -180,14 +181,15 @@ export const useAPXPS = ({}) => {
 
         ws.current.onopen = (event) => {
             setSocketStatus('Open');
+            setStatus((oldState) => ({...oldState, ['websocket']: 'connected'}));
             isUserClosed.current = false;
         }
 
         ws.current.onerror = (error) => {
             console.log("error with ws");
             console.log({error});
-            alert("Unable to connect to websocket");
-            setWarningMessage("Verify that the Python server is running, and that the port and path are correct");
+            //alert("Unable to connect to websocket");
+            setWarningMessage("Error connecting websocket: Check port/path and verify processor running");
         }
 
         ws.current.onmessage = (event) => {
@@ -201,6 +203,7 @@ export const useAPXPS = ({}) => {
 
     const handleWebsocketClose = (event) => {
         ws.current = false;
+        setStatus((oldState) => ({...oldState, ['websocket']: 'disconnected', ['scan']: 'N/A'}));
         if (isUserClosed.current === true) {
             //do nothing, the user forced the websocket to close
             console.log('user closed websocket');

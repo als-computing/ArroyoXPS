@@ -1,30 +1,19 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
 
-const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis']
+const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
 export default function PlotlyHeatMap({
-    array=[], 
-    title='', 
-    xAxisTitle='', 
-    yAxisTitle='', 
-    colorScale='Viridis', 
-    verticalScaleFactor=3500, 
-    minPlotHeight=200, 
-    width='w-full'
+    array = [], 
+    title = '', 
+    xAxisTitle = '', 
+    yAxisTitle = '', 
+    colorScale = 'Viridis', 
+    verticalScaleFactor = 1, // Scale factor for content growth
+    width = 'w-full'
 }) {
-    //console.log({array})
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-    const getScaledHeight = (containerHeight, arrayHeight) => {
-        //return the new height as a ratio
-        //console.log({containerHeight})
-        //console.log({arrayHeight})
-        const scaledPlotContainerHeight = (arrayHeight/verticalScaleFactor)*containerHeight + minPlotHeight;
-        //console.log({scaledPlotContainerHeight})
-        return scaledPlotContainerHeight;
-    }
 
     // Hook to update dimensions dynamically
     useEffect(() => {
@@ -45,11 +34,14 @@ export default function PlotlyHeatMap({
             z: array,
             type: 'heatmap',
             colorscale: colorScale,
-            zmin: 0, // Minimum value in the heatmap
-            zmax: 255, // Maximum value in the heatmap
-            showscale: false
+            zmin: 0,
+            zmax: 255,
+            showscale: false,
         },
     ];
+
+    // Calculate the height based on the number of rows in the array
+    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 200); // Minimum height is 200px
 
     return (
         <div className={`h-full ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
@@ -59,16 +51,23 @@ export default function PlotlyHeatMap({
                     title: {
                         text: '',
                     },
-                    xaxis: { title: '' },
-                    yaxis: { title: '' },
+                    xaxis: {
+                        title: xAxisTitle,
+                        scaleanchor: "y", // Ensure squares remain proportional
+                    },
+                    yaxis: {
+                        title: yAxisTitle,
+                        range: [0, array.length], // Dynamically adjust y-axis range
+                        autorange: false,
+                    },
                     autosize: true,
                     width: dimensions.width,
-                    height: getScaledHeight(dimensions.height, array.length),
+                    height: dynamicHeight, // Dynamically set height
                     margin: {
-                        l: 4, // Space for y-axis title
-                        r: 4, // Small space on the right
-                        t: 0, // Adjust space for title
-                        b: 0, // Space for x-axis title
+                        l: 4,
+                        r: 4,
+                        t: 0,
+                        b: 0,
                     },
                 }}
                 config={{ responsive: true }}
@@ -80,4 +79,5 @@ export default function PlotlyHeatMap({
         </div>
     );
 }
+
     

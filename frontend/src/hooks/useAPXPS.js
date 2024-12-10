@@ -39,12 +39,19 @@ export const useAPXPS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
+                console.log('got a blob:');
+                console.log({newMessage});
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
                 newMessage = msgpack.decode(new Uint8Array(event.data));
+                console.log('got array buffer:')
+                console.log({newMessage});
+
             } else {
                 // Assume JSON string for non-binary data
                 newMessage = JSON.parse(event.data);
+                console.log('got JSON:')
+                console.log({newMessage});
             }
             //log keys
             var keyList = '';

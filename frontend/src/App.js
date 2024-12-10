@@ -35,12 +35,9 @@ export default function App() {
         </div>
         <div className="flex h-[calc(100vh-4rem)]">
           <Sidebar>
-              <li className="flex flex-col w-full items-center justify-center space-x-6 space-y-4 py-8 px-8 bg-slate-200">
+              <li className="flex flex-col w-full items-center justify-center space-x-6 space-y-4 py-8 px-8 ">
                   <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-64' />
                   {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
-              </li>
-              <li className="flex flex-col w-full items-center justify-center space-x-6 space-y-4 py-8 px-8 bg-slate-200">
-                <p>{`Current Frame Count: ${frameNumber}`}</p>
               </li>
           </Sidebar>
           <Main >

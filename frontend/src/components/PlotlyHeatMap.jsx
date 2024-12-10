@@ -52,15 +52,15 @@ export default function PlotlyHeatMap({
     ];
 
     return (
-        <div className={`h-full ${width} rounded-b-md pb-4 flex-col content-end relative`} ref={plotContainer}>
+        <div className={`h-full ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{
                     title: {
                         text: '',
                     },
-                    xaxis: { title: xAxisTitle },
-                    yaxis: { title: yAxisTitle },
+                    xaxis: { title: '' },
+                    yaxis: { title: '' },
                     autosize: true,
                     width: dimensions.width,
                     height: getScaledHeight(dimensions.height, array.length),
@@ -74,7 +74,7 @@ export default function PlotlyHeatMap({
                 config={{ responsive: true }}
                 className="rounded-b-md"
             />
-            <div className="absolute bottom-0 left-0 right-0 text-center bg-slate-200 py-2 text-sm font-medium">
+            <div className="absolute bottom-0 left-0 right-0 text-center py-2 text-md font-semibold">
                 {title}
             </div>
         </div>

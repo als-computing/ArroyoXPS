@@ -77,15 +77,12 @@ class XPSWSResultPublisher(Publisher):
                 }
             )
         )
-        image_info = {
-            "width": message.integrated_frames.array.shape[0],
-            "height": message.integrated_frames.array.shape[1],
-        }
+
         # send image data separately to client memory issues
-        await client.send(msgpack.packb({"raw": convert_to_uint8(message.integrated_frames.array), **image_info}))
-        await client.send(json.dumps({"fitted": detected_peaks}))
-        await client.send(msgpack.packb({"vfft": convert_to_uint8(message.vfft.array), **image_info}))
-        await client.send(msgpack.packb({"ifft": convert_to_uint8(message.ifft.array), **image_info}))
+        image_bundle = await asyncio.to_thread(pack_images, message)
+        await client.send(image_bundle)
+
+
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
@@ -119,3 +116,20 @@ def peaks_output(peaks: pd.DataFrame):
     # ]
     peaks.columns = ["x", "h", "fwhm"]
     return peaks.to_dict(orient="records")
+
+def pack_images(message: XPSResult) -> bytes:
+    """
+    Pack all the images into a single msgpack message
+    """
+    image_info = {
+        "width": message.integrated_frames.array.shape[0],
+        "height": message.integrated_frames.array.shape[1],
+    }
+    return msgpack.packb({
+        "raw": convert_to_uint8(message.integrated_frames.array),
+        "vfft": convert_to_uint8(message.vfft.array),
+        "ifft": convert_to_uint8(message.ifft.array), 
+        "width": message.integrated_frames.array.shape[0],
+        "height": message.integrated_frames.array.shape[1],
+        "fitted": json.dumps(peaks_output(message.detected_peaks.df))
+    })

@@ -16,6 +16,8 @@ export const useAPXPS = ({}) => {
     const [ singlePeakData, setSinglePeakData ] = useState({x:[], y:[]});
     const [ allPeakData, setAllPeakData ] = useState([]);
 
+    const [ status, setStatus ] = useState({scan: 'N/A', websocket: 'N/A'})
+
     const frameNumber = useRef(null);
     
 
@@ -200,6 +202,7 @@ export const useAPXPS = ({}) => {
         socketStatus,
         startWebSocket,
         closeWebSocket,
-        warningMessage
+        warningMessage,
+        status
     }
 }

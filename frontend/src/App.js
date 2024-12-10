@@ -9,6 +9,7 @@ import PlotlyScatterMultiple from "./components/PlotlyScatterMultiple";
 import ConsoleViewer from "./components/ConsoleViewer";
 import Button from "./component_library/Button";
 import TextField from "./component_library/TextField";
+import Status from "./components/Status";
 
 import { useAPXPS } from "./hooks/useAPXPS";
 export default function App() {
@@ -26,7 +27,8 @@ export default function App() {
     socketStatus,
     startWebSocket,
     closeWebSocket,
-    warningMessage
+    warningMessage,
+    status
   } = useAPXPS({});
   
     return (
@@ -42,9 +44,9 @@ export default function App() {
                   {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
               </li>
             </SidebarItem>
-              <SidebarItem title='Sample Title'>
-                <p>hello</p>
-              </SidebarItem>
+            <SidebarItem title='Scan Status'>
+              <Status status={status}/>
+            </SidebarItem>
           </Sidebar>
           <Main >
             <Widget title='Live Images' width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]'>

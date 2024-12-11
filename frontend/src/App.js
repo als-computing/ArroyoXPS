@@ -11,9 +11,10 @@ import PlotlyScatterMultiple from "./components/PlotlyScatterMultiple";
 import ConsoleViewer from "./components/ConsoleViewer";
 import Button from "./component_library/Button";
 import TextField from "./component_library/TextField";
-import Status from "./components/Status";
+import ScanMetadata from "./components/ScanMetadata";
 import Settings from "./components/Settings";
 import FormContainer from "./component_library/FormContainer";
+import { phosphorIcons } from './assets/icons';
 
 import { useAPXPS } from "./hooks/useAPXPS";
 export default function App() {
@@ -34,7 +35,8 @@ export default function App() {
     warningMessage,
     status,
     heatmapSettings,
-    handleHeatmapSettingChange
+    handleHeatmapSettingChange,
+    metadata
   } = useAPXPS({});
 
   //Automatically start the websocket connection on page load
@@ -52,20 +54,20 @@ export default function App() {
 
         <div className="flex h-[calc(100vh-4rem)]">
           <Sidebar>
-            <SidebarItem title="Websocket Connection">
+            <SidebarItem title="Websocket" icon={phosphorIcons.plugsConnected} pulse={socketStatus === 'Open'}>
               <li className="flex flex-col w-full items-center justify-center space-x-6 space-y-4">
                   {warningMessage.length > 0 ? <p className="text-red-500 text-lg">{warningMessage}</p> : ''}
                   <TextField text="Websocket URL" value={wsUrl} cb={setWsUrl} styles='w-64' />
                   {socketStatus === 'closed' ? <Button text="Start" cb={startWebSocket}/> : <Button text="stop" cb={closeWebSocket}/>}
               </li>
             </SidebarItem>
-            <SidebarItem title='Scan Status'>
-              <Status status={status}/>
-            </SidebarItem>
-            <SidebarItem title='Live Image Settings'>
+            <SidebarItem title='Image Settings' icon={phosphorIcons.sliders}>
               <Settings>
                 <FormContainer inputs={heatmapSettings} handleInputChange={handleHeatmapSettingChange}/>
               </Settings>
+            </SidebarItem>
+            <SidebarItem title='Scan Metadata' icon={phosphorIcons.fileMd}>
+              <ScanMetadata status={status} metadata={metadata}/>
             </SidebarItem>
           </Sidebar>
 

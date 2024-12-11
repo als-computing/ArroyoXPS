@@ -19,6 +19,7 @@ export const useAPXPS = ({}) => {
     const [ allPeakData, setAllPeakData ] = useState([]);
 
     const [ status, setStatus ] = useState({scan: 'N/A', websocket: 'N/A'});
+    const [ metadata, setMetadata ] = useState({}); 
 
     const type = {
         float: 'float',
@@ -30,7 +31,7 @@ export const useAPXPS = ({}) => {
     };
     const defaultHeatmapSettings = {
         scaleFactor: {
-            label: 'Vertical Scale Factor',
+            label: 'Scale Factor',
             type: type.float,
             value: '1',
             description: 'Factor to scale the vertical axis of Raw, VFFT, and IFFT images in the heatmap. Larger number will increase the vertical height.'
@@ -38,7 +39,7 @@ export const useAPXPS = ({}) => {
         showTicks: {
             label: 'Tick Marks',
             type: type.boolean,
-            value: true,
+            value: false,
             description: 'Toggles the display of tickmarks on the heatmap graphs, where tickmarks represent the frame count at that row.'
         }
     };
@@ -93,7 +94,7 @@ export const useAPXPS = ({}) => {
                 //console.log({newMessage});
             }
             //log keys
-            console.log({newMessage})
+            //console.log({newMessage})
             var keyList = '';
             for (const key in newMessage) {
                 keyList = keyList.concat(', ', key);
@@ -128,6 +129,12 @@ export const useAPXPS = ({}) => {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
                 processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray)
+            }
+
+            if ('msg_type' in newMessage) {
+                console.log({newMessage});
+                //store in metadata which will be displayed in sidebar
+                setMetadata(newMessage);
             }
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
@@ -302,6 +309,7 @@ export const useAPXPS = ({}) => {
         warningMessage,
         status,
         heatmapSettings,
-        handleHeatmapSettingChange
+        handleHeatmapSettingChange,
+        metadata
     }
 }

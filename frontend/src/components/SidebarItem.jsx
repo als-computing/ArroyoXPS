@@ -34,7 +34,7 @@ const chevronUp = (
     </svg>
 );
 
-export default function SidebarItem({ children, title }) {
+export default function SidebarItem({ children, title, icon='', pulse }) {
     const [isExpanded, setIsExpanded] = useState(true);
 
     const toggleExpand = () => {
@@ -47,7 +47,10 @@ export default function SidebarItem({ children, title }) {
                 className="flex items-center justify-between p-2 cursor-pointer text-sky-950"
                 onClick={toggleExpand}
             >
-                <span className="text-lg text-sky-950 font-medium">{title}</span>
+                <div className="flex"> 
+                    <div className={`${pulse ? 'animate-pulse' : ''} aspect-square w-6 mx-2 text-sky-900`}>{icon}</div>
+                    <span className="text-lg text-sky-950 font-medium">{title}</span>
+                </div>
                 {isExpanded ? chevronUp : chevronDown}
             </div>
             <div

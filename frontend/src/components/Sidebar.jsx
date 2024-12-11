@@ -28,7 +28,7 @@ export default function Sidebar({ children }) {
                 </button>
             </div>
             {!isCollapsed && (
-                <div className="p-2 flex-col space-y-2">
+                <div className="flex-col space-y-6">
                     {children}
                 </div>
             )}

@@ -13,7 +13,7 @@ export default function Sidebar({ children }) {
 
     return (
         <aside
-            className={`bg-slate-200 flex-shrink-0 shadow-md h-full transition-all duration-300 ${
+            className={`bg-slate-200 flex-shrink-0 shadow-md h-full transition-all duration-300 overflow-auto ${
                 isCollapsed ? 'w-[60px]' : 'w-[300px]'
             }`}
         >

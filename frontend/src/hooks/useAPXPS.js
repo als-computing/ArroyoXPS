@@ -133,20 +133,45 @@ export const useAPXPS = ({}) => {
 
             if ('msg_type' in newMessage) {
                 console.log({newMessage});
-                //store in metadata which will be displayed in sidebar
-                setMetadata(newMessage);
+                //add to metadata display and clear cumulative plots
+                handleStartDocument(newMessage);
             }
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
         }
-    }
+    };
+
+    const handleStartDocument = (msg) => {
+        if (msg.msg_type === 'start') {
+            setAllPeakData([]); //clear out cumulative peak data which was from a previous scan
+        }
+        setMetadata(msg);
+    };
 
     const processArrayData = (data=[], width, height, cb) => {
+        //console.time("processArrayData"); // Start timing
+
+            // average 0.58 ms / img
+/*         const newData = new Array(height);
+
+        for (let i = 0; i < height; i++) {
+            // Directly assign the sliced portion to the preallocated array
+            newData[i] = data.slice(i * width, (i + 1) * width);
+        }
+ */
+
+
+
         //convert a single dimensional array data into width and height to make suitable for heatmap
+        // average 0.54 ms / img
         const newData = [];
         for (let i = 0; i < height; i++) {
             newData.push(data.slice(i * width, (i + 1) * width));
         }
+
+        //console.timeEnd("processArrayData"); // End timing and log duration 
+
+
         cb(newData);
     };
 

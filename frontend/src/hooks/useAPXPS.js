@@ -19,7 +19,7 @@ export const useAPXPS = ({}) => {
     const [ allPeakData, setAllPeakData ] = useState([]);
 
     const [ status, setStatus ] = useState({scan: 'N/A', websocket: 'N/A'});
-    const [ metadata, setMetadata ] = useState({}); 
+    const [ metadata, setMetadata ] = useState({});
 
     const type = {
         float: 'float',
@@ -59,7 +59,7 @@ export const useAPXPS = ({}) => {
     const frameNumber = useRef(null);
 
     const isUserClosed = useRef(null);
-    
+
 
 
     const defaultWsUrl = getWsUrl();
@@ -106,7 +106,7 @@ export const useAPXPS = ({}) => {
                 //console.log({newMessage})
                 frameNumber.current = newMessage.frame_number;
             }
-            
+
             //handle fitted data parameters for line plots
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
@@ -157,13 +157,13 @@ export const useAPXPS = ({}) => {
             //receives an array of objects
             var y_peak = data.h;
             var x_peak = data.x;
-    
+
             // Calculate sigma and define x range
             var sigma = data.fwhm / (2 * Math.sqrt(2 * Math.log(2)));
             var x_min = x_peak - 5 * sigma;
             var x_max = x_peak + 5 * sigma;
             var step = (x_max - x_min) / 100;
-    
+
             // Generate x and y values for the single plot
             var xValues = [];
             var yValues = [];
@@ -172,11 +172,11 @@ export const useAPXPS = ({}) => {
                 xValues.push(x);
                 yValues.push(y);
             }
-    
+
             // Create single plot object
             recentPlots.push({ x: xValues, y: yValues, type: 'scatter', mode: 'lines' });
-        }) 
-        
+        })
+
 
         //update state
         singlePlotCallback(recentPlots);
@@ -250,7 +250,7 @@ export const useAPXPS = ({}) => {
             };
 
             setTimeout(tryReconnect, time*1000);
-        } 
+        }
     }
 
     const closeWebSocket = () => {

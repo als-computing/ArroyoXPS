@@ -9,9 +9,8 @@ import tqdm
 import typer
 import zmq
 
-from .simulator import start_example, stop_example, event_example
 from ..log_utils import setup_logger
-
+from .simulator import stop_example
 
 app = typer.Typer(help="Labview H5 frame simulator")
 
@@ -27,8 +26,6 @@ event_msg = {
 }
 
 
-
-
 class H5LabViewSimulator:
     def __init__(
         self,
@@ -37,7 +34,7 @@ class H5LabViewSimulator:
         zmq_socket: zmq.Socket,
         scan_pause: int,
         repeat_scans: int,
-        single_scan_mode: bool
+        single_scan_mode: bool,
     ):
         self.file = file
         self.scan = scan
@@ -120,7 +117,9 @@ def start(
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 
     # simulator = LabViewPickleSimulator(socket, pickle_dir)
-    simulator = H5LabViewSimulator(file, group, socket, scan_pause, repeat_scans, single_scan_mode)
+    simulator = H5LabViewSimulator(
+        file, group, socket, scan_pause, repeat_scans, single_scan_mode
+    )
     print("starting labview simulator")
     simulator.start()
     simulator.finish()

@@ -21,9 +21,9 @@ export default function FormInputFloat ({value='', id='', handleInputChange=(new
     return (
         <input
             disabled={isDisabled}
-            type="number" 
-            value={value} 
-            className={`${isDisabled ? 'hover:cursor-not-allowed text-slate-400' : 'text-black'} border border-slate-300 pl-2 ${inputStyles}`} 
+            type="number"
+            value={value}
+            className={`${isDisabled ? 'hover:cursor-not-allowed text-slate-400' : 'text-black'} border border-slate-300 pl-2 ${inputStyles}`}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
         />

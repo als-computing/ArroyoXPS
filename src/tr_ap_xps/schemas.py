@@ -124,6 +124,7 @@ class XPSStop(Stop, XPSMessage):
     }
 
     """
+
     pass
     # num_frames: int = Field(..., alias="Num Frames")
 

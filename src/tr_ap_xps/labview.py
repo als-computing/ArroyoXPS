@@ -124,7 +124,8 @@ class XPSLabviewZMQListener(ZMQListener):
         image_info = XPSImageInfo(
             frame_number=0,
             width=rectangle.right - rectangle.left,
-            height=rectangle.bottom - rectangle.top,  # rectangle is from top-left corner
+            height=rectangle.bottom
+            - rectangle.top,  # rectangle is from top-left corner
             data_type=start.data_type,
         )
         return start, image_info

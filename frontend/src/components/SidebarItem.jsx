@@ -47,7 +47,7 @@ export default function SidebarItem({ children, title, icon='', pulse }) {
                 className="flex items-center justify-between p-2 cursor-pointer text-sky-950"
                 onClick={toggleExpand}
             >
-                <div className="flex"> 
+                <div className="flex">
                     <div className={`${pulse ? 'animate-pulse' : ''} aspect-square w-6 mx-2 text-sky-900`}>{icon}</div>
                     <span className="text-lg text-sky-950 font-medium">{title}</span>
                 </div>

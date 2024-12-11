@@ -2,7 +2,7 @@ xps:
   log_level: "INFO"
   tiled_uri: "http://localhost:8000"
   lv_zmq_listener:
-    zmq_pub_address: "tcp://131.243.75.240"
+    zmq_pub_address: "tcp://localhost"
     zmq_pub_port: 5555
   websockets_publisher:
     host: "0.0.0.0"

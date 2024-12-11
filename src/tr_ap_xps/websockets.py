@@ -1,6 +1,4 @@
 import asyncio
-import base64
-import io
 import json
 import logging
 from typing import Union
@@ -9,7 +7,6 @@ import msgpack
 import numpy as np
 import pandas as pd
 import websockets
-from PIL import Image
 
 from arroyo.publisher import Publisher
 
@@ -66,8 +63,6 @@ class XPSWSResultPublisher(Publisher):
             await client.send(json.dumps(message.model_dump()))
             return
 
-        detected_peaks = json.dumps(peaks_output(message.detected_peaks.df))
-
         # send basic info
         await client.send(
             json.dumps(
@@ -80,8 +75,6 @@ class XPSWSResultPublisher(Publisher):
         # send image data separately to client memory issues
         image_bundle = await asyncio.to_thread(pack_images, message)
         await client.send(image_bundle)
-
-
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
@@ -99,25 +92,28 @@ class XPSWSResultPublisher(Publisher):
             self.connected_clients.remove(websocket)
             logger.info("Client disconnected")
 
+
 def convert_to_uint8(image: np.ndarray) -> bytes:
     """
     Convert an image to uint8, scaling image
     """
     # scaled = (image - image.min()) / (image.max() - image.min()) * 255
     # return scaled.astype(np.uint8).tobytes()
-    
+
     image_normalized = (image - image.min()) / (image.max() - image.min())
 
     # Apply logarithmic stretch
     log_stretched = np.log1p(image_normalized)  # log(1 + x) to handle near-zero values
 
     # Normalize the log-stretched image to [0, 1] again
-    log_stretched_normalized = (log_stretched - log_stretched.min()) / (log_stretched.max() - log_stretched.min())
+    log_stretched_normalized = (log_stretched - log_stretched.min()) / (
+        log_stretched.max() - log_stretched.min()
+    )
 
     # Convert to uint8 (range [0, 255])
     image_uint8 = (log_stretched_normalized * 255).astype(np.uint8)
     return image_uint8.tobytes()
-    # def convert_to_uint8(image: np.ndarray) -> bytes:   
+    # def convert_to_uint8(image: np.ndarray) -> bytes:
     #     image = image.astype(np.float64)
     #     scaled = np.interp(image, (image.min(), image.max()), (0, 255))
     #     return scaled.astype(np.uint8).tobytes()
@@ -131,19 +127,18 @@ def peaks_output(peaks: pd.DataFrame):
     peaks.columns = ["x", "h", "fwhm"]
     return peaks.to_dict(orient="records")
 
+
 def pack_images(message: XPSResult) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
-    image_info = {
-        "width": message.integrated_frames.array.shape[0],
-        "height": message.integrated_frames.array.shape[1],
-    }
-    return msgpack.packb({
-        "raw": convert_to_uint8(message.integrated_frames.array),
-        "vfft": convert_to_uint8(message.vfft.array),
-        "ifft": convert_to_uint8(message.ifft.array), 
-        "width": message.integrated_frames.array.shape[0],
-        "height": message.integrated_frames.array.shape[1],
-        "fitted": json.dumps(peaks_output(message.detected_peaks.df))
-    })
+    return msgpack.packb(
+        {
+            "raw": convert_to_uint8(message.integrated_frames.array),
+            "vfft": convert_to_uint8(message.vfft.array),
+            "ifft": convert_to_uint8(message.ifft.array),
+            "width": message.integrated_frames.array.shape[0],
+            "height": message.integrated_frames.array.shape[1],
+            "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
+        }
+    )

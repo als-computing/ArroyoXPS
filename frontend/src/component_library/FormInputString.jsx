@@ -14,9 +14,9 @@ export default function FormInputString ({value='', id='', handleInputChange=(ne
     return (
         <input
             disabled={isDisabled}
-            type="text" 
-            value={value} 
-            className={`${isDisabled ? 'hover:cursor-not-allowed' : ''} border border-slate-300 pl-2 ${inputStyles}`} 
+            type="text"
+            value={value}
+            className={`${isDisabled ? 'hover:cursor-not-allowed' : ''} border border-slate-300 pl-2 ${inputStyles}`}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
         />

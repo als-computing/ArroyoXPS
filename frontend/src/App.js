@@ -44,7 +44,7 @@ export default function App() {
     startWebSocket();
     return closeWebSocket;
   }, []);
-  
+
     return (
       <div className="flex-col h-screen w-screen">
 
@@ -91,9 +91,6 @@ export default function App() {
           </Main>
         </div>
       </div>
-      
+
     )
 }
-
-
-

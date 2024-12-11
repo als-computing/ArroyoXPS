@@ -4,11 +4,11 @@ import Plot from 'react-plotly.js';
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
 export default function PlotlyHeatMap({
-    array = [], 
-    title = '', 
-    xAxisTitle = '', 
-    yAxisTitle = '', 
-    colorScale = 'Viridis', 
+    array = [],
+    title = '',
+    xAxisTitle = '',
+    yAxisTitle = '',
+    colorScale = 'Viridis',
     verticalScaleFactor = 0.1, // Scale factor for content growth
     width = 'w-full',
     showTicks = false,
@@ -61,7 +61,7 @@ export default function PlotlyHeatMap({
                         title: yAxisTitle,
                         range: [0, array.length], // Dynamically adjust y-axis range
                         autorange: false,
-                        tickmode: showTicks ? 'linear' : '', // tick marks should only appear when 
+                        tickmode: showTicks ? 'linear' : '', // tick marks should only appear when
                         tick0: 0, // Starting tick
                         dtick: showTicks ? tickStep : 10000, // Tick step,
                         showticklabels: showTicks
@@ -85,5 +85,3 @@ export default function PlotlyHeatMap({
         </div>
     );
 }
-
-    

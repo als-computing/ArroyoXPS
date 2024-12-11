@@ -10,9 +10,7 @@ from .peak_fitting import peak_fit
 logger = logging.getLogger("tr_ap_xps.processor")
 
 
-
 class XPSProcessor:
-   
     """
     A class to process XPS (X-ray Photoelectron Spectroscopy) data.
 
@@ -30,7 +28,7 @@ class XPSProcessor:
     def process_frame(self, message: XPSRawEvent) -> None:
         # Compute horizontally-integrated frame
         new_integrated_frame = self._compute_mean(message.image.array)
-        
+
         # Update the local cached dataframes
         if self.integrated_frames is None:
             self.integrated_frames = new_integrated_frame[None, :]

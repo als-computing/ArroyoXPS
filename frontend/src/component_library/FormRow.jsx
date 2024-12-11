@@ -4,7 +4,7 @@ import FormInputInteger from "./FormInputInteger";
 import FormInputString from "./FormInputString";
 import FormInputBoolean from "./FormInputBoolean";
 export default function FormRow({inputItem={}, handleInputChange=()=>{}, id='', labelStyles='', inputStyles='', layout='horizontal'}) {
-    
+
     const type = {
         float: 'float',
         integer: 'integer',
@@ -33,7 +33,7 @@ export default function FormRow({inputItem={}, handleInputChange=()=>{}, id='', 
                 return <p>Input type error</p>;
         }
     }
-    
+
     if (layout === 'horizontal') {
         return (
             <li className='flex'>

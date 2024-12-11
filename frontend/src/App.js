@@ -82,7 +82,7 @@ export default function App() {
 
             <div className='flex flex-wrap w-2/5'>
               <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
-                  <PlotlyScatterSingle dataX={singlePeakData.x} dataY={singlePeakData.y} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
+                  <PlotlyScatterMultiple data={singlePeakData} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
               <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>

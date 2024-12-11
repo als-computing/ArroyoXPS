@@ -111,7 +111,7 @@ export const useAPXPS = ({}) => {
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
                 //console.log({fittedData})
-                processPeakData(fittedData[0], setSinglePeakData, updateCumulativePlot)
+                processPeakData(fittedData, setSinglePeakData, updateCumulativePlot)
             }
 
             //handle heatmap data
@@ -150,33 +150,37 @@ export const useAPXPS = ({}) => {
         cb(newData);
     };
 
-    //to do: revise data to be an object instead of array if only a single plot is needed
-    const processPeakData = (data={x:0, h:0, fwhm: 0}, singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
+    const processPeakData = (peakDataArray=[{x:0, h:0, fwhm: 0}], singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
 
-        const y_peak = data.h;
-        const x_peak = data.x;
-
-        // Calculate sigma and define x range
-        const sigma = data.fwhm / (2 * Math.sqrt(2 * Math.log(2)));
-        const x_min = x_peak - 5 * sigma;
-        const x_max = x_peak + 5 * sigma;
-        const step = (x_max - x_min) / 100;
-
-        // Generate x and y values for the single plot
-        const xValues = [];
-        const yValues = [];
-        for (let x = x_min; x <= x_max; x += step) {
-            const y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
-            xValues.push(x);
-            yValues.push(y);
-        }
-
-        // Create single plot object
-        const singlePlot = { x: xValues, y: yValues };
+        var recentPlots = [];
+        peakDataArray.forEach(data => {
+            //receives an array of objects
+            var y_peak = data.h;
+            var x_peak = data.x;
+    
+            // Calculate sigma and define x range
+            var sigma = data.fwhm / (2 * Math.sqrt(2 * Math.log(2)));
+            var x_min = x_peak - 5 * sigma;
+            var x_max = x_peak + 5 * sigma;
+            var step = (x_max - x_min) / 100;
+    
+            // Generate x and y values for the single plot
+            var xValues = [];
+            var yValues = [];
+            for (let x = x_min; x <= x_max; x += step) {
+                var y = y_peak * Math.exp(-Math.pow(x - x_peak, 2) / (2 * Math.pow(sigma, 2)));
+                xValues.push(x);
+                yValues.push(y);
+            }
+    
+            // Create single plot object
+            recentPlots.push({ x: xValues, y: yValues, type: 'scatter', mode: 'lines' });
+        }) 
+        
 
         //update state
-        singlePlotCallback(singlePlot);
-        multiPlotCallback(singlePlot);
+        singlePlotCallback(recentPlots);
+        multiPlotCallback(recentPlots);
     }
 
 
@@ -260,7 +264,7 @@ export const useAPXPS = ({}) => {
         isUserClosed.current = true; //this function is only able to be called by the user
     };
 
-    const updateCumulativePlot = (singlePlot) => {
+    const updateCumulativePlot = (recentPlots) => {
        //console.log({frameNumber})
       setAllPeakData((data) => {
         var oldArrayData = Array.from(data);
@@ -277,16 +281,20 @@ export const useAPXPS = ({}) => {
             };
             newArrayData.push(plot);
         })
-        const newestData = {
-            x: singlePlot.x,
-            y: singlePlot.y,
-            line: {
-                color: 'rgb(0, 94, 245)',
-                width: 1,
-            },
-            name: `frame ${frameNumber.current ? frameNumber.current : 'NA'}`
-        }
-        return [...newArrayData, newestData];
+        var newestData = [];
+        recentPlots.forEach((plot) => {
+            var newPlot = {
+                x: plot.x,
+                y: plot.y,
+                line: {
+                    color: 'rgb(0, 94, 245)',
+                    width: 1,
+                },
+                name: `frame ${frameNumber.current ? frameNumber.current : 'NA'}`
+            };
+            newestData.push(newPlot);
+        })
+        return [...newArrayData, ...newestData];
       })
     };
 

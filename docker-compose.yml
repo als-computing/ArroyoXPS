@@ -46,8 +46,6 @@ services:
       - .:/app:Z
     networks:
       aps_net:
-    env_file:
-      - .env
 
 networks:
   aps_net:

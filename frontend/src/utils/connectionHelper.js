@@ -7,7 +7,7 @@ const getWsUrl = () => {
     const pathname = "/simImages";
     const port = ":8001";
     var wsUrl;
-
+ 
     if (process.env.REACT_APP_WEBSOCKET_URL) {
         wsUrl = process.env.REACT_APP_WEBSOCKET_URL; //defined at top level .env file, accessed at build time
     } else {

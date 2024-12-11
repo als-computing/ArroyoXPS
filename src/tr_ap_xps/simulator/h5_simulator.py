@@ -37,12 +37,14 @@ class H5LabViewSimulator:
         zmq_socket: zmq.Socket,
         scan_pause: int,
         repeat_scans: int,
+        single_scan_mode: bool
     ):
         self.file = file
         self.scan = scan
         self.zmq_socket = zmq_socket
         self.scan_pause = scan_pause
         self.repeat_scans = repeat_scans
+        self.single_scan_mode = single_scan_mode
 
     def _send_image(self, image: np.ndarray):
         self.zmq_socket.send(image)
@@ -82,6 +84,8 @@ class H5LabViewSimulator:
             logger.info(
                 f"finished sending messages pausing for {self.scan_pause} seconds"
             )
+            if self.single_scan_mode:
+                break
             time.sleep(scan_pause)
 
     def finish(self):
@@ -96,6 +100,7 @@ def start(
     zmq_pub_port: int = 5555,
     log_level: str = "DEBUG",
     scan_pause: int = 5,
+    single_scan_mode: bool = True,
     repeat_scans: int = typer.Option(
         50, help="Number of times to repeat data from a scan as a full scan"
     ),
@@ -103,6 +108,8 @@ def start(
     setup_logger(logger)
     logger.setLevel(log_level.upper())
     logger.info(f"{log_level=}")
+    logger.info(f"{file=}")
+    logger.info(f"{group=}")
     logger.debug("DEBUG LOGGING SET")
     logger.info(f"zmq_pub_address: {zmq_pub_address}")
     logger.info(f"zmq_pub_port: {zmq_pub_port}")
@@ -113,7 +120,7 @@ def start(
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
 
     # simulator = LabViewPickleSimulator(socket, pickle_dir)
-    simulator = H5LabViewSimulator(file, group, socket, scan_pause, repeat_scans)
+    simulator = H5LabViewSimulator(file, group, socket, scan_pause, repeat_scans, single_scan_mode)
     print("starting labview simulator")
     simulator.start()
     simulator.finish()

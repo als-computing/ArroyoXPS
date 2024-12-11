@@ -77,7 +77,6 @@ class XPSWSResultPublisher(Publisher):
                 }
             )
         )
-
         # send image data separately to client memory issues
         image_bundle = await asyncio.to_thread(pack_images, message)
         await client.send(image_bundle)
@@ -104,9 +103,24 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     """
     Convert an image to uint8, scaling image
     """
-    scaled = (image - image.min()) / (image.max() - image.min()) * 255
-    return scaled.astype(np.uint8).tobytes()
+    # scaled = (image - image.min()) / (image.max() - image.min()) * 255
+    # return scaled.astype(np.uint8).tobytes()
     
+    image_normalized = (image - image.min()) / (image.max() - image.min())
+
+    # Apply logarithmic stretch
+    log_stretched = np.log1p(image_normalized)  # log(1 + x) to handle near-zero values
+
+    # Normalize the log-stretched image to [0, 1] again
+    log_stretched_normalized = (log_stretched - log_stretched.min()) / (log_stretched.max() - log_stretched.min())
+
+    # Convert to uint8 (range [0, 255])
+    image_uint8 = (log_stretched_normalized * 255).astype(np.uint8)
+    return image_uint8.tobytes()
+    # def convert_to_uint8(image: np.ndarray) -> bytes:   
+    #     image = image.astype(np.float64)
+    #     scaled = np.interp(image, (image.min(), image.max()), (0, 255))
+    #     return scaled.astype(np.uint8).tobytes()
 
 
 def peaks_output(peaks: pd.DataFrame):

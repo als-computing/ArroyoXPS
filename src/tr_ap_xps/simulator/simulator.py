@@ -65,7 +65,7 @@ class RandomLabViewSimulator:
 
     def start(self):
         time.sleep(
-            5
+            1
         )  # pause to let clients connect...without this the first message is lost
         while True:
             self.zmq_socket.send_json(start_example)
@@ -153,7 +153,7 @@ def start(
     repeat: bool = True,
     scan_pause: int = 5,
     num_frames: int = 1000,
-    sim_type: SimType = SimType.random.value,
+    sim_type: SimType = SimType.random,
 ) -> None:
     setup_logger(logger)
     logger.setLevel(log_level.upper())
@@ -166,7 +166,7 @@ def start(
     socket.setsockopt(zmq.SNDHWM, 10000)
     socket.bind(f"{zmq_pub_address}:{zmq_pub_port}")
     logger.info(f"publishing labview simulations {zmq_pub_address}:{zmq_pub_port}")
-
+    simulator = None
     # simulator = LabViewPickleSimulator(socket, pickle_dir)
     match sim_type:
         case SimType.h5:

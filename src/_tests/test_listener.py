@@ -21,7 +21,7 @@ async def run_simulator(num_frames: int = 1):
 
 
 @pytest.fixture
-def mock_operator():
+async def mock_operator():
     return AsyncMock()
 
 
@@ -37,7 +37,7 @@ async def test_listen_zmq_interface(mock_operator):
         listener_task = asyncio.create_task(listener.start())
         
         # Give the listener time to process messages
-        await asyncio.sleep(20)
+        await asyncio.sleep(5)
 
         # Stop the listener and wait for it to clean up
         await listener.stop()
@@ -49,25 +49,14 @@ async def test_listen_zmq_interface(mock_operator):
         # Ensure process was called three times. We expect 1 event.
         assert mock_operator.process.call_count == 3
 
-        # # Validate that the arguments are instances of specific classes
-        # for call_args in mock_operator.process.call_args_list:
-        #     assert isinstance(
-        #         call_args[0][0], XPSStart
-        #     ), f"First argument is not an instance of XPSStart: {call_args[0][0]}"
-        #     assert isinstance(
-        #         call_args[0][1], XPSRawEvent
-        #     ), f"Second argument is not an instance of XPSRawEvent: {call_args[0][1]}"
-        #     assert isinstance(
-        #         call_args[0][2], XPSStop
-        #     ), f"Second argument is not an instance of XPSStop: {call_args[0][1]}"
         # Validate that the arguments are instances of specific classes
         call_args = mock_operator.process.call_args_list
         assert isinstance(
             call_args[0][0][0], XPSStart
-        ), f"First argument is not an instance of XPSStart: {call_args[0][0]}"
+        ), f"First argument is not an instance of XPSStart: {call_args[0][0][0],"
         assert isinstance(
             call_args[1][0][0], XPSRawEvent
-        ), f"Second argument is not an instance of XPSRawEvent: {call_args[0][1]}"
+        ), f"Second argument is not an instance of XPSRawEvent: {call_args[1][0][0]}"
         assert isinstance(
             call_args[2][0][0], XPSStop
-        ), f"Second argument is not an instance of XPSStop: {call_args[0][1]}"
+        ), f"Second argument is not an instance of XPSStop: {call_args[2][0][0]}"

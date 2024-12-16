@@ -9,9 +9,12 @@ from tr_ap_xps.labview import XPSLabviewZMQListener, setup_zmq
 from tr_ap_xps.schemas import XPSRawEvent, XPSStart, XPSStop
 from tr_ap_xps.simulator.simulator import start
 
+
 @contextlib.asynccontextmanager
 async def run_simulator(num_frames: int = 1):
-    thread = threading.Thread(target=start, kwargs={"repeat": False, "num_frames": num_frames})
+    thread = threading.Thread(
+        target=start, kwargs={"repeat": False, "num_frames": num_frames}
+    )
     thread.start()
     try:
         yield thread
@@ -35,7 +38,7 @@ async def test_listen_zmq_interface(mock_operator):
 
         # Start the listener in an asyncio task
         listener_task = asyncio.create_task(listener.start())
-        
+
         # Give the listener time to process messages
         await asyncio.sleep(5)
 
@@ -53,7 +56,7 @@ async def test_listen_zmq_interface(mock_operator):
         call_args = mock_operator.process.call_args_list
         assert isinstance(
             call_args[0][0][0], XPSStart
-        ), f"First argument is not an instance of XPSStart: {call_args[0][0][0],"
+        ), f"First argument is not an instance of XPSStart: {call_args[0][0][0]}"
         assert isinstance(
             call_args[1][0][0], XPSRawEvent
         ), f"Second argument is not an instance of XPSRawEvent: {call_args[1][0][0]}"

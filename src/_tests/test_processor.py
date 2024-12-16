@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from tr_ap_xps.pipeline.xps_operator import XPSProcessor
-from tr_ap_xps.schemas import XPSStart
+# from tr_ap_xps.pipeline.xps_operator import XPSProcessor
+# from tr_ap_xps.schemas import XPSStart
 
 
 @pytest.fixture
@@ -22,27 +22,27 @@ def integrated_frame():
 
 #     frame_info = {"Frame Number": 1}
 #     xps_dataset.process_frame(frame_info, integrated_frame)
-    # TODO commenting this out for now, the new peak fitting code cannot handle dummy data
-    # assert "lines_raw" in xps_dataset.run_node
-    # assert xps_dataset.tiled_struct.lines_raw_node is not None
-    # assert xps_dataset.tiled_struct.lines_raw_node.read().shape == (
-    #     1,
-    #     10,
-    # ), "Expected a single row with 10 columns, matching a veritcally integrated frame"
-    # assert xps_dataset.tiled_struct.lines_filtered_node.read().shape == (
-    #     1,
-    #     10,
-    # ), "Expected a single row with 10 columns, matching a veritcally filtered integrated frame"
+# TODO commenting this out for now, the new peak fitting code cannot handle dummy data
+# assert "lines_raw" in xps_dataset.run_node
+# assert xps_dataset.tiled_struct.lines_raw_node is not None
+# assert xps_dataset.tiled_struct.lines_raw_node.read().shape == (
+#     1,
+#     10,
+# ), "Expected a single row with 10 columns, matching a veritcally integrated frame"
+# assert xps_dataset.tiled_struct.lines_filtered_node.read().shape == (
+#     1,
+#     10,
+# ), "Expected a single row with 10 columns, matching a veritcally filtered integrated frame"
 
-    # xps_dataset.process_frame(integrated_frame)
-    # assert xps_dataset.tiled_struct.lines_raw_node.read().shape == (
-    #     2,
-    #     10,
-    # ), "Expected another row of verically integrated frame"
-    # assert xps_dataset.tiled_struct.lines_filtered_node.read().shape == (
-    #     2,
-    #     10,
-    # ), "Expected a single row with 10 columns, matching a veritcally filtered integrated frame"
+# xps_dataset.process_frame(integrated_frame)
+# assert xps_dataset.tiled_struct.lines_raw_node.read().shape == (
+#     2,
+#     10,
+# ), "Expected another row of verically integrated frame"
+# assert xps_dataset.tiled_struct.lines_filtered_node.read().shape == (
+#     2,
+#     10,
+# ), "Expected a single row with 10 columns, matching a veritcally filtered integrated frame"
 
-    # xps_dataset.finish()
-    # assert xps_dataset.tiled_struct.timing_node.read().shape[0] == 2
+# xps_dataset.finish()
+# assert xps_dataset.tiled_struct.timing_node.read().shape[0] == 2

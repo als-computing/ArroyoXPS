@@ -169,7 +169,7 @@ export const useAPXPS = ({}) => {
             newData.push(data.slice(i * width, (i + 1) * width));
         }
 
-        //console.timeEnd("processArrayData"); // End timing and log duration 
+        //console.timeEnd("processArrayData"); // End timing and log duration
 
 
         cb(newData);

@@ -105,7 +105,7 @@ class XPSLabviewZMQListener(ZMQListener):
     def _build_event(
         message: dict, image_info: XPSImageInfo, buffer: bytes
     ) -> XPSRawEvent:
-        shape = (image_info.width, image_info.height)
+        shape = (image_info.height, image_info.width)
         dtype = DATATYPE_MAP.get(image_info.data_type)
         if not dtype:
             logger.error(f"Received unexpected data type: {image_info}")

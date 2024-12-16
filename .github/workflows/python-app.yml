@@ -22,6 +22,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
         pip install .[dev]
+        git clone https://github.com/als-computing/arroyo.git
+        pip install ./arroyo
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

@@ -33,8 +33,11 @@ class XPSProcessor:
         if self.integrated_frames is None:
             self.integrated_frames = new_integrated_frame[None, :]
         else:
+            # self.integrated_frames = np.vstack(
+            #     (self.integrated_frames, new_integrated_frame)
+            # )
             self.integrated_frames = np.vstack(
-                (self.integrated_frames, new_integrated_frame)
+                (new_integrated_frame, self.integrated_frames)
             )
         # Things to do every so often
         if message.image_info.frame_number % self.frames_per_cycle == 0:

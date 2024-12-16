@@ -140,5 +140,7 @@ def pack_images(message: XPSResult) -> bytes:
             "width": message.integrated_frames.array.shape[0],
             "height": message.integrated_frames.array.shape[1],
             "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
+            "shot_num" : message.shot_num,
+            "shot_sum": convert_to_uint8(message.shot_sum.array)
         }
     )

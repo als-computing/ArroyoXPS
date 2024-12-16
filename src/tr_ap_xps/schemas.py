@@ -140,7 +140,8 @@ class XPSResult(Event, XPSMessage):
     detected_peaks: DataFrameModel
     vfft: NumpyArrayModel
     ifft: NumpyArrayModel
-    sum: NumpyArrayModel
+    shot_num: int
+    shot_sum: NumpyArrayModel
 
 
 class XPSResultStop(Stop, XPSMessage):

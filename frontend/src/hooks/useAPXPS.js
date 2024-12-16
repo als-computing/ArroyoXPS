@@ -33,7 +33,7 @@ export const useAPXPS = ({}) => {
         scaleFactor: {
             label: 'Scale Factor',
             type: type.float,
-            value: '1',
+            value: '0.5',
             description: 'Factor to scale the vertical axis of Raw, VFFT, and IFFT images in the heatmap. Larger number will increase the vertical height.'
         },
         showTicks: {
@@ -59,6 +59,9 @@ export const useAPXPS = ({}) => {
     const frameNumber = useRef(null);
 
     const isUserClosed = useRef(null);
+
+    const latestArrayRef = useRef([]);
+    const plottedArrayRef = useRef([]);
 
 
 
@@ -111,7 +114,7 @@ export const useAPXPS = ({}) => {
             if ('fitted' in newMessage) {
                 const fittedData = JSON.parse(newMessage.fitted);
                 //console.log({fittedData})
-                processPeakData(fittedData, setSinglePeakData, updateCumulativePlot)
+                //processPeakData(fittedData, setSinglePeakData, updateCumulativePlot)
             }
 
             //handle heatmap data
@@ -119,16 +122,17 @@ export const useAPXPS = ({}) => {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
                 processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
+                console.log({newMessage})
             }
             if ('vfft' in newMessage) {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
-                processArrayData(newMessage.vfft, newMessage.height,  newMessage.width, setVfftArray)
+                //processArrayData(newMessage.vfft, newMessage.height,  newMessage.width, setVfftArray)
             }
             if ('ifft' in newMessage) {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
-                processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray)
+                //processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray)
             }
 
             if ('msg_type' in newMessage) {
@@ -173,7 +177,25 @@ export const useAPXPS = ({}) => {
 
 
         cb(newData);
+        console.log({newData});
+        latestArrayRef.current = newData;
     };
+
+    //this never worked properly
+    const addSlice = () => {
+        const latestHeight = latestArrayRef.current.length;
+        const plottedHeight = plottedArrayRef.current.length;
+        if (latestHeight !== plottedHeight) {
+            const newSlice = latestArrayRef.current.slice(plottedHeight, latestHeight);
+            plottedArrayRef.current = latestArrayRef.current;
+            console.log('found new slice')
+            console.log({newSlice})
+            return newSlice;
+        } else {
+            console.log('no new slice')
+            return false;
+        }
+    }
 
     const processPeakData = (peakDataArray=[{x:0, h:0, fwhm: 0}], singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
 
@@ -343,6 +365,7 @@ export const useAPXPS = ({}) => {
         status,
         heatmapSettings,
         handleHeatmapSettingChange,
-        metadata
+        metadata,
+        addSlice
     }
 }

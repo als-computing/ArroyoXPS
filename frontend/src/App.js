@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 import SidebarItem from "./components/SidebarItem";
 import Widget from "./components/Widget";
 import PlotlyHeatMap from "./components/PlotlyHeatMap";
+import PlotlyHeatMapBySlice from './components/PlotlyHeatMapBySlice';
 import PlotlyScatterSingle from "./components/PlotlyScatterSingle";
 import PlotlyScatterMultiple from "./components/PlotlyScatterMultiple";
 import ConsoleViewer from "./components/ConsoleViewer";
@@ -14,7 +15,9 @@ import TextField from "./component_library/TextField";
 import ScanMetadata from "./components/ScanMetadata";
 import Settings from "./components/Settings";
 import FormContainer from "./component_library/FormContainer";
+import D3HeatmapCanvas from './components/D3HeatmapCanvas';
 import { phosphorIcons } from './assets/icons';
+import { sampleArraySmall, sampleArrayMedium } from './assets/sampleRawArray';
 
 import { useAPXPS } from "./hooks/useAPXPS";
 export default function App() {
@@ -36,13 +39,14 @@ export default function App() {
     status,
     heatmapSettings,
     handleHeatmapSettingChange,
-    metadata
+    metadata,
+    addSlice
   } = useAPXPS({});
 
   //Automatically start the websocket connection on page load
   useEffect(() => {
-    startWebSocket();
-    return closeWebSocket;
+    //startWebSocket();
+    //return closeWebSocket;
   }, []);
 
     return (
@@ -74,20 +78,21 @@ export default function App() {
           <Main >
             <Widget title='Live Images' width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]' expandedWidth='w-full'>
               <div className="w-full h-full overflow-auto flex">
-                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <D3HeatmapCanvas array={sampleArrayMedium} title="heatmap example" />
+                {/* <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
                 <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
-                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/> */}
               </div>
             </Widget>
 
-            <div className='flex flex-wrap w-2/5'>
+{/*             <div className='flex flex-wrap w-2/5'>
               <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={singlePeakData} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
               <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
-            </div>
+            </div> */}
           </Main>
         </div>
       </div>

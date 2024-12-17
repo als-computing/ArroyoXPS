@@ -9,7 +9,8 @@ export default function Widget({
     maxHeight='max-h-3/4',
     width='w-1/4',
     maxWidth='max-w-full',
-    expandedWidth='w-full'
+    expandedWidth='w-full',
+    contentStyles=''
 }) {
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -35,7 +36,7 @@ export default function Widget({
                 </header>
 
                 {/* Main Body */}
-                <div className="h-[calc(100%-2.5rem)] rounded-b-md flex w-full overflow-auto">
+                <div className={`h-[calc(100%-2.5rem)] rounded-b-md flex w-full overflow-auto ${contentStyles}`}>
                     {children}
                 </div>
             </div>

@@ -15,6 +15,8 @@ export const useAPXPS = ({}) => {
     const [ vfftArray, setVfftArray ] = useState([]);
     const [ ifftArray, setIfftArray ] = useState([]);
     const [ shotSumArray, setShotSumArray ] = useState([]);
+    const [ shotSumIfftArray, setShotSumIfftArray ] = useState([]);
+    const [ shotSumVfftArray, setShotSumVfftArray ] = useState([]);
     const [ shotNumber, setShotNumber ] = useState(0);
 
     const [ singlePeakData, setSinglePeakData ] = useState([]);
@@ -146,6 +148,14 @@ export const useAPXPS = ({}) => {
                 var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum.length / newMessage.height)
                 processArrayData(newMessage.shot_sum, newMessage.height, shotHeight, setShotSumArray)
             }
+            if ('shot_sum_vfft' in newMessage) {
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum_vfft.length / newMessage.height)
+                processArrayData(newMessage.shot_sum_vfft, newMessage.height, shotHeight, setShotSumVfftArray)
+            }
+            if ('shot_sum_ifft' in newMessage) {
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum_ifft.length / newMessage.height)
+                processArrayData(newMessage.shot_sum_ifft, newMessage.height, shotHeight, setShotSumIfftArray)
+            }
             if ('shot_num' in newMessage) {
                 setShotNumber(newMessage.shot_num);
             }
@@ -163,29 +173,11 @@ export const useAPXPS = ({}) => {
     };
 
     const processArrayData = (data=[], width, height, cb) => {
-        //console.time("processArrayData"); // Start timing
 
-            // average 0.58 ms / img
-/*         const newData = new Array(height);
-
-        for (let i = 0; i < height; i++) {
-            // Directly assign the sliced portion to the preallocated array
-            newData[i] = data.slice(i * width, (i + 1) * width);
-        }
- */
-
-
-
-        //convert a single dimensional array data into width and height to make suitable for heatmap
-        // average 0.54 ms / img
         const newData = [];
         for (let i = 0; i < height; i++) {
             newData.push(data.slice(i * width, (i + 1) * width));
         }
-
-        //console.timeEnd("processArrayData"); // End timing and log duration
-
-
         cb(newData);
     };
 
@@ -216,13 +208,11 @@ export const useAPXPS = ({}) => {
                         }
                     }
                 }
-    
                 // Calculate the average value and add to the downsampled row
                 newRow.push(sum / count);
             }
             newData.push(newRow);
         }
-    
         cb(newData);
     };
 
@@ -396,6 +386,8 @@ export const useAPXPS = ({}) => {
         handleHeatmapSettingChange,
         metadata,
         shotSumArray,
-        shotNumber
+        shotNumber,
+        shotSumIfftArray,
+        shotSumVfftArray
     }
 }

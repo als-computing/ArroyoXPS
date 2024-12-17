@@ -52,6 +52,7 @@ class H5LabViewSimulator:
         )  # pause to let clients connect...without this the first message is lost
         while True:
             with h5py.File(self.file, "r") as file:
+                frame_number = 1
                 group = file[self.scan]
                 metadata = json.loads(group["Metadata"][()])
                 logger.info(metadata)
@@ -70,7 +71,8 @@ class H5LabViewSimulator:
                 for _ in range(self.repeat_scans):  # repeat the scan
                     logging.info(f"repeating scan {self.repeat_scans} times")
                     for i in range(num_frames):
-                        event_msg["Frame Number"] = i
+                        event_msg["Frame Number"] = frame_number
+                        frame_number += 1
                         self.zmq_socket.send_json(event_msg)
                         self.zmq_socket.send(frames[i])
                         progress_bar.update(1)

@@ -121,7 +121,8 @@ export const useAPXPS = ({}) => {
             if ('raw' in newMessage) {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
-                processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
+                //processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
+                processAndDownsampleArrayData(newMessage.raw,  newMessage.height, newMessage.width, 2, setRawArray)
                 console.log({newMessage})
             }
             if ('vfft' in newMessage) {
@@ -180,6 +181,45 @@ export const useAPXPS = ({}) => {
         console.log({newData});
         latestArrayRef.current = newData;
     };
+
+    const processAndDownsampleArrayData = (data = [], width, height, scaleFactor = 1, cb) => {
+        if (scaleFactor < 1) throw new Error("Scale factor must be 1 or greater.");
+    
+        const downsampledHeight = Math.floor(height / scaleFactor);
+        const downsampledWidth = Math.floor(width / scaleFactor);
+        const newData = [];
+    
+        for (let row = 0; row < downsampledHeight; row++) {
+            const newRow = [];
+            for (let col = 0; col < downsampledWidth; col++) {
+                let sum = 0;
+                let count = 0;
+    
+                // Sum up values within the scaleFactor x scaleFactor block
+                for (let i = 0; i < scaleFactor; i++) {
+                    for (let j = 0; j < scaleFactor; j++) {
+                        const originalRow = row * scaleFactor + i;
+                        const originalCol = col * scaleFactor + j;
+                        const index = originalRow * width + originalCol;
+    
+                        if (originalRow < height && originalCol < width) {
+                            sum += data[index];
+                            count++;
+                        }
+                    }
+                }
+    
+                // Calculate the average value and add to the downsampled row
+                newRow.push(sum / count);
+            }
+            newData.push(newRow);
+        }
+    
+        cb(newData);
+        console.log({ newData });
+        latestArrayRef.current = newData;
+    };
+    
 
     //this never worked properly
     const addSlice = () => {

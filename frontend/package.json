@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@pixi/react": "^7.1.2",
+    "@react-three/fiber": "^8.17.10",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "d3": "^7.9.0",
     "dayjs": "^1.11.13",
     "msgpack-lite": "^0.1.26",
+    "pixi.js": "^7.4.2",
     "plotly.js": "^2.12.1",
     "plotly.js-basic-dist": "^2.35.2",
     "react": "^18.3.1",
@@ -16,6 +19,7 @@
     "react-plotly.js": "^2.5.1",
     "react-scripts": "5.0.1",
     "react-tooltip": "^5.28.0",
+    "three": "^0.171.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

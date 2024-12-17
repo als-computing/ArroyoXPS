@@ -7,7 +7,7 @@ const sampleArray = [
     // ... (your large dataset here)
 ];
 
-export default function D3HeatmapCanvas({ array = sampleArray, width = 400}) {
+export default function D3HeatmapCanvas({ array = sampleArray, width = 200}) {
     const canvasRef = useRef(null);
     var height = Math.max(array.length, 0)
 
@@ -20,12 +20,6 @@ export default function D3HeatmapCanvas({ array = sampleArray, width = 400}) {
 
         const cellWidth = width / cols;
         const cellHeight = height / rows;
-
-        //this made everything dark, did not work
-        //const flatArray = array.flat();
-        //const minVal = d3.min(flatArray);
-        //const maxVal = d3.max(flatArray);
-        //const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([minVal, maxVal]);
 
 
         const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 255]);
@@ -43,14 +37,10 @@ export default function D3HeatmapCanvas({ array = sampleArray, width = 400}) {
                 ctx.fillRect(colIndex * cellWidth, rowIndex * cellHeight, cellWidth, cellHeight);
             });
         });
-/*         const dpi = window.devicePixelRatio || 1;
-        canvas.width = width * dpi;
-        canvas.height = height * dpi;
-        ctx.scale(dpi, dpi); */
 
     }, [array, width, height]);
 
-    return <div>
+    return <div className='flex-col h-full content-end pb-8'>
             <canvas ref={canvasRef} width={width} height={height} className="w-fit border border-slate-500"></canvas>
         </div>;
 }

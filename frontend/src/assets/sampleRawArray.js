@@ -40,7 +40,7 @@ const sampleArraySmall = [
 ];
 
 var sampleArrayMedium = [];
-const mediumArrayHeight = 1000;
+const mediumArrayHeight = 10;
 for (let i = 0; i<mediumArrayHeight; i++) {
     sampleArrayMedium.push(sampleArraySmall[0]);
 }

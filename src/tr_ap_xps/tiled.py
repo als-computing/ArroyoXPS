@@ -28,7 +28,7 @@ class TiledScan:
     detected_peaks: DataFrameClient = None
     vfft: ArrayClient = None
     ifft: ArrayClient = None
-    sum: ArrayClient = None
+    shot_sum: ArrayClient = None
     function_timings: DataFrameClient = None
 
 
@@ -105,7 +105,7 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
         )
         patch_tiled_array(self.current_tiled_scan.vfft, message.vfft.array)
         patch_tiled_array(self.current_tiled_scan.ifft, message.ifft.array)
-        patch_tiled_array(self.current_tiled_scan.sum, message.sum.array)
+        patch_tiled_array(self.current_tiled_scan.shot_sum, message.shot_sum.array, axis_to_increment=1)
         append_table_node(
             self.current_tiled_scan.detected_peaks, message.detected_peaks.df
         )
@@ -123,7 +123,7 @@ def create_data_nodes(tiled_scan: TiledScan, message: XPSResult) -> None:
     )
     tiled_scan.vfft = tiled_scan.run_node.write_array(message.vfft.array, key="vfft")
     tiled_scan.ifft = tiled_scan.run_node.write_array(message.ifft.array, key="ifft")
-    tiled_scan.sum = tiled_scan.run_node.write_array(message.sum.array, key="sum")
+    tiled_scan.shot_sum = tiled_scan.run_node.write_array(message.shot_sum.array, key="shot_sum")
     tiled_scan.detected_peaks = create_tiled_table_node(
         tiled_scan.run_node, message.detected_peaks.df, "detected_peaks"
     )

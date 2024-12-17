@@ -20,7 +20,8 @@ class XPSProcessor:
         self.frames_per_cycle = message.f_reset
         self.integrated_frames: np.ndarray = None
         self.shot_num = 0
-        self.shot_sum: np.ndarray = None
+        self.shot_cache = None # built up with each integrated frame, reset at the end of each shot
+        self.shot_sum = None  # updated at the completion of each shot
 
     @timer
     def _compute_mean(self, curr_frame: np.array):
@@ -31,7 +32,7 @@ class XPSProcessor:
         # Compute horizontally-integrated frame
         new_integrated_frame = self._compute_mean(message.image.array)
 
-        # Update the local cached dataframes
+        # Update the local cached arrays
         if self.integrated_frames is None:
             self.integrated_frames = new_integrated_frame[None, :]
         else:
@@ -42,15 +43,19 @@ class XPSProcessor:
                 (new_integrated_frame, self.integrated_frames)
             )
 
+        if self.shot_cache is None:
+            self.shot_cache = new_integrated_frame[np.newaxis, :]  # add a new axis frame number
+        else:
+            self.shot_cache = np.vstack((self.shot_cache, new_integrated_frame))
+
         # Things to do with every shot (a "shot" is a complete cycle of frames)
-        if message.image_info.frame_number % self.frames_per_cycle == 0:
+        if message.image_info.frame_number != 0 and message.image_info.frame_number % self.frames_per_cycle == 0:
             self.shot_num += 1
             if self.shot_sum is None:
-                self.shot_sum = self.integrated_frames
+                self.shot_sum = self.shot_cache
             else:
-                self.shot_sum = self.shot_sum + self.integrated_frames
+                self.shot_sum = self.shot_sum + self.shot_cache
 
-            
             logger.info(f"Processing frame {message.image_info.frame_number}")
             # Peak detection on new_integrated_frame
             detected_peaks_df = peak_fit(new_integrated_frame)
@@ -68,6 +73,6 @@ class XPSProcessor:
                 shot_num=self.shot_num,
                 shot_sum=NumpyArrayModel(array=self.shot_sum),
             )
-            return result
-
+            self.shot_cache = None
+            return result            
         timer.end_frame()

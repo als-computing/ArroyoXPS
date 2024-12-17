@@ -12,7 +12,8 @@ export default function PlotlyHeatMap({
     verticalScaleFactor = 0.1, // Scale factor for content growth
     width = 'w-full',
     showTicks = false,
-    tickStep = 100
+    tickStep = 100,
+    fixHeightToParent=false
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -68,7 +69,7 @@ export default function PlotlyHeatMap({
                     },
                     autosize: true,
                     width: dimensions.width,
-                    height: dynamicHeight, // Dynamically set height
+                    height: fixHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
                     margin: {
                         l: showTicks ? 50 : 10,
                         r: 10,

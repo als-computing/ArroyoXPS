@@ -35,7 +35,7 @@ export default function Widget({
                 </header>
 
                 {/* Main Body */}
-                <div className="h-[calc(100%-2.5rem)] rounded-b-md flex w-full">
+                <div className="h-[calc(100%-2.5rem)] rounded-b-md flex w-full overflow-auto">
                     {children}
                 </div>
             </div>

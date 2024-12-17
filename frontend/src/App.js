@@ -86,10 +86,10 @@ export default function App() {
               <Widget title={`Sum - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/3' maxHeight='max-h-96'>
                 <PlotlyHeatMap array={shotSumArray} title='Shot Sum' fixHeightToParent={true} width='w-full' verticalScaleFactor={1} showTicks={false}/>
               </Widget>
-              <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
+              <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/3' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={singlePeakData} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
-              <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
+              <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/3' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
             </div>

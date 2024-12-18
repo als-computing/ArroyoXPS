@@ -7,12 +7,16 @@ const sampleArray = [
     // ... (your large dataset here)
 ];
 
-export default function D3HeatmapCanvas({ array = sampleArray, title='', width = 'w-full', verticalScaleFactor=1, fixPlotHeightToParent=false}) {
+export default function D3HeatmapCanvasTest({
+    array = sampleArray,
+    title = '',
+    width = 'w-full',
+    verticalScaleFactor = 1,
+    fixPlotHeightToParent = false,
+}) {
     const canvasRef = useRef(null);
     const canvasContainerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-    //var height = Math.max(array.length, 0);
-    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 0); // Minimum height is 200px
 
     // Hook to update dimensions dynamically
     useEffect(() => {
@@ -29,40 +33,51 @@ export default function D3HeatmapCanvas({ array = sampleArray, title='', width =
     }, []);
 
     useEffect(() => {
-        if (!array.length) return;
+        if (!array.length || dimensions.width === 0) return;
 
         const rows = array.length;
         const cols = array[0].length;
 
-        const cellWidth = dimensions.width / cols;
-        const cellHeight = fixPlotHeightToParent ? dimensions.height / rows : dynamicHeight / rows;
-
+        const cellWidth = Math.floor(dimensions.width / cols);
+        const cellHeight = Math.floor(
+            fixPlotHeightToParent ? dimensions.height / rows : (array.length * verticalScaleFactor) / rows
+        );
 
         const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 255]);
+        const myfilld3 = colorScale(0);
+        console.log({myfilld3});
 
         const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false;
+        canvas.width = dimensions.width; // Explicitly set canvas width
+        canvas.height = fixPlotHeightToParent ? dimensions.height : array.length * verticalScaleFactor;
 
-        // Clear canvas before drawing
-        ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+        const ctx = canvas.getContext('2d');
+        //ctx.imageSmoothingEnabled = false; // Disable antialiasing for crisp rendering
 
         // Draw heatmap
         array.forEach((row, rowIndex) => {
             row.forEach((value, colIndex) => {
                 ctx.fillStyle = colorScale(value);
-                ctx.fillRect(colIndex * cellWidth, rowIndex * cellHeight, cellWidth, cellHeight);
+                ctx.fillRect(
+                    Math.round(colIndex * cellWidth),
+                    Math.round(rowIndex * cellHeight),
+                    Math.ceil(cellWidth),
+                    Math.ceil(cellHeight)
+                );
             });
         });
-
-    }, [array, dimensions]);
+    }, [array, dimensions, fixPlotHeightToParent, verticalScaleFactor]);
 
     return (
         <div className={`${width} flex-col h-full content-end pb-8 relative`} ref={canvasContainerRef}>
-            <canvas ref={canvasRef} width={dimensions.width} height={fixPlotHeightToParent ? dimensions.height : dynamicHeight} className="w-fit border border-slate-500"></canvas>
-            <div className="absolute bottom-0 left-0 right-0 text-center  text-md font-semibold">
+            <canvas
+                ref={canvasRef}
+                className="w-fit border border-slate-500"
+                style={{ display: 'block' }}
+            ></canvas>
+            <div className="absolute bottom-0 left-0 right-0 text-center text-md font-semibold">
                 {title}
             </div>
         </div>
-    ) 
+    );
 }

@@ -45,6 +45,23 @@ for (let i = 0; i<mediumArrayHeight; i++) {
     sampleArrayMedium.push(sampleArraySmall[0]);
 }
 
+//create 2d arrays (100 x 100) 
+const singleColorRow = Array(100);
+const lowVal = 0;
+singleColorRow.fill(lowVal);
+const arrayHeight = 100;
+
+var singleColorArray = [];
+for (let i=0; i < arrayHeight; i++) {
+    singleColorArray.push(singleColorRow);
+}
+var multiColorArray = [];
+for (let i=0; i < arrayHeight; i++) {
+    let dynamicColorRow = Array(100);
+    dynamicColorRow.fill(i)
+    multiColorArray.push(dynamicColorRow);
+}
 
 
-export { sampleArraySmall, sampleArrayMedium };
+
+export { sampleArraySmall, sampleArrayMedium, singleColorArray, multiColorArray };

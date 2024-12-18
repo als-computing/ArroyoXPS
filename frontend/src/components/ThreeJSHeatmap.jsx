@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import * as d3 from 'd3';
 
@@ -10,23 +10,35 @@ const sampleArray = [
     // Add more rows to simulate larger datasets
 ];
 
-export default function ThreeJSHeatmap({ array = sampleArray, width = 400, height = 800 }) {
+export default function ThreeJSHeatmap({ array = sampleArray, width = 'w-full', fixPlotHeightToParent=false, title='' }) {
+    const plotRef = useRef(null);
     const containerRef = useRef(null);
+    const [ dimensions, setDimensions ] = useState({width: 0, height: 0});
+
+    useEffect(() =>{
+        const resizeObserver = new ResizeObserver((entries) => {
+            if (entries[0]) {
+                const { width, height } = entries[0].contentRect;
+                setDimensions({ width, height })
+            }
+        })
+        if (containerRef.current) {
+            resizeObserver.observe(containerRef.current);
+        }
+        return () => resizeObserver.disconnect();
+    }, [])
 
     useEffect(() => {
         if (!array.length) return;
 
         // Set up Three.js scene
         const scene = new THREE.Scene();
-        const camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 0.1, 10);
+        const camera = new THREE.OrthographicCamera(-dimensions.width / 2, dimensions.width / 2, dimensions.height / 2, -dimensions.height / 2, 0.1, 10);
         camera.position.z = 1;
 
         const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(width, height);
-        //renderer.outputEncoding = THREE.sRGBEncoding; // Enable sRGB encoding for gamma correction
-        renderer.toneMapping = THREE.ACESFilmicToneMapping; // Improved tone mapping
-        renderer.toneMappingExposure = 1.2; // Adjust exposure for better brightness
-        containerRef.current.appendChild(renderer.domElement);
+        renderer.setSize(dimensions.width, dimensions.height);
+        plotRef.current.appendChild(renderer.domElement);
 
         // Create an off-screen canvas to draw the heatmap
         const canvas = document.createElement('canvas');
@@ -37,10 +49,9 @@ export default function ThreeJSHeatmap({ array = sampleArray, width = 400, heigh
         const ctx = canvas.getContext('2d');
 
         // Create color scale
-        const flatArray = array.flat();
-        const minVal = Math.min(...flatArray);
-        const maxVal = Math.max(...flatArray);
         const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 255]);
+        const myfillThreeJS = colorScale(0);
+        console.log({myfillThreeJS});
 
         // Draw heatmap to the canvas (1 pixel per data point)
         array.forEach((row, rowIndex) => {
@@ -53,11 +64,11 @@ export default function ThreeJSHeatmap({ array = sampleArray, width = 400, heigh
         // Convert the canvas to a Three.js texture
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.LinearFilter; // Avoid pixelation on zoom
-        //texture.encoding = THREE.sRGBEncoding;
+        texture.colorSpace = THREE.SRGBColorSpace;
         texture.needsUpdate = true;
 
         // Create a plane and map the texture to it
-        const geometry = new THREE.PlaneGeometry(width, height);
+        const geometry = new THREE.PlaneGeometry(dimensions.width, dimensions.height);
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false });
         const plane = new THREE.Mesh(geometry, material);
         scene.add(plane);
@@ -68,9 +79,16 @@ export default function ThreeJSHeatmap({ array = sampleArray, width = 400, heigh
         // Cleanup
         return () => {
             renderer.dispose();
-            containerRef.current.removeChild(renderer.domElement);
+            plotRef.current.removeChild(renderer.domElement);
         };
-    }, [array, width, height]);
+    }, [array, dimensions]);
 
-    return <div ref={containerRef} style={{ width: `${width}px`, height: `${height}px` }}></div>;
+    return (
+        <div className={`${width} h-full pb-8 relative`} ref={containerRef}>
+            <div ref={plotRef} style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}></div>;
+            <div className="absolute bottom-0 left-0 right-0 text-center  text-md font-semibold">
+                {title}
+            </div>
+        </div>
+    )
 }

@@ -11,8 +11,10 @@ export default function PlotlyHeatMap({
     colorScale = 'Viridis',
     verticalScaleFactor = 0.1, // Scale factor for content growth
     width = 'w-full',
+    height='h-full',
     showTicks = false,
-    tickStep = 100
+    tickStep = 100,
+    fixPlotHeightToParent=false
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -46,7 +48,7 @@ export default function PlotlyHeatMap({
     const dynamicHeight = Math.max(array.length * verticalScaleFactor, 0); // Minimum height is 200px
 
     return (
-        <div className={`h-full ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
+        <div className={`${height} ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{
@@ -68,7 +70,7 @@ export default function PlotlyHeatMap({
                     },
                     autosize: true,
                     width: dimensions.width,
-                    height: dynamicHeight, // Dynamically set height
+                    height: fixPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
                     margin: {
                         l: showTicks ? 50 : 10,
                         r: 10,
@@ -79,7 +81,7 @@ export default function PlotlyHeatMap({
                 config={{ responsive: true }}
                 className="rounded-b-md"
             />
-            <div className="absolute bottom-0 left-0 right-0 text-center py-2 text-md font-semibold">
+            <div className="absolute bottom-0 left-0 right-0 text-center  text-md font-semibold">
                 {title}
             </div>
         </div>

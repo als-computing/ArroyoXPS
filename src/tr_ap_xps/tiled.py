@@ -130,11 +130,8 @@ def create_data_nodes(tiled_scan: TiledScan, message: XPSResult) -> None:
 
 def patch_tiiled_frame(array_client: ArrayClient, array: np.ndarray) -> None:
     shape = array_client.shape
-    offset = (shape[0] + 1)
-    # print(array[None, :])
+    offset = (shape[0], )
     array_client.patch(array[None, :], offset=offset, extend=True)
-    # print(array_client[-1])
-    print(array_client[-1] == array[None, :])
 
 def patch_tiled_array(
     array_client: ArrayClient, array: np.ndarray, axis_to_increment: int = 0

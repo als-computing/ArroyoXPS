@@ -55,8 +55,6 @@ class XPSProcessor:
                 self.shot_sum = self.shot_cache
             else:
                 self.shot_sum = self.shot_sum + self.shot_cache
-                print(self.shot_sum.max(), self.shot_sum.min())
-
             logger.info(f"Processing frame {message.image_info.frame_number}")
             # Peak detection on new_integrated_frame
             detected_peaks_df = peak_fit(new_integrated_frame)

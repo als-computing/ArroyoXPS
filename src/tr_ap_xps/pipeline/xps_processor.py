@@ -22,10 +22,16 @@ class XPSProcessor:
         self.shot_num = 0
         self.shot_cache = None # built up with each integrated frame, reset at the end of each shot
         self.shot_sum = None  # updated at the completion of each shot
+        self.shot_mean = None
+        self.shot_std = None
 
     @timer
     def _compute_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
+    
+    @timer
+    def _compute_std(self, curr_frame: np.array):
+        return np.std(curr_frame, axis=0)
 
     @timer
     def process_frame(self, message: XPSRawEvent) -> None:
@@ -53,8 +59,13 @@ class XPSProcessor:
             self.shot_num += 1
             if self.shot_sum is None:
                 self.shot_sum = self.shot_cache
+                self.shot_mean = self.shot_cache
+                self.shot_std = self._compute_std(self.shot_cache)
             else:
                 self.shot_sum = self.shot_sum + self.shot_cache
+                self.shot_mean = self._compute_mean(self.shot_cache)
+                self.shot_std = self._compute_std(self.shot_cache)
+
             logger.info(f"Processing frame {message.image_info.frame_number}")
             # Peak detection on new_integrated_frame
             detected_peaks_df = peak_fit(new_integrated_frame)
@@ -71,6 +82,8 @@ class XPSProcessor:
                 ifft=NumpyArrayModel(array=ifft_np),
                 shot_num=self.shot_num,
                 shot_sum=NumpyArrayModel(array=self.shot_sum),
+                shot_mean=NumpyArrayModel(array=self.shot_mean),
+                shot_std=NumpyArrayModel(array=self.shot_std),
             )
             self.shot_cache = None
             return result            

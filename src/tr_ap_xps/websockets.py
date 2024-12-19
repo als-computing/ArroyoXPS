@@ -74,6 +74,7 @@ class XPSWSResultPublisher(Publisher):
         )
         # send image data separately to client memory issues
         image_bundle = await asyncio.to_thread(pack_images, message)
+        logger.info(f"Sending image bundle to client of size {len(image_bundle)}")
         await client.send(image_bundle)
 
     async def websocket_handler(self, websocket):
@@ -141,6 +142,8 @@ def pack_images(message: XPSResult) -> bytes:
             "height": message.integrated_frames.array.shape[1],
             "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
             "shot_num" : message.shot_num,
-            "shot_sum": convert_to_uint8(message.shot_sum.array)
+            "shot_sum": convert_to_uint8(message.shot_sum.array),
+            "shot_mean": convert_to_uint8(message.shot_mean.array),
+            "shot_std": convert_to_uint8(message.shot_std.array),
         }
     )

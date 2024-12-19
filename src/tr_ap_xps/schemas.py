@@ -142,6 +142,8 @@ class XPSResult(Event, XPSMessage):
     ifft: NumpyArrayModel
     shot_num: int
     shot_sum: NumpyArrayModel
+    shot_mean: NumpyArrayModel
+    shot_std: NumpyArrayModel
 
 
 class XPSResultStop(Stop, XPSMessage):

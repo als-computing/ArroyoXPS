@@ -3,23 +3,25 @@ import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
+
 export default function PlotlyHeatMap({
-    array = [],
+    array = [], //2d array [[1, 2, 3], [2, 2 1]]
     title = '',
     xAxisTitle = '',
     yAxisTitle = '',
-    colorScale = 'Viridis',
-    verticalScaleFactor = 0.1, // Scale factor for content growth
-    width = 'w-full',
-    height='h-full',
+    colorScale = 'Viridis', //plotly compatible colorScale
+    verticalScaleFactor = 0.1, // Adjusts the height of the plot. ex) A factor of 2 makes each row in the array take up 2 pixels
+    width = 'w-full', //width of the container
+    height='h-full', //height of the container
     showTicks = false,
     tickStep = 100,
-    fixPlotHeightToParent=false
+    fixPlotHeightToParent=false, //locks the height of the plot to the height of the container, should not be set to True if preventInterpolation is on
+    preventInterpolation=false, //restricts the maximum view of the plot so that it never exceeds a 1 pixel to 1 array element density (preventing interpolation and inaccurate display for sensitive data)
 }) {
     const plotContainer = useRef(null);
-    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); //applied to plot, not the container
 
-    // Hook to update dimensions dynamically
+    // Hook to update dimensions of plot dynamically
     useEffect(() => {
         const resizeObserver = new ResizeObserver((entries) => {
             if (entries[0]) {
@@ -48,7 +50,7 @@ export default function PlotlyHeatMap({
     const dynamicHeight = Math.max(array.length * verticalScaleFactor, 0); // Minimum height is 200px
 
     return (
-        <div className={`${height} ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
+        <div name="container" className={`${height} ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{
@@ -69,11 +71,11 @@ export default function PlotlyHeatMap({
                         showticklabels: showTicks
                     },
                     autosize: true,
-                    width: dimensions.width,
-                    height: fixPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
+                    width: preventInterpolation ? Math.min(dimensions.width, array[0].length) : dimensions.width,
+                    height: preventInterpolation ? Math.min(dimensions.height, array.length) : fixPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
                     margin: {
-                        l: showTicks ? 50 : 10,
-                        r: 10,
+                        l: showTicks ? 50 : 0,
+                        r: 0,
                         t: 0,
                         b: 0,
                     },

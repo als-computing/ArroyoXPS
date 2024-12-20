@@ -33,7 +33,7 @@ export const useAPXPS = ({}) => {
         scaleFactor: {
             label: 'Scale Factor',
             type: type.float,
-            value: '0.5',
+            value: '1',
             description: 'Factor to scale the vertical axis of Raw, VFFT, and IFFT images in the heatmap. Larger number will increase the vertical height.'
         },
         showTicks: {
@@ -123,7 +123,7 @@ export const useAPXPS = ({}) => {
                 //send in height as width and vice versa until height/width issues fixed
                 //processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
                 processAndDownsampleArrayData(newMessage.raw,  newMessage.height, newMessage.width, 2, setRawArray)
-                console.log({newMessage})
+                //console.log({newMessage})
             }
             if ('vfft' in newMessage) {
                 //console.log({newMessage})

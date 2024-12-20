@@ -49,6 +49,8 @@ export default function App() {
     addSlice
   } = useAPXPS({});
 
+  const displayArray = multiColorArray;
+
   //Automatically start the websocket connection on page load
   useEffect(() => {
     //startWebSocket();
@@ -84,10 +86,11 @@ export default function App() {
           <Main >
             <Widget title='Heatmaps (Plotly, D3+Canvas, ThreeJS)' width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]' expandedWidth='w-full'>
               <div className="w-full h-full overflow-auto flex">
-                <PlotlyHeatMap array={singleColorArray} title='Plotly' width='w-1/3' fixPlotHeightToParent={true} verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
-                <D3HeatmapCanvasTest array={singleColorArray} title='D3+Canvas' fixPlotHeightToParent={true} width='w-1/3'/>
-                <ThreeJSHeatmap array={singleColorArray} title='threejs' width='w-1/3' fixPlotHeightToParent={true}/>
-                {/* <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={displayArray} preventInterpolation={true} title='Plotly' width='w-1/3' fixPlotHeightToParent={false} verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <D3HeatmapCanvasTest array={displayArray} title='D3+Canvas' fixPlotHeightToParent={true} width='w-1/3'/>
+                <ThreeJSHeatmap array={displayArray} title='threejs' width='w-1/3' fixPlotHeightToParent={true}/>
+                {/* 
+                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
                 <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='Averaged Vertical Intensity' yAxisTitle='Frame' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/> */}
               </div>
             </Widget>

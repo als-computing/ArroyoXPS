@@ -74,11 +74,9 @@ class XPSProcessor:
                 and message.image_info.frame_number % self.frames_per_cycle == 0
             ):
                 self.shot_num += 1
-                if self.shot_recent is None:
-                    self.shot_recent = self.shot_cache
-  
-                else:
-                    self.shot_recent = self.shot_recent + self.shot_cache
+ 
+                self.shot_recent = self.shot_cache
+
                 self._compute_rolling_values(self.shot_cache)
 
 

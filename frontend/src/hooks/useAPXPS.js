@@ -14,10 +14,11 @@ export const useAPXPS = ({}) => {
     const [ rawArray, setRawArray ] = useState([]);
     const [ vfftArray, setVfftArray ] = useState([]);
     const [ ifftArray, setIfftArray ] = useState([]);
-    const [ shotSumArray, setShotSumArray ] = useState([]);
-    const [ shotSumIfftArray, setShotSumIfftArray ] = useState([]);
-    const [ shotSumVfftArray, setShotSumVfftArray ] = useState([]);
+    const [ shotRecentArray, setShotRecentArray ] = useState([]);
+    const [ shotMeanArray, setShotMeanArray ] = useState([]);
+    const [ shotStdArray, setShotStdArray ] = useState([]);
     const [ shotNumber, setShotNumber ] = useState(0);
+    const [ shotInfo, setShotInfo ] = useState({}); //TO DO: put state into here to track shots to frames and use for tick marks
 
     const [ singlePeakData, setSinglePeakData ] = useState([]);
     const [ allPeakData, setAllPeakData ] = useState([]);
@@ -146,15 +147,15 @@ export const useAPXPS = ({}) => {
             if ('shot_recent' in newMessage) {
                 //technically metadata won't have f_reset due to stale state at time of function initilization, need to put it into a ref
                 var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_recent.length / newMessage.height)
-                processArrayData(newMessage.shot_recent, newMessage.height, shotHeight, setShotSumArray)
+                processArrayData(newMessage.shot_recent, newMessage.height, shotHeight, setShotRecentArray)
             }
             if ('shot_mean' in newMessage) {
                 var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_mean.length / newMessage.height)
-                processArrayData(newMessage.shot_mean, newMessage.height, shotHeight, setShotSumVfftArray)
+                processArrayData(newMessage.shot_mean, newMessage.height, shotHeight, setShotStdArray)
             }
             if ('shot_std' in newMessage) {
                 var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_std.length / newMessage.height)
-                processArrayData(newMessage.shot_std, newMessage.height, shotHeight, setShotSumIfftArray)
+                processArrayData(newMessage.shot_std, newMessage.height, shotHeight, setShotMeanArray)
             }
             if ('shot_num' in newMessage) {
                 setShotNumber(newMessage.shot_num);
@@ -385,9 +386,9 @@ export const useAPXPS = ({}) => {
         heatmapSettings,
         handleHeatmapSettingChange,
         metadata,
-        shotSumArray,
         shotNumber,
-        shotSumIfftArray,
-        shotSumVfftArray
+        shotRecentArray,
+        shotMeanArray,
+        shotStdArray
     }
 }

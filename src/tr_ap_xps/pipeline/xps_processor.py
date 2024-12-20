@@ -30,7 +30,11 @@ class XPSProcessor:
         return np.mean(curr_frame, axis=0)
     
     @timer
-    def _compute_std(self, curr_frame: np.array):
+    def _compute_shot_mean(self, curr_frame: np.array):
+        return np.mean(curr_frame, axis=0)
+    
+    @timer
+    def _compute_shot_std(self, curr_frame: np.array):
         return np.std(curr_frame, axis=0)
 
     @timer
@@ -60,11 +64,11 @@ class XPSProcessor:
             if self.shot_sum is None:
                 self.shot_sum = self.shot_cache
                 self.shot_mean = self.shot_cache
-                self.shot_std = self._compute_std(self.shot_cache)
+                self.shot_std = self._compute_shot_std(self.shot_cache)
             else:
                 self.shot_sum = self.shot_sum + self.shot_cache
-                self.shot_mean = self._compute_mean(self.shot_cache)
-                self.shot_std = self._compute_std(self.shot_cache)
+                self.shot_mean = self._compute_shot_mean(self.shot_cache)
+                self.shot_std = self._compute_shot_std(self.shot_cache)
 
             logger.info(f"Processing frame {message.image_info.frame_number}")
             # Peak detection on new_integrated_frame

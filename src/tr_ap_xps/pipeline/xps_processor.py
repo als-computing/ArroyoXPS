@@ -20,7 +20,9 @@ class XPSProcessor:
         self.frames_per_cycle = message.f_reset
         self.integrated_frames: np.ndarray = None
         self.shot_num = 0
-        self.shot_cache = None # built up with each integrated frame, reset at the end of each shot
+        self.shot_cache = (
+            None  # built up with each integrated frame, reset at the end of each shot
+        )
         self.shot_sum = None  # updated at the completion of each shot
         self.shot_mean = None
         self.shot_std = None
@@ -28,11 +30,11 @@ class XPSProcessor:
     @timer
     def _compute_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
-    
+
     @timer
     def _compute_shot_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
-    
+
     @timer
     def _compute_shot_std(self, curr_frame: np.array):
         return np.std(curr_frame, axis=0)
@@ -54,12 +56,17 @@ class XPSProcessor:
             )
 
         if self.shot_cache is None:
-            self.shot_cache = new_integrated_frame[np.newaxis, :]  # add a new axis frame number
+            self.shot_cache = new_integrated_frame[
+                np.newaxis, :
+            ]  # add a new axis frame number
         else:
             self.shot_cache = np.vstack((self.shot_cache, new_integrated_frame))
 
         # Things to do with every shot (a "shot" is a complete cycle of frames)
-        if message.image_info.frame_number != 0 and message.image_info.frame_number % self.frames_per_cycle == 0:
+        if (
+            message.image_info.frame_number != 0
+            and message.image_info.frame_number % self.frames_per_cycle == 0
+        ):
             self.shot_num += 1
             if self.shot_sum is None:
                 self.shot_sum = self.shot_cache
@@ -90,5 +97,5 @@ class XPSProcessor:
                 shot_std=NumpyArrayModel(array=self.shot_std),
             )
             self.shot_cache = None
-            return result            
+            return result
         timer.end_frame()

@@ -123,15 +123,19 @@ def create_data_nodes(tiled_scan: TiledScan, message: XPSResult) -> None:
     )
     tiled_scan.vfft = tiled_scan.run_node.write_array(message.vfft.array, key="vfft")
     tiled_scan.ifft = tiled_scan.run_node.write_array(message.ifft.array, key="ifft")
-    tiled_scan.shot_sum = tiled_scan.run_node.write_array(message.shot_sum.array[None, :], key="shot_sum")
+    tiled_scan.shot_sum = tiled_scan.run_node.write_array(
+        message.shot_sum.array[None, :], key="shot_sum"
+    )
     tiled_scan.detected_peaks = create_tiled_table_node(
         tiled_scan.run_node, message.detected_peaks.df, "detected_peaks"
     )
 
+
 def patch_tiiled_frame(array_client: ArrayClient, array: np.ndarray) -> None:
     shape = array_client.shape
-    offset = (shape[0], )
+    offset = (shape[0],)
     array_client.patch(array[None, :], offset=offset, extend=True)
+
 
 def patch_tiled_array(
     array_client: ArrayClient, array: np.ndarray, axis_to_increment: int = 0

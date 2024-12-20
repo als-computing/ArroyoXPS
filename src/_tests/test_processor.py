@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from tr_ap_xps.pipeline.xps_operator import XPSProcessor
-from tr_ap_xps.schemas import XPSRawEvent
+# from tr_ap_xps.pipeline.xps_operator import XPSProcessor
+# from tr_ap_xps.schemas import XPSRawEvent
 
 
 @pytest.fixture
@@ -12,6 +12,7 @@ def integrated_frame():
 
 def test_xps_processor():
     pass
+
 
 # def test_XPSDataSet(client, integrated_frame):
 #     if "runs" not in client:

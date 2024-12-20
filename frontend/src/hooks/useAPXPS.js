@@ -184,24 +184,24 @@ export const useAPXPS = ({}) => {
 
     const processAndDownsampleArrayData = (data = [], width, height, scaleFactor = 1, cb) => {
         if (scaleFactor < 1) throw new Error("Scale factor must be 1 or greater.");
-    
+
         const downsampledHeight = Math.floor(height / scaleFactor);
         const downsampledWidth = Math.floor(width / scaleFactor);
         const newData = [];
-    
+
         for (let row = 0; row < downsampledHeight; row++) {
             const newRow = [];
             for (let col = 0; col < downsampledWidth; col++) {
                 let sum = 0;
                 let count = 0;
-    
+
                 // Sum up values within the scaleFactor x scaleFactor block
                 for (let i = 0; i < scaleFactor; i++) {
                     for (let j = 0; j < scaleFactor; j++) {
                         const originalRow = row * scaleFactor + i;
                         const originalCol = col * scaleFactor + j;
                         const index = originalRow * width + originalCol;
-    
+
                         if (originalRow < height && originalCol < width) {
                             sum += data[index];
                             count++;

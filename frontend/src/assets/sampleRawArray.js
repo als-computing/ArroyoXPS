@@ -49,7 +49,7 @@ for (let i = 0; i<mediumArrayHeight; i++) {
 const singleColorRow = Array(100);
 const lowVal = 0;
 singleColorRow.fill(lowVal);
-const arrayHeight = 100;
+const arrayHeight = 1000;
 
 var singleColorArray = [];
 for (let i=0; i < arrayHeight; i++) {
@@ -57,8 +57,12 @@ for (let i=0; i < arrayHeight; i++) {
 }
 var multiColorArray = [];
 for (let i=0; i < arrayHeight; i++) {
-    let dynamicColorRow = Array(100);
-    dynamicColorRow.fill(i)
+    let dynamicColorRow = Array(1000);
+    if (i % 2 === 0) {
+        dynamicColorRow.fill(i);
+    } else {
+        dynamicColorRow.fill(244)
+    }
     multiColorArray.push(dynamicColorRow);
 }
 

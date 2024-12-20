@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
-
+//TODO: there are some issues with the display when zooming out
 export default function PlotlyHeatMap({
     array = [], //2d array [[1, 2, 3], [2, 2 1]]
     title = '',
@@ -15,8 +15,8 @@ export default function PlotlyHeatMap({
     height='h-full', //height of the container
     showTicks = false,
     tickStep = 100,
-    fixPlotHeightToParent=false, //locks the height of the plot to the height of the container, should not be set to True if preventInterpolation is on
-    preventInterpolation=false, //restricts the maximum view of the plot so that it never exceeds a 1 pixel to 1 array element density (preventing interpolation and inaccurate display for sensitive data)
+    lockPlotHeightToParent=false, //locks the height of the plot to the height of the container, should not be set to True if lockPlotWidthHeightToInputArray is on
+    lockPlotWidthHeightToInputArray=false, //restricts the maximum view of the plot so that it never exceeds a 1 pixel to 1 array element density
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); //applied to plot, not the container
@@ -71,8 +71,8 @@ export default function PlotlyHeatMap({
                         showticklabels: showTicks
                     },
                     autosize: true,
-                    width: preventInterpolation ? Math.min(dimensions.width, array[0].length) : dimensions.width,
-                    height: preventInterpolation ? Math.min(dimensions.height, array.length) : fixPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
+                    width: lockPlotWidthHeightToInputArray ? Math.min(dimensions.width, array[0].length) : dimensions.width,
+                    height: lockPlotWidthHeightToInputArray ? Math.min(dimensions.height, array.length) : lockPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
                     margin: {
                         l: showTicks ? 50 : 0,
                         r: 0,

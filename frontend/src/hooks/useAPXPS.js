@@ -148,13 +148,13 @@ export const useAPXPS = ({}) => {
                 var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum.length / newMessage.height)
                 processArrayData(newMessage.shot_sum, newMessage.height, shotHeight, setShotSumArray)
             }
-            if ('shot_sum_vfft' in newMessage) {
-                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum_vfft.length / newMessage.height)
-                processArrayData(newMessage.shot_sum_vfft, newMessage.height, shotHeight, setShotSumVfftArray)
+            if ('shot_mean' in newMessage) {
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_mean.length / newMessage.height)
+                processArrayData(newMessage.shot_mean, newMessage.height, shotHeight, setShotSumVfftArray)
             }
-            if ('shot_sum_ifft' in newMessage) {
-                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum_ifft.length / newMessage.height)
-                processArrayData(newMessage.shot_sum_ifft, newMessage.height, shotHeight, setShotSumIfftArray)
+            if ('shot_std' in newMessage) {
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_std.length / newMessage.height)
+                processArrayData(newMessage.shot_std, newMessage.height, shotHeight, setShotSumIfftArray)
             }
             if ('shot_num' in newMessage) {
                 setShotNumber(newMessage.shot_num);

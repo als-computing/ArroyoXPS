@@ -142,7 +142,7 @@ def pack_images(message: XPSResult) -> bytes:
             "height": message.integrated_frames.array.shape[1],
             "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
             "shot_num": message.shot_num,
-            "shot_sum": convert_to_uint8(message.shot_sum.array),
+            "shot_recent": convert_to_uint8(message.shot_recent.array),
             "shot_mean": convert_to_uint8(message.shot_mean.array),
             "shot_std": convert_to_uint8(message.shot_std.array),
         }

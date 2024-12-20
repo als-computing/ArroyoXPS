@@ -85,10 +85,10 @@ export default function App() {
             </Widget>
 
             <div className='flex flex-wrap w-2/5 h-full'>
-              <Widget title={`Shot Sum - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[1000px]' contentStyles='flex-col space-y-1'>
-                <PlotlyHeatMap array={shotSumArray} title='Shot Sum' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
-                <PlotlyHeatMap array={shotSumVfftArray} title='Shot Sum - VFFT' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
-                <PlotlyHeatMap array={shotSumIfftArray} title='Shot Sum - IFFT' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+              <Widget title={`Shot Sum - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[1000px]' contentStyles='flex-col space-y-1 pb-2'>
+                <PlotlyHeatMap array={shotSumArray} title='Shot Recent' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+                <PlotlyHeatMap array={shotSumVfftArray} title='Shot Mean' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+                <PlotlyHeatMap array={shotSumIfftArray} title='Shot Std' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
               </Widget>
               <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={singlePeakData} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>

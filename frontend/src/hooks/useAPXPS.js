@@ -143,9 +143,9 @@ export const useAPXPS = ({}) => {
                 //add to metadata display and clear cumulative plots
                 handleStartDocument(newMessage);
             }
-            if ('shot_sum' in newMessage) {
+            if ('shot_recent' in newMessage) {
                 //technically metadata won't have f_reset due to stale state at time of function initilization, need to put it into a ref
-                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_sum.length / newMessage.height)
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_recent.length / newMessage.height)
                 processArrayData(newMessage.shot_sum, newMessage.height, shotHeight, setShotSumArray)
             }
             if ('shot_mean' in newMessage) {

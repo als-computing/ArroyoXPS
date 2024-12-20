@@ -23,7 +23,7 @@ class XPSProcessor:
         self.shot_cache = (
             None  # built up with each integrated frame, reset at the end of each shot
         )
-        self.recent_shot = None  # updated at the completion of each shot
+        self.shot_recent = None  # updated at the completion of each shot
         self.shot_rolling_mean = None
         self.shot_rolling_variance = None
         self.shot_rolling_std = None
@@ -74,11 +74,11 @@ class XPSProcessor:
                 and message.image_info.frame_number % self.frames_per_cycle == 0
             ):
                 self.shot_num += 1
-                if self.recent_shot is None:
-                    self.recent_shot = self.shot_cache
+                if self.shot_recent is None:
+                    self.shot_recent = self.shot_cache
   
                 else:
-                    self.recent_shot = self.recent_shot + self.shot_cache
+                    self.shot_recent = self.shot_recent + self.shot_cache
                 self._compute_rolling_values(self.shot_cache)
 
 
@@ -97,7 +97,7 @@ class XPSProcessor:
                     vfft=NumpyArrayModel(array=vfft_np),
                     ifft=NumpyArrayModel(array=ifft_np),
                     shot_num=self.shot_num,
-                    shot_recent=NumpyArrayModel(array=self.recent_shot),
+                    shot_recent=NumpyArrayModel(array=self.shot_recent),
                     shot_mean=NumpyArrayModel(array=self.shot_rolling_mean),
                     shot_std=NumpyArrayModel(array=self.shot_rolling_std),
                 )

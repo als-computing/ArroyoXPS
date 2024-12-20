@@ -14,8 +14,13 @@ export const useAPXPS = ({}) => {
     const [ rawArray, setRawArray ] = useState([]);
     const [ vfftArray, setVfftArray ] = useState([]);
     const [ ifftArray, setIfftArray ] = useState([]);
+    const [ shotRecentArray, setShotRecentArray ] = useState([]);
+    const [ shotMeanArray, setShotMeanArray ] = useState([]);
+    const [ shotStdArray, setShotStdArray ] = useState([]);
+    const [ shotNumber, setShotNumber ] = useState(0);
+    const [ shotInfo, setShotInfo ] = useState({}); //TO DO: put state into here to track shots to frames and use for tick marks
 
-    const [ singlePeakData, setSinglePeakData ] = useState({x:[], y:[]});
+    const [ singlePeakData, setSinglePeakData ] = useState([]);
     const [ allPeakData, setAllPeakData ] = useState([]);
 
     const [ status, setStatus ] = useState({scan: 'N/A', websocket: 'N/A'});
@@ -33,7 +38,7 @@ export const useAPXPS = ({}) => {
         scaleFactor: {
             label: 'Scale Factor',
             type: type.float,
-            value: '1',
+            value: '2',
             description: 'Factor to scale the vertical axis of Raw, VFFT, and IFFT images in the heatmap. Larger number will increase the vertical height.'
         },
         showTicks: {
@@ -118,17 +123,20 @@ export const useAPXPS = ({}) => {
             if ('raw' in newMessage) {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
-                processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray)
+                //processArrayData(newMessage.raw,  newMessage.height, newMessage.width, setRawArray);
+                processAndDownsampleArrayData(newMessage.raw,  newMessage.height, newMessage.width, 2, setRawArray);
             }
             if ('vfft' in newMessage) {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
-                processArrayData(newMessage.vfft, newMessage.height,  newMessage.width, setVfftArray)
+                //processArrayData(newMessage.vfft, newMessage.height,  newMessage.width, setVfftArray);
+                processAndDownsampleArrayData(newMessage.vfft,  newMessage.height, newMessage.width, 2, setVfftArray);
             }
             if ('ifft' in newMessage) {
                 //console.log({newMessage})
                 //send in height as width and vice versa until height/width issues fixed
-                processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray)
+                //processArrayData(newMessage.ifft, newMessage.height, newMessage.width, setIfftArray);
+                processAndDownsampleArrayData(newMessage.ifft,  newMessage.height, newMessage.width, 2, setIfftArray);
             }
 
             if ('msg_type' in newMessage) {
@@ -136,6 +144,23 @@ export const useAPXPS = ({}) => {
                 //add to metadata display and clear cumulative plots
                 handleStartDocument(newMessage);
             }
+            if ('shot_recent' in newMessage) {
+                //technically metadata won't have f_reset due to stale state at time of function initilization, need to put it into a ref
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_recent.length / newMessage.height)
+                processArrayData(newMessage.shot_recent, newMessage.height, shotHeight, setShotRecentArray)
+            }
+            if ('shot_mean' in newMessage) {
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_mean.length / newMessage.height)
+                processArrayData(newMessage.shot_mean, newMessage.height, shotHeight, setShotStdArray)
+            }
+            if ('shot_std' in newMessage) {
+                var shotHeight = ("f_reset" in metadata) ? metadata.f_reset : (newMessage.shot_std.length / newMessage.height)
+                processArrayData(newMessage.shot_std, newMessage.height, shotHeight, setShotMeanArray)
+            }
+            if ('shot_num' in newMessage) {
+                setShotNumber(newMessage.shot_num);
+            }
+            console.log({newMessage})
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
         }
@@ -149,29 +174,46 @@ export const useAPXPS = ({}) => {
     };
 
     const processArrayData = (data=[], width, height, cb) => {
-        //console.time("processArrayData"); // Start timing
 
-            // average 0.58 ms / img
-/*         const newData = new Array(height);
-
-        for (let i = 0; i < height; i++) {
-            // Directly assign the sliced portion to the preallocated array
-            newData[i] = data.slice(i * width, (i + 1) * width);
-        }
- */
-
-
-
-        //convert a single dimensional array data into width and height to make suitable for heatmap
-        // average 0.54 ms / img
         const newData = [];
         for (let i = 0; i < height; i++) {
             newData.push(data.slice(i * width, (i + 1) * width));
         }
+        cb(newData);
+    };
 
-        //console.timeEnd("processArrayData"); // End timing and log duration
 
+    const processAndDownsampleArrayData = (data = [], width, height, scaleFactor = 1, cb) => {
+        if (scaleFactor < 1) throw new Error("Scale factor must be 1 or greater.");
 
+        const downsampledHeight = Math.floor(height / scaleFactor);
+        const downsampledWidth = Math.floor(width / scaleFactor);
+        const newData = [];
+
+        for (let row = 0; row < downsampledHeight; row++) {
+            const newRow = [];
+            for (let col = 0; col < downsampledWidth; col++) {
+                let sum = 0;
+                let count = 0;
+
+                // Sum up values within the scaleFactor x scaleFactor block
+                for (let i = 0; i < scaleFactor; i++) {
+                    for (let j = 0; j < scaleFactor; j++) {
+                        const originalRow = row * scaleFactor + i;
+                        const originalCol = col * scaleFactor + j;
+                        const index = originalRow * width + originalCol;
+
+                        if (originalRow < height && originalCol < width) {
+                            sum += data[index];
+                            count++;
+                        }
+                    }
+                }
+                // Calculate the average value and add to the downsampled row
+                newRow.push(sum / count);
+            }
+            newData.push(newRow);
+        }
         cb(newData);
     };
 
@@ -343,6 +385,10 @@ export const useAPXPS = ({}) => {
         status,
         heatmapSettings,
         handleHeatmapSettingChange,
-        metadata
+        metadata,
+        shotNumber,
+        shotRecentArray,
+        shotMeanArray,
+        shotStdArray
     }
 }

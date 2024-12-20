@@ -58,7 +58,7 @@ def calculate_fft_items(array: np.array, repeat_factor: int = 20, width: int = 0
 
     array = np.array(array)
     vfft = get_vfft(array)
-    sum = get_sum(vfft)
+    # sum = get_sum(vfft)
     ifft = get_ifft(array, repeat_factor, width)
 
-    return vfft, sum, ifft
+    return vfft, ifft

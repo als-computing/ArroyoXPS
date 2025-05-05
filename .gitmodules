@@ -1,0 +1,3 @@
+[submodule "arroyopy"]
+	path = arroyopy
+	url = https://github.com/als-computing/arroyopy.git

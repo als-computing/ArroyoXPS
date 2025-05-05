@@ -1,8 +1,8 @@
 import asyncio
 import logging
 
-from arroyo.operator import Operator
-from arroyo.schemas import Message
+from arroyopy.operator import Operator
+from arroyopy.schemas import Message
 
 from ..schemas import DataFrameModel, XPSRawEvent, XPSResultStop, XPSStart, XPSStop
 from ..timing import timer

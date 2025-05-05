@@ -11,7 +11,7 @@ from tiled.client.node import Container
 from tiled.structures.data_source import DataSource
 from tiled.structures.table import TableStructure
 
-from arroyo.publisher import Publisher
+from arroyopy.publisher import Publisher
 
 from .config import settings
 from .schemas import XPSResult, XPSResultStop, XPSStart

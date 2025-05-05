@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import websockets
 
-from arroyo.publisher import Publisher
+from arroyopy.publisher import Publisher
 
 from .schemas import XPSResult, XPSResultStop, XPSStart
 

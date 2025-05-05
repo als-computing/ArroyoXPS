@@ -6,7 +6,7 @@ RUN apt install git
 
 
 COPY . /app
-RUN pip install ./arroyo
+RUN pip install ./arroyopy
 RUN pip install --no-cache-dir --upgrade .
 RUN pip install --no-cache-dir .[simulator]
 

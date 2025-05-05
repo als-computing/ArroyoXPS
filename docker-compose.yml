@@ -2,6 +2,7 @@ services:
   tiled:
     # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
     image: ghcr.io/bluesky/tiled:main
+    platform: linux/amd64
     ports:
       - "8000:8000"
     environment:

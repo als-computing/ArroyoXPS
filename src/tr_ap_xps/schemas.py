@@ -2,7 +2,14 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from arroyo.schemas import DataFrameModel, Event, Message, NumpyArrayModel, Start, Stop
+from arroyopy.schemas import (
+    DataFrameModel,
+    Event,
+    Message,
+    NumpyArrayModel,
+    Start,
+    Stop,
+)
 
 """
     This module defines schemas for XPS (X-ray Photoelectron Spectroscopy) messages and events using

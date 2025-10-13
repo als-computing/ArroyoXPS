@@ -39,6 +39,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_frontend
+      args:
+        REACT_APP_WEBSOCKET_URL: ${REACT_APP_WEBSOCKET_URL}
     ports:
       - "8080:80"
     restart: unless-stopped

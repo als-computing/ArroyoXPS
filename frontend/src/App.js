@@ -76,25 +76,27 @@ export default function App() {
           </Sidebar>
 
           <Main >
-            <Widget title={`Live Images - Current Shot #${shotNumber}`} width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]' expandedWidth='w-full'>
-              <div className="w-full h-full overflow-auto flex">
-                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='' yAxisTitle='' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
-                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='' yAxisTitle='' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
-                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='' yAxisTitle='' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
-              </div>
-            </Widget>
 
-            <div className='flex flex-wrap w-2/5 h-full'>
-              <Widget title={`Shot Sum - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[1000px]' contentStyles='flex-col space-y-1 pb-2'>
+            <div className='flex flex-wrap w-full h-full'>
+              {/* <Widget title={`Shot Sum - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-full' defaultHeight='h-full' maxHeight='max-h-full' contentStyles='flex-col space-y-1 pb-2'>
                 <PlotlyHeatMap array={shotRecentArray} title='Shot Recent' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
                 <PlotlyHeatMap array={shotMeanArray} title='Shot Mean' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
                 <PlotlyHeatMap array={shotStdArray} title='Shot Std' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
-              </Widget>
-              <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
+              </Widget> */}
+              {/* <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={singlePeakData} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
               <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
                   <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
+              </Widget> */}
+              <Widget title={`Shot Recent - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-full' defaultHeight='h-1/3' maxHeight='max-h-full' expandedHeight='h-full' contentStyles='flex-col space-y-1 pb-2'>
+                <PlotlyHeatMap array={shotRecentArray} title='Shot Recent' fixPlotHeightToParent={true} height="h-full" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+              </Widget>
+              <Widget title={`Shot Mean`} width='w-full' maxWidth='max-w-full' defaultHeight='h-1/3' maxHeight='max-h-full' expandedHeight='h-full' contentStyles='flex-col space-y-1 pb-2'>
+                <PlotlyHeatMap array={shotMeanArray} title='Shot Mean' fixPlotHeightToParent={true} height="h-full" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+              </Widget>
+              <Widget title={`Shot Standard`} width='w-full' maxWidth='max-w-full' defaultHeight='h-1/3' maxHeight='max-h-full' expandedHeight='h-full' contentStyles='flex-col space-y-1 pb-2'>
+                <PlotlyHeatMap array={shotStdArray} title='Shot Std' fixPlotHeightToParent={true} height="h-full" width='w-full' verticalScaleFactor={1} showTicks={false}/>
               </Widget>
             </div>
           </Main>

@@ -62,6 +62,8 @@ export const useAPXPS = ({}) => {
 
 
     const frameNumber = useRef(null);
+    const reconnectTimeoutRef = useRef(null);
+    const reconnectAttemptsRef = useRef(0);
 
     const isUserClosed = useRef(null);
 
@@ -261,6 +263,13 @@ export const useAPXPS = ({}) => {
             setSocketStatus('Open');
             setStatus((oldState) => ({...oldState, ['websocket']: 'connected'}));
             isUserClosed.current = false;
+            reconnectAttemptsRef.current = 0; // Reset attempts on successful connection
+            
+            // Clear any pending reconnection timeout
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+                reconnectTimeoutRef.current = null;
+            }
         }
 
         ws.current.onerror = (error) => {
@@ -281,47 +290,109 @@ export const useAPXPS = ({}) => {
 
     const handleWebsocketClose = (event) => {
         ws.current = false;
+        setSocketStatus('closed');
         setStatus((oldState) => ({...oldState, ['websocket']: 'disconnected', ['scan']: 'N/A'}));
+        
         if (isUserClosed.current === true) {
             //do nothing, the user forced the websocket to close
             console.log('user closed websocket');
             return;
         } else {
             //if websocket closed due to external reason, send in warning and attempt reconnection
-            const maxAttempt = 2;
-            const time = 5; //time in seconds
-            //alert(`Websocket ${event.currentTarget.url} closed at ${dayjs().format('h:mm:ss A')} `)
+            const maxAttempts = 2;
+            const reconnectDelay = 5000; // 5 seconds in milliseconds
+            
             console.log({event})
-
-            // Attempt to reconnect
             setWarningMessage("WebSocket closed unexpectedly. Attempting to reconnect...");
             console.log(`WebSocket ${event.currentTarget.url} closed unexpectedly at ${dayjs().format('h:mm:ss A')}`);
 
-            // Reconnection logic
-            const maxAttempts = 2; // Number of attempts to reconnect
-            let attempts = 0;
+            // Clear any existing reconnection timeout
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+            }
 
             const tryReconnect = () => {
-                if (attempts >= maxAttempts) {
+                if (reconnectAttemptsRef.current >= maxAttempts) {
                     setWarningMessage("Failed to reconnect to WebSocket after multiple attempts.");
+                    reconnectAttemptsRef.current = 0; // Reset for next time
                     return;
                 }
-                if (ws.current !== false) {
-                    //ws has restarted
+                
+                if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                    // WebSocket has already reconnected
+                    reconnectAttemptsRef.current = 0; // Reset counter
                     return;
-                } else {
-                    attempts++;
-                    console.log(`Reconnection attempt ${attempts}`);
-                    startWebSocket();
+                }
+                
+                reconnectAttemptsRef.current++;
+                console.log(`Reconnection attempt ${reconnectAttemptsRef.current}/${maxAttempts}`);
+                setWarningMessage(`Reconnection attempt ${reconnectAttemptsRef.current}/${maxAttempts}...`);
+                
+                try {
+                    // Create WebSocket manually here to avoid recursive close event handling
+                    ws.current = new WebSocket(wsUrl);
+                    
+                    ws.current.onopen = (event) => {
+                        setSocketStatus('Open');
+                        setStatus((oldState) => ({...oldState, ['websocket']: 'connected'}));
+                        isUserClosed.current = false;
+                        reconnectAttemptsRef.current = 0; // Reset attempts on successful connection
+                        setWarningMessage(''); // Clear warning on successful reconnection
+                        
+                        // Clear any pending reconnection timeout
+                        if (reconnectTimeoutRef.current) {
+                            clearTimeout(reconnectTimeoutRef.current);
+                            reconnectTimeoutRef.current = null;
+                        }
+                    };
+                    
+                    ws.current.onerror = (error) => {
+                        console.log("error with ws during reconnection");
+                        console.log({error});
+                    };
+                    
+                    ws.current.onmessage = (event) => {
+                        handleNewWebsocketMessages(event);
+                    };
+                    
+                    ws.current.onclose = (event) => {
+                        // Only handle close if this isn't a user-initiated close and we haven't exceeded max attempts
+                        if (isUserClosed.current !== true && reconnectAttemptsRef.current < maxAttempts) {
+                            console.log(`Reconnection attempt ${reconnectAttemptsRef.current} failed, scheduling next attempt`);
+                            reconnectTimeoutRef.current = setTimeout(tryReconnect, reconnectDelay);
+                        } else if (reconnectAttemptsRef.current >= maxAttempts) {
+                            setWarningMessage("Failed to reconnect to WebSocket after multiple attempts.");
+                            reconnectAttemptsRef.current = 0;
+                        }
+                    };
+                    
+                } catch (error) {
+                    console.error('Error during reconnection attempt:', error);
+                    
+                    if (reconnectAttemptsRef.current < maxAttempts) {
+                        // Schedule next attempt
+                        reconnectTimeoutRef.current = setTimeout(tryReconnect, reconnectDelay);
+                    } else {
+                        setWarningMessage("Failed to reconnect to WebSocket after multiple attempts.");
+                        reconnectAttemptsRef.current = 0;
+                    }
                 }
             };
 
-            setTimeout(tryReconnect, time*1000);
+            // Start first reconnection attempt after delay
+            reconnectTimeoutRef.current = setTimeout(tryReconnect, reconnectDelay);
         }
     }
 
     const closeWebSocket = () => {
         try {
+            // Clear reconnection timeout when manually closing
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+                reconnectTimeoutRef.current = null;
+            }
+            reconnectAttemptsRef.current = 0;
+            
             ws.current.close();
         } catch (error) {
             console.log({error});

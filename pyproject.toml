@@ -13,7 +13,7 @@ classifiers = [
 ]
 
 dependencies = [
-    # "arroyo",
+    "arroyopy",
     "astropy",
     "dynaconf",
     "python-dotenv",
@@ -22,7 +22,8 @@ dependencies = [
     "numpy",
     "Pillow",
     "pyzmq",
-    "tiled[client] @ git+https://github.com/bluesky/tiled.git",
+    "scipy",
+    "tiled[client]",
     "tqdm",
     "typer",
     "websockets",

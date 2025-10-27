@@ -16,7 +16,7 @@ from arroyopy.publisher import Publisher
 from .config import settings
 from .schemas import XPSResult, XPSResultStop, XPSStart
 
-app_settings = settings.xps
+app_settings = settings.xps_operator
 
 logger = logging.getLogger(__name__)
 

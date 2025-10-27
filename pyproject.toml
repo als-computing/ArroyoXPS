@@ -22,7 +22,7 @@ dependencies = [
     "numpy",
     "Pillow",
     "pyzmq",
-    "scipy",
+    "scipy==1.14.1",
     "tiled[client]",
     "tqdm",
     "typer",

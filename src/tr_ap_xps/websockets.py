@@ -1,4 +1,5 @@
 import asyncio
+from urllib.parse import urlparse
 import json
 import logging
 from typing import Union
@@ -25,21 +26,21 @@ class XPSWSResultPublisher(Publisher):
     connected_clients = set()
     current_start_message = None
 
-    def __init__(self, host: str = "localhost", port: int = 8001):
+    def __init__(self, ws_url: str = "ws://localhost:8765"):
         super().__init__()
-        self.host = host
-        self.port = port
+        self.ws_url = ws_url
 
     async def start(
         self,
     ):
         # Use partial to bind `self` while matching the expected handler signature
+        parsed_url = urlparse(self.ws_url)
         server = await websockets.serve(
             self.websocket_handler,
-            self.host,
-            self.port,
+            parsed_url.hostname,
+            parsed_url.port,
         )
-        logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
+        logger.info(f"Websocket server started at ws://{parsed_url.hostname}:{parsed_url.port}")
         await server.wait_closed()
 
     async def publish(self, message: XPSResult) -> None:
@@ -79,7 +80,7 @@ class XPSWSResultPublisher(Publisher):
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
-        if websocket.request.path != "/simImages":
+        if websocket.request.path != "/xps_operator":
             logger.info(
                 f"Invalid path: {websocket.request.path}, we only support /simImages"
             )
@@ -98,14 +99,17 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     """
     Convert an image to uint8, scaling image
     """
+
     # scaled = (image - image.min()) / (image.max() - image.min()) * 255
     # return scaled.astype(np.uint8).tobytes()
-
+    
+    if np.allclose(image, 0):
+        return image.astype(np.uint8).tobytes()
+    
     image_normalized = (image - image.min()) / (image.max() - image.min())
 
     # Apply logarithmic stretch
     log_stretched = np.log1p(image_normalized)  # log(1 + x) to handle near-zero values
-
     # Normalize the log-stretched image to [0, 1] again
     log_stretched_normalized = (log_stretched - log_stretched.min()) / (
         log_stretched.max() - log_stretched.min()
@@ -135,11 +139,11 @@ def pack_images(message: XPSResult) -> bytes:
     """
     return msgpack.packb(
         {
-            "raw": convert_to_uint8(message.integrated_frames.array),
-            "vfft": convert_to_uint8(message.vfft.array),
-            "ifft": convert_to_uint8(message.ifft.array),
-            "width": message.integrated_frames.array.shape[0],
-            "height": message.integrated_frames.array.shape[1],
+            # "raw": convert_to_uint8(message.integrated_frames.array),
+            # "vfft": convert_to_uint8(message.vfft.array),
+            # "ifft": convert_to_uint8(message.ifft.array),
+            "width": message.shot_mean.array.shape[0],
+            "height": message.shot_mean.array.shape[1],
             "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
             "shot_num": message.shot_num,
             "shot_recent": convert_to_uint8(message.shot_recent.array),

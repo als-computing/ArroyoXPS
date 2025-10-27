@@ -71,14 +71,12 @@ class XPSProcessor:
             # Things to do with every shot (a "shot" is a complete cycle of frames)
             if (
                 message.image_info.frame_number != 0
-                and message.image_info.frame_number % self.frames_per_cycle == 0
+                and (message.image_info.frame_number + 1) % self.frames_per_cycle == 0
             ):
                 self.shot_num += 1
- 
                 self.shot_recent = self.shot_cache
 
                 self._compute_rolling_values(self.shot_cache)
-
 
                 logger.info(f"Processing frame {message.image_info.frame_number}")
                 # Peak detection on new_integrated_frame
@@ -87,7 +85,6 @@ class XPSProcessor:
                 vfft_np, ifft_np = calculate_fft_items(
                     self.integrated_frames, repeat_factor=20, width=0
                 )
-
                 result = XPSResult(
                     frame_number=message.image_info.frame_number,
                     integrated_frames=NumpyArrayModel(array=self.integrated_frames),

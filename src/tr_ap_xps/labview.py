@@ -26,7 +26,7 @@ DATATYPE_MAP = {
     "Double Float": np.dtype(np.double).newbyteorder(">"),
 }
 
-app_settings = settings.xps
+app_settings = settings.xps_operator
 
 logger = logging.getLogger(__name__)
 

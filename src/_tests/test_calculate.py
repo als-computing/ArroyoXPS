@@ -60,8 +60,7 @@ def test_peak_fit(test_array):
 
 def test_fft_items(test_array):
     """Test the FFT calculation functionality."""
-    vfft, sum, ifft = calculate_fft_items(test_array)
+    vfft, ifft = calculate_fft_items(test_array)
 
     assert vfft.shape == test_array.shape, "vfft shape mismatch"
-    assert len(sum.shape) == 1, "sum should be a 1D array"
     assert ifft.shape == test_array.shape, "ifft shape mismatch"

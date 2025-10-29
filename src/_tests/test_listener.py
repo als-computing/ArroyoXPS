@@ -24,7 +24,7 @@ async def run_simulator(num_frames: int = 1):
 
 
 @pytest.fixture
-async def mock_operator():
+def mock_operator():
     return AsyncMock()
 
 

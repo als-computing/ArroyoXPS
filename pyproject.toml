@@ -35,6 +35,7 @@ dependencies = [
 # the documentation) but not necessarily required for _using_ it.
 dev = [
     "flake8",
+    "fakeredis",
     "pre-commit",
     "pytest-asyncio",
     "pytest-mock",

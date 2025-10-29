@@ -1,4 +1,4 @@
-xps:
+xps_operator:
   log_level: "INFO"
   tiled_uri: "http://localhost:8000"
   lv_zmq_listener:

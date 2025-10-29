@@ -5,7 +5,7 @@ import uuid
 import numpy as np
 import zmq.asyncio
 
-from arroyo.zmq import ZMQListener
+from arroyopy.zmq import ZMQListener
 
 from .config import settings
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
@@ -26,7 +26,7 @@ DATATYPE_MAP = {
     "Double Float": np.dtype(np.double).newbyteorder(">"),
 }
 
-app_settings = settings.xps
+app_settings = settings.xps_operator
 
 logger = logging.getLogger(__name__)
 

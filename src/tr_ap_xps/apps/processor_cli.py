@@ -17,8 +17,7 @@ app = typer.Typer()
 logger = logging.getLogger("tr_ap_xps")
 setup_logger(logger)
 
-app_settings = settings.xps
-
+app_settings = settings.xps_operator
 
 def tiled_runs_container() -> Container:
     try:
@@ -48,14 +47,11 @@ async def listen() -> None:
 
         # setup websocket server
         operator = XPSOperator()
-        ws_publisher = XPSWSResultPublisher(
-            host=app_settings.websockets_publisher.host,
-            port=app_settings.websockets_publisher.port,
-        )
-        tiled_pub = TiledPublisher(tiled_runs_container())
+        ws_publisher = XPSWSResultPublisher(app_settings.websocket_url)
+        # tiled_pub = TiledPublisher(tiled_runs_container())
 
         operator.add_publisher(ws_publisher)
-        operator.add_publisher(tiled_pub)
+        # operator.add_publisher(tiled_pub)
         # connect to labview zmq
 
         lv_zmq_socket = setup_zmq()

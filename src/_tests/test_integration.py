@@ -9,10 +9,10 @@ def start_processor_cli():
     subprocess.run(["python", "processor_cli.py"])
 
 
-def start_zmq_publisher():
+def start_zmq_publisher(port):
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
-    socket.bind("tcp://*:5555")
+    socket.bind(f"tcp://*:{port}")
     while True:
         socket.send_string("test message")
         time.sleep(1)
@@ -28,8 +28,14 @@ def test_integration():
     processor_cli_process.start()
     time.sleep(2)  # Give it time to start
 
-    # Start zmq publisher in a background process
-    zmq_publisher_process = Process(target=start_zmq_publisher)
+    # Dynamically assign a port for ZMQ publisher
+    context = zmq.Context()
+    temp_socket = context.socket(zmq.PUB)
+    port = temp_socket.bind_to_random_port("tcp://*")
+    temp_socket.close()
+
+    # Start zmq publisher in a background process with the random port
+    zmq_publisher_process = Process(target=start_zmq_publisher, args=(port,))
     zmq_publisher_process.start()
     time.sleep(2)  # Give it time to start
 
@@ -41,7 +47,7 @@ def test_integration():
     # Set up zmq subscriber to receive messages
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
-    socket.connect("tcp://localhost:5555")
+    socket.connect(f"tcp://localhost:{port}")
     socket.setsockopt_string(zmq.SUBSCRIBE, "")
     #
     # Check if messages are received and processed

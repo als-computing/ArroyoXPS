@@ -13,7 +13,7 @@ classifiers = [
 ]
 
 dependencies = [
-    # "arroyo",
+    "arroyopy",
     "astropy",
     "dynaconf",
     "python-dotenv",
@@ -22,7 +22,8 @@ dependencies = [
     "numpy",
     "Pillow",
     "pyzmq",
-    "tiled[client] @ git+https://github.com/bluesky/tiled.git",
+    "scipy==1.14.1",
+    "tiled[client]",
     "tqdm",
     "typer",
     "websockets",
@@ -34,6 +35,7 @@ dependencies = [
 # the documentation) but not necessarily required for _using_ it.
 dev = [
     "flake8",
+    "fakeredis",
     "pre-commit",
     "pytest-asyncio",
     "pytest-mock",

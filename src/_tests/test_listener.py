@@ -29,7 +29,8 @@ def mock_operator():
 
 
 @pytest.mark.asyncio
-async def test_listen_zmq_interface(mock_operator):
+async def test_listen_zmq_interface(mock_operator, monkeypatch):
+    # monkeypatch.setattr("tr_ap_xps.labview.app_settings.lv_zmq_listener.zmq_pub_port", "6000")
     zmq_socket = setup_zmq()  # Ensure setup_zmq supports async if needed
 
     async with run_simulator(num_frames=1):

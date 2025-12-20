@@ -7,6 +7,7 @@ import msgpack
 import zmq.asyncio
 
 from arroyopy.zmq import ZMQListener
+from arroyosas.schemas import RawFrameEvent, ImageInfo
 
 from .config import settings
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
@@ -23,10 +24,10 @@ def setup_zmq():
     lv_zmq_socket = ctx.socket(zmq.SUB)
     lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
     logger.info(
-        f"binding to: {app_settings.lv_zmq_listener.zmq_pub_address}:{app_settings.lv_zmq_listener.zmq_pub_port}"
+        f"binding to: {app_settings.tpx_zmq_listener.zmq_pub_address}:{app_settings.tpx_zmq_listener.zmq_pub_port}"
     )
     lv_zmq_socket.connect(
-        f"{app_settings.lv_zmq_listener.zmq_pub_address}:{app_settings.lv_zmq_listener.zmq_pub_port}"
+        f"{app_settings.tpx_zmq_listener.zmq_pub_address}:{app_settings.tpx_zmq_listener.zmq_pub_port}"
     )
     lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
     return lv_zmq_socket

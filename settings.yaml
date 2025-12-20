@@ -2,7 +2,10 @@ xps_operator:
   log_level: "INFO"
   tiled_uri: "http://localhost:8000"
   lv_zmq_listener:
-    zmq_pub_address: "tcp://931-apxps-es23.dhcp.lbl.gov"
+    zmq_pub_address: "tcp://localhost"
+    zmq_pub_port: 5555
+  tpx_zmq_listener:
+    zmq_pub_address: "tcp://localhost"
     zmq_pub_port: 5657
   websockets_publisher:
     host: "0.0.0.0"

@@ -36,9 +36,9 @@ async def listen() -> None:
         logger.setLevel(app_settings.log_level.upper())
         logger.debug("DEBUG LOGGING SET")
         logger.info(
-            f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_address}"
+            f"tpx_zmq_socket_address: {app_settings.tpx_zmq_listener.zmq_pub_address}"
         )
-        logger.info(f"lv_zmq_pub_address: {app_settings.lv_zmq_listener.zmq_pub_port}")
+        logger.info(f"tpx_zmq_socket_port: {app_settings.tpx_zmq_listener.zmq_pub_port}")
         logger.info(f"tiled_uri: {app_settings.tiled_uri}")
         logger.info(
             f"tiled_api_key: {'****' if app_settings.tiled_api_key else 'NOT SET!!!'}"
@@ -55,8 +55,8 @@ async def listen() -> None:
         # operator.add_publisher(tiled_pub)
         # connect to labview zmq
 
-        lv_zmq_socket = setup_zmq()
-        listener = XPSTimepixZMQListener(operator=operator, zmq_socket=lv_zmq_socket)
+        tpx_zmq_socket = setup_zmq()
+        listener = XPSTimepixZMQListener(operator=operator, zmq_socket=tpx_zmq_socket)
 
         # Wait for both tasks to complete
         await asyncio.gather(listener.start(), ws_publisher.start())

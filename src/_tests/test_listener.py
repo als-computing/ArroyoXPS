@@ -34,7 +34,7 @@ async def test_listen_zmq_interface(mock_operator, monkeypatch):
     zmq_socket = setup_zmq()  # Ensure setup_zmq supports async if needed
 
     async with run_simulator(num_frames=1):
-        asyncio.sleep(2)
+        await asyncio.sleep(2)
         listener = XPSLabviewZMQListener(mock_operator, zmq_socket)
 
         # Start the listener in an asyncio task
@@ -72,7 +72,7 @@ async def test_listen_timepix_zmq_interface(mock_operator, monkeypatch):
     zmq_socket = setup_zmq()  # Ensure setup_zmq supports async if needed
 
     async with run_simulator(num_frames=1):
-        asyncio.sleep(2)
+        await asyncio.sleep(2)
         listener = XPSLabviewZMQListener(mock_operator, zmq_socket)
 
         # Start the listener in an asyncio task

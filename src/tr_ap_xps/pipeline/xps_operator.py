@@ -4,7 +4,7 @@ import logging
 from arroyopy.operator import Operator
 from arroyopy.schemas import Message
 
-from ..schemas import DataFrameModel, XPSRawEvent, XPSResultStop, XPSStart, XPSStop
+from ..schemas import XPSResult, XPSRawEvent, XPSResultStop, XPSStart, XPSStop
 from ..timing import timer
 from .xps_processor import XPSProcessor
 
@@ -17,8 +17,9 @@ class XPSOperator(Operator):
 
     """
 
-    def __init__(self) -> None:
+    def __init__(self, build_heatmaps: bool = False) -> None:
         self.xps_processor = None
+        self.build_heatmaps = build_heatmaps
 
     async def process(self, message: Message) -> None:
         """
@@ -40,19 +41,34 @@ class XPSOperator(Operator):
             await self.publish(message)
 
         elif isinstance(message, XPSRawEvent):
-            if not self.xps_processor:
-                logger.error(
-                    "Received XPSRawEvent without an active XPSProcessor. Started after labview started?"
+            
+            if self.build_heatmaps:
+                if not self.xps_processor:
+                    logger.error(
+                        "Received XPSRawEvent without an active XPSProcessor. Started after labview started?"
+                    )
+                    return
+                result: XPSResult = await asyncio.to_thread(
+                    self.xps_processor.process_frame, message
                 )
-                return
-            result: XPSRawEvent = await asyncio.to_thread(
-                self.xps_processor.process_frame, message
-            )
+            else:
+                result = XPSResult(
+                    shot_num=message.image_info.frame_number,
+                    integrated_frames=message.image,
+                    rolling_mean=None,
+                    rolling_std=None,
+                    frame_number=message.image_info.frame_number,
+                    detected_peaks=None,
+                    vfft=None,
+                    ifft=None,
+                    shot_recent=None,
+                    shot_mean=None,
+                    shot_std=None,
+                )
             if result:
-                await self.publish(result)
-
-        elif isinstance(message, XPSStop):
-            data_frame_model = DataFrameModel(df=timer.timing_dataframe)
-            new_msg = XPSResultStop(function_timings=data_frame_model)
-            await self.publish(new_msg)
-            self.xps_processor = None
+                    await self.publish(result)
+        # elif isinstance(message, XPSStop):
+        #     data_frame_model = DataFrameModel(df=timer.timing_dataframe)
+        #     new_msg = XPSResultStop(function_timings=data_frame_model)
+        #     await self.publish(new_msg)
+        #     self.xps_processor = None

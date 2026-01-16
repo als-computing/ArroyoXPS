@@ -139,15 +139,11 @@ def pack_images(message: XPSResult) -> bytes:
     """
     return msgpack.packb(
         {
-            # "raw": convert_to_uint8(message.integrated_frames.array),
-            # "vfft": convert_to_uint8(message.vfft.array),
-            # "ifft": convert_to_uint8(message.ifft.array),
+            "raw": convert_to_uint8(message.integrated_frames.array),
             "width": message.shot_mean.array.shape[0],
             "height": message.shot_mean.array.shape[1],
             "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
             "shot_num": message.shot_num,
             "shot_recent": convert_to_uint8(message.shot_recent.array),
-            "shot_mean": convert_to_uint8(message.shot_mean.array),
-            "shot_std": convert_to_uint8(message.shot_std.array),
         }
     )

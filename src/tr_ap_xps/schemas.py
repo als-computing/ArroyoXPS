@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -135,15 +135,15 @@ class XPSResult(Event, XPSMessage):
     calculations are made.
     """
 
-    frame_number: int
+    frame_number: Optional[int] = None
     integrated_frames: NumpyArrayModel
-    detected_peaks: DataFrameModel
-    vfft: NumpyArrayModel
-    ifft: NumpyArrayModel
-    shot_num: int
-    shot_recent: NumpyArrayModel
-    shot_mean: NumpyArrayModel
-    shot_std: NumpyArrayModel
+    detected_peaks: Optional[DataFrameModel] = None
+    vfft: Optional[NumpyArrayModel] = None
+    ifft: Optional[NumpyArrayModel] = None
+    shot_num: Optional[int] = None
+    shot_recent: Optional[NumpyArrayModel] = None
+    shot_mean: Optional[NumpyArrayModel] = None
+    shot_std: Optional[NumpyArrayModel] = None
 
 
 class XPSResultStop(Stop, XPSMessage):

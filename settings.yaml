@@ -4,6 +4,9 @@ xps_operator:
   lv_zmq_listener:
     zmq_pub_address: "tcp://localhost"
     zmq_pub_port: 5555
+  tpx_zmq_listener:
+    zmq_pub_address: "tcp://localhost"
+    zmq_pub_port: 5657
   websockets_publisher:
     host: "0.0.0.0"
     port: 8001

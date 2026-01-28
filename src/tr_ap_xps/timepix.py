@@ -10,8 +10,7 @@ from arroyopy.zmq import ZMQListener
 from .config import settings
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
-# from arroyosas.schemas import RawFrameEvent, ImageInfo  # Not used in this file
-
+from arroyopy.operator import Operator
 
 app_settings = settings.xps_operator
 
@@ -20,23 +19,22 @@ logger = logging.getLogger(__name__)
 
 def setup_zmq():
     ctx = zmq.asyncio.Context()
-    lv_zmq_socket = ctx.socket(zmq.SUB)
-    lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
+    tpx_zmq_socket = ctx.socket(zmq.SUB)
+    tpx_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
     logger.info(
         f"binding to: {app_settings.tpx_zmq_listener.zmq_pub_address}:{app_settings.tpx_zmq_listener.zmq_pub_port}"
     )
-    lv_zmq_socket.connect(
+    tpx_zmq_socket.connect(
         f"{app_settings.tpx_zmq_listener.zmq_pub_address}:{app_settings.tpx_zmq_listener.zmq_pub_port}"
     )
-    lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
-    return lv_zmq_socket
-
+    tpx_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
+    return tpx_zmq_socket
 
 class XPSTimepixZMQListener(ZMQListener):
     stop_signal = False
 
-    def __init__(self, zmq_socket: zmq.Socket, operator: Callable):
-        super().__init__(zmq_socket, operator)
+    def __init__(self, zmq_socket: zmq.Socket, operator: Operator):
+        super().__init__(operator, zmq_socket)
 
     async def start(self):
         logger.info("Listener started")

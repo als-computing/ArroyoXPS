@@ -1,12 +1,23 @@
+# xps_operator:
+#   log_level: "INFO"
+#   tiled_uri: "http://localhost:8000"
+#   lv_zmq_listener:
+#     zmq_pub_address: "tcp://localhost"
+#     zmq_pub_port: 5555
+#   tpx_zmq_listener:
+#     zmq_pub_address: "tcp://localhost"
+#     zmq_pub_port: 5657
+#   websockets_publisher:
+#     host: "0.0.0.0"
+#     port: 8001
 xps_operator:
-  log_level: "INFO"
-  tiled_uri: "http://localhost:8000"
+  log_level: "DEBUG" 
+  tiled_uri: "https://tiled-staging.computing.als.lbl.gov"
+  tiled_api_key: afecf30c4fcf142a9c30142dc8b7d5212a55a100715c580f034afcddc317be822174ead4
   lv_zmq_listener:
     zmq_pub_address: "tcp://localhost"
     zmq_pub_port: 5555
   tpx_zmq_listener:
-    zmq_pub_address: "tcp://localhost"
+    zmq_pub_address: "tcp://131.243.191.226"
     zmq_pub_port: 5657
-  websockets_publisher:
-    host: "0.0.0.0"
-    port: 8001
+  websocket_url: "ws://localhost:8766"

@@ -34,7 +34,7 @@ async def test_listen_zmq_interface(mock_operator, monkeypatch):
     zmq_socket = setup_zmq()  # Ensure setup_zmq supports async if needed
 
     async with run_simulator(num_frames=1):
-        asyncio.sleep(2)
+        await asyncio.sleep(2)
         listener = XPSLabviewZMQListener(mock_operator, zmq_socket)
 
         # Start the listener in an asyncio task
@@ -42,6 +42,44 @@ async def test_listen_zmq_interface(mock_operator, monkeypatch):
 
         # Give the listener time to process messages
         await asyncio.sleep(5)
+
+        # Stop the listener and wait for it to clean up
+        await listener.stop()
+        try:
+            await listener_task
+        except asyncio.CancelledError:
+            pass
+
+        # Ensure process was called three times. We expect 1 event.
+        assert mock_operator.process.call_count == 3
+
+        # Validate that the arguments are instances of specific classes
+        call_args = mock_operator.process.call_args_list
+        assert isinstance(
+            call_args[0][0][0], XPSStart
+        ), f"First argument is not an instance of XPSStart: {call_args[0][0][0]}"
+        assert isinstance(
+            call_args[1][0][0], XPSRawEvent
+        ), f"Second argument is not an instance of XPSRawEvent: {call_args[1][0][0]}"
+        assert isinstance(
+            call_args[2][0][0], XPSStop
+        ), f"Second argument is not an instance of XPSStop: {call_args[2][0][0]}"
+
+
+@pytest.mark.asyncio
+async def test_listen_timepix_zmq_interface(mock_operator, monkeypatch):
+    # monkeypatch.setattr("tr_ap_xps.labview.app_settings.lv_zmq_listener.zmq_pub_port", "6000")
+    zmq_socket = setup_zmq()  # Ensure setup_zmq supports async if needed
+
+    async with run_simulator(num_frames=1):
+        await asyncio.sleep(2)
+        listener = XPSLabviewZMQListener(mock_operator, zmq_socket)
+
+        # Start the listener in an asyncio task
+        listener_task = asyncio.create_task(listener.start())
+
+        # Give the listener time to process messages
+        await asyncio.sleep(3)
 
         # Stop the listener and wait for it to clean up
         await listener.stop()

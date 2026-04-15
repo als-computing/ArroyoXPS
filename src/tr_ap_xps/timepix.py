@@ -9,26 +9,22 @@ import zmq.asyncio
 from arroyopy.zmq import ZMQListener
 from arroyosas.schemas import RawFrameEvent, ImageInfo
 
-from .config import settings
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
-
-
-app_settings = settings.xps_operator
 
 logger = logging.getLogger(__name__)
 
 
-def setup_zmq():
+# CHANGED: removed app_settings; accepts address/port as parameters instead
+def setup_zmq(
+    zmq_pub_address: str = "tcp://localhost",
+    zmq_pub_port: int = 5657,
+):
     ctx = zmq.asyncio.Context()
     lv_zmq_socket = ctx.socket(zmq.SUB)
     lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
-    logger.info(
-        f"binding to: {app_settings.tpx_zmq_listener.zmq_pub_address}:{app_settings.tpx_zmq_listener.zmq_pub_port}"
-    )
-    lv_zmq_socket.connect(
-        f"{app_settings.tpx_zmq_listener.zmq_pub_address}:{app_settings.tpx_zmq_listener.zmq_pub_port}"
-    )
+    logger.info(f"binding to: {zmq_pub_address}:{zmq_pub_port}")
+    lv_zmq_socket.connect(f"{zmq_pub_address}:{zmq_pub_port}")
     lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
     return lv_zmq_socket
 
@@ -53,11 +49,10 @@ class XPSTimepixZMQListener(ZMQListener):
                     logger.error(f"Error unpacking message: {e}")
                     continue
 
-
                 # Must be an event with an image
                 if logger.getEffectiveLevel() == logging.DEBUG:
                     logger.debug(f"event: {metadata.keys()}")
-           
+
                 await self.operator.process(
                     self._build_event(raw_message, metadata)
                 )
@@ -69,7 +64,6 @@ class XPSTimepixZMQListener(ZMQListener):
     def _build_event(
         image: bytes,
         metadata: dict,
-
     ) -> XPSRawEvent:
         shape = tuple(metadata["shape"])
         dtype = metadata["dtype"]
@@ -103,3 +97,13 @@ if __name__ == "__main__":
     listener = XPSTimepixZMQListener(zmq_socket=zmq_socket, operator=DummyOperator())
     import asyncio
     asyncio.run(listener.start())
+
+
+# ADDED: factory function for YAML instantiation
+def xps_timepix_listener_factory(
+    operator,
+    zmq_pub_address: str = "tcp://localhost",
+    zmq_pub_port: int = 5657,
+) -> XPSTimepixZMQListener:
+    socket = setup_zmq(zmq_pub_address, zmq_pub_port)
+    return XPSTimepixZMQListener(operator=operator, zmq_socket=socket)

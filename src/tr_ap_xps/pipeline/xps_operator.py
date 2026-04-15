@@ -18,6 +18,7 @@ class XPSOperator(Operator):
     """
 
     def __init__(self, build_heatmaps: bool = False) -> None:
+        super().__init__()  # CHANGED: required by new arroyopy — sets up listener_queue
         self.xps_processor = None
         self.build_heatmaps = build_heatmaps
 
@@ -41,7 +42,7 @@ class XPSOperator(Operator):
             await self.publish(message)
 
         elif isinstance(message, XPSRawEvent):
-            
+
             if self.build_heatmaps:
                 if not self.xps_processor:
                     logger.error(
@@ -72,3 +73,7 @@ class XPSOperator(Operator):
         #     new_msg = XPSResultStop(function_timings=data_frame_model)
         #     await self.publish(new_msg)
         #     self.xps_processor = None
+
+# ADDED: factory function for YAML instantiation
+def build_xps_operator(build_heatmaps: bool = False) -> XPSOperator:
+    return XPSOperator(build_heatmaps=build_heatmaps)

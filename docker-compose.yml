@@ -19,7 +19,7 @@ services:
   aps_net:
 
   processor:
-    command: python -m tr_ap_xps.apps.processor_cli_tpx
+    command: arroyo run /app/block_configs/processor_cli_tpx_block.yaml
     build:
       context: .
       dockerfile: Dockerfile_processor

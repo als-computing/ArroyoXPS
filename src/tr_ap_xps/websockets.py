@@ -102,10 +102,10 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
 
     # scaled = (image - image.min()) / (image.max() - image.min()) * 255
     # return scaled.astype(np.uint8).tobytes()
-    
+
     if np.allclose(image, 0):
         return image.astype(np.uint8).tobytes()
-    
+
     image_normalized = (image - image.min()) / (image.max() - image.min())
 
     # Apply logarithmic stretch
@@ -147,3 +147,10 @@ def pack_images(message: XPSResult) -> bytes:
             "shot_recent": convert_to_uint8(message.shot_recent.array),
         }
     )
+
+
+# ADDED: factory function for YAML instantiation
+def xps_ws_publisher_factory(
+    ws_url: str = "ws://localhost:8001/xps_operator",
+) -> XPSWSResultPublisher:
+    return XPSWSResultPublisher(ws_url=ws_url)

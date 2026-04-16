@@ -115,51 +115,20 @@ class XPSTimepixZMQListener(ZMQListener):
 
     @staticmethod
     def _build_start(metadata: dict) -> XPSStart:
-        """Build XPSStart from metadata dict.
+        """Build XPSStart from Timepix metadata.
 
-        Note: This is a basic conversion. splash_timepix start messages have different
-        fields than XPSStart expects, so this may need adjustment based on your needs.
+        CHANGED: XPSStart fields are all Optional now, so pass metadata directly.
+        No need to fabricate fake LabVIEW fields (Rectangle, F_Reset, etc.).
         """
-        # Create Rectangle using a dict with alias keys
-        detector_x = metadata.get("detector_size_x", 256)
-        detector_y = metadata.get("detector_size_y", 256)
-        rectangle_dict = {
-            "Left": 0,
-            "Top": 0,
-            "Right": detector_x,
-            "Bottom": detector_y,
-            "Rotation": 0,
-        }
-
-        # Create XPSStart using a dict with alias keys (as Pydantic expects)
-        # This matches the LabVIEW JSON format
-        start_dict = {
-            "msg_type": "start",
-            "scan_name": metadata.get("scan_name", "unknown"),
-            "Binding Energy": 0.0,  # Not applicable for TimePix
-            "F_Trigger": 0,
-            "F_Un-Trigger": 0,
-            "F_Dead": 0,
-            "F_Reset": 0,
-            "CCD_nx": metadata.get("detector_size_x", 256),
-            "CCD_ny": metadata.get("detector_size_y", 256),
-            "Pass Energy": 0.0,
-            "Center Energy": 0.0,
-            "Offset Energy": 0.0,
-            "Lens Mode": "TimePix3",
-            "Rectangle": rectangle_dict,  # Pass dict, not object
-            "dt": metadata.get("t_delta_ns", 10.0) / 1e9,  # Convert ns to seconds
-            "Photon Energy": 0.0,
-            "File Ver": "1.0.0",
-            "data_type": "uint32",
-        }
-        return XPSStart(**start_dict)
+        return XPSStart(**metadata)
 
     @staticmethod
     def _build_stop(metadata: dict) -> XPSStop:
-        """Build XPSStop from metadata dict."""
-        # XPSStop doesn't have required fields, so we can create an empty one
-        return XPSStop()
+        """Build XPSStop from Timepix metadata.
+
+        CHANGED: XPSStop accepts extra fields now, so pass metadata directly.
+        """
+        return XPSStop(**metadata)
 
     @staticmethod
     def _build_event(
@@ -170,11 +139,17 @@ class XPSTimepixZMQListener(ZMQListener):
         dtype = metadata["dtype"]
 
         image_info = XPSImageInfo(
-            frame_number=0, width=shape[0], height=shape[1], data_type=dtype
+            frame_number=metadata.get("flush_number", 0),
+            width=shape[0],
+            height=shape[1],
+            data_type=dtype,
+            timestamp=metadata.get("timestamp"),
+            cycles_in_flush=metadata.get("cycles_in_flush"),
+            total_cycles=metadata.get("total_cycles"),
         )
 
         array_received = np.frombuffer(image, dtype=dtype).reshape(shape)
-        image_info.frame_number = metadata.get("flush_number", 0)
+        
         return XPSRawEvent(
             image=NumpyArrayModel(array=array_received), image_info=image_info
         )

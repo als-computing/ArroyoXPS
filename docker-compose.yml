@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - aps_net
+      - mle_net
 
   labview_processor:
     build:
@@ -24,11 +24,11 @@ services:
       dockerfile: Dockerfile_labview_processor
     restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "8002:8001"
     volumes:
       - .:/app:Z
     networks:
-      aps_net:
+      mle_net:
     depends_on:
       tiled:
         condition: service_healthy
@@ -39,14 +39,12 @@ services:
       dockerfile: Dockerfile_timepix_processor
     restart: unless-stopped
     ports:
-      - "8002:8001"
+      - "8001:8001"
     volumes:
       - .:/app:Z
     networks:
-      aps_net:
-    depends_on:
-      tiled:
-        condition: service_healthy
+      mle_net:
+
 
   frontend:
     build:
@@ -61,5 +59,6 @@ services:
       aps_net:
 
 networks:
-  aps_net:
+  mle_net:
+    name: mle_net
     driver: bridge

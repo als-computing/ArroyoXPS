@@ -13,7 +13,7 @@ from arroyopy.publisher import Publisher
 
 from .schemas import XPSResult, XPSResultStart, XPSResultStop
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("xps_processor.XPSWSResultPublisher")  
 
 
 class XPSWSResultPublisher(Publisher):

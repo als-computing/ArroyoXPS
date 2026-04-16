@@ -18,17 +18,30 @@ services:
   networks:
   aps_net:
 
-  processor:
-    command: arroyo run /app/block_configs/processor_cli_tpx_block.yaml
+  labview_processor:
     build:
       context: .
-      dockerfile: Dockerfile_processor
+      dockerfile: Dockerfile_labview_processor
     restart: unless-stopped
     ports:
       - "8001:8001"
     volumes:
       - .:/app:Z
-      - ./settings_container.yaml:/app/settings.yaml:Z
+    networks:
+      aps_net:
+    depends_on:
+      tiled:
+        condition: service_healthy
+
+  timepix_processor:
+    build:
+      context: .
+      dockerfile: Dockerfile_timepix_processor
+    restart: unless-stopped
+    ports:
+      - "8002:8001"
+    volumes:
+      - .:/app:Z
     networks:
       aps_net:
     depends_on:

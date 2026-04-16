@@ -1,16 +1,16 @@
 blocks:
-  - name: XPS Timepix Operator
-    description: Real-time AP-XPS processor for Timepix data
+  - name: XPS LabVIEW Operator
+    description: Real-time AP-XPS processor for LabVIEW data
 
     operator:
       class: tr_ap_xps.pipeline.xps_operator.build_xps_operator
       kwargs:
-        build_heatmaps: false
+        build_heatmaps: true
 
     listeners:
-      - class: tr_ap_xps.timepix.xps_timepix_listener_factory
+      - class: tr_ap_xps.labview.xps_labview_listener_factory
         kwargs:
-          zmq_pub_address: "tcp://simulator"
+          zmq_pub_address: "tcp://localhost"
           zmq_pub_port: 5555
 
     publishers:

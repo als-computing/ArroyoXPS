@@ -6,7 +6,7 @@ import numpy as np
 from arroyopy.operator import Operator
 from arroyopy.schemas import Message
 
-from ..schemas import XPSResult, XPSResultStart, XPSResultStop, XPSRawEvent, XPSStart, XPSStop, NumpyArrayModel
+from ..schemas import DataFrameModel, XPSResult, XPSResultStart, XPSResultStop, XPSRawEvent, XPSStart, XPSStop, NumpyArrayModel
 from ..timing import timer
 from .xps_processor import XPSProcessor
 
@@ -95,6 +95,7 @@ class XPSOperator(Operator):
                         shot_mean=NumpyArrayModel(array=shot_mean_2d),
                         shot_std=None,
                     )
+                    timer.end_frame()
                 except Exception as e:
                     logger.error(f"Error computing timepix arrays: {e}", exc_info=True)
                     return
@@ -110,8 +111,9 @@ class XPSOperator(Operator):
             self.total_cycles = 0
             self.xps_processor = None
             try:
+                timings_df = timer.timing_dataframe
                 await self.publish(XPSResultStop(
-                    function_timings=timer.timing_dataframe
+                    function_timings=DataFrameModel(df=timings_df) if not timings_df.empty else None
                 ))
             except Exception as e:
                 logger.error(f"Error publishing XPSResultStop: {e}", exc_info=True)

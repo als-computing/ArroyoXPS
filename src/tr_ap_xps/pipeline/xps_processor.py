@@ -97,8 +97,9 @@ class XPSProcessor:
                     shot_std=NumpyArrayModel(array=self.shot_rolling_std),
                 )
                 self.shot_cache = None
+                timer.end_frame()
                 return result 
         except Exception as e:
             logger.exception(f"Error processing frame: {e}")
             return None
-        timer.end_frame()
+        

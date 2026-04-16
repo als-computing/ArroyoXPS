@@ -219,4 +219,4 @@ class XPSResultStop(Stop, XPSMessage):
     Published by XPSOperator when processing ends.
     """
     msg_type: str = Literal["result_stop"]
-    function_timings: DataFrameModel
+    function_timings: Optional[DataFrameModel] = None

@@ -1,22 +1,22 @@
 services:
   tiled:
-  # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
-  image: ghcr.io/bluesky/tiled:main
-  ports:
-  - "8000:8000"
-  environment:
-  - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
-  volumes:
-  - ./services/tiled/deploy:/deploy:Z
-  - ./data:/data:Z
-  restart: unless-stopped
-  healthcheck:
-  test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
-  interval: 10s
-  timeout: 5s
-  retries: 3
-  networks:
-  aps_net:
+    # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
+    image: ghcr.io/bluesky/tiled:main
+    ports:
+      - "8000:8000"
+    environment:
+      - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
+    volumes:
+      - ./services/tiled/deploy:/deploy:Z
+      - ./data:/data:Z
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - aps_net
 
   labview_processor:
     build:

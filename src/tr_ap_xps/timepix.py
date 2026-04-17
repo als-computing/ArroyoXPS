@@ -16,16 +16,15 @@ from arroyopy.operator import Operator
 logger = logging.getLogger("xps_processor.XPSTimepixZMQListener")  
 
 
-# CHANGED: removed app_settings; accepts address/port as parameters instead
+# CHANGED: removed app_settings; accepts zmq_connection_address as parameters instead
 def setup_zmq(
-    zmq_pub_address: str = "tcp://localhost",
-    zmq_pub_port: int = 5657,
+    zmq_connection_address: str = "tcp://localhost:5657",
 ):
     ctx = zmq.asyncio.Context()
     lv_zmq_socket = ctx.socket(zmq.SUB)
     lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
-    logger.info(f"binding to: {zmq_pub_address}:{zmq_pub_port}")
-    lv_zmq_socket.connect(f"{zmq_pub_address}:{zmq_pub_port}")
+    logger.info(f"connecting to: {zmq_connection_address}")
+    lv_zmq_socket.connect(zmq_connection_address)
     lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
     return lv_zmq_socket
 
@@ -186,8 +185,7 @@ if __name__ == "__main__":
 # ADDED: factory function for YAML instantiation
 def xps_timepix_listener_factory(
     operator,
-    zmq_pub_address: str = "tcp://localhost",
-    zmq_pub_port: int = 5657,
+    zmq_connection_address: str = "tcp://localhost:5657",
 ) -> XPSTimepixZMQListener:
-    socket = setup_zmq(zmq_pub_address, zmq_pub_port)
+    socket = setup_zmq(zmq_connection_address)
     return XPSTimepixZMQListener(operator=operator, zmq_socket=socket)

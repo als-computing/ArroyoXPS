@@ -28,19 +28,17 @@ DATATYPE_MAP = {
 logger = logging.getLogger(__name__)
 
 
-# CHANGED: removed app_settings; accepts address/port as parameters instead
+# CHANGED: removed app_settings; accepts zmq_connection_address as parameters instead
 def setup_zmq(
-    zmq_pub_address: str = "tcp://localhost",
-    zmq_pub_port: int = 5555,
+    zmq_connection_address: str = "tcp://localhost:5555",
 ):
     ctx = zmq.asyncio.Context()
     lv_zmq_socket = ctx.socket(zmq.SUB)
     lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
-    logger.info(f"binding to: {zmq_pub_address}:{zmq_pub_port}")
-    lv_zmq_socket.connect(f"{zmq_pub_address}:{zmq_pub_port}")
+    logger.info(f"connecting to: {zmq_connection_address}")
+    lv_zmq_socket.connect(zmq_connection_address)
     lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
     return lv_zmq_socket
-
 
 class XPSLabviewZMQListener(ZMQListener):
     stop_signal = False
@@ -134,11 +132,9 @@ class XPSLabviewZMQListener(ZMQListener):
         return XPSStop(**message)
 
 
-# ADDED: factory function for YAML instantiation
 def xps_labview_listener_factory(
     operator,
-    zmq_pub_address: str = "tcp://localhost",
-    zmq_pub_port: int = 5555,
+    zmq_connection_address: str = "tcp://localhost:5555",
 ) -> XPSLabviewZMQListener:
-    socket = setup_zmq(zmq_pub_address, zmq_pub_port)
+    socket = setup_zmq(zmq_connection_address)
     return XPSLabviewZMQListener(operator=operator, zmq_socket=socket)

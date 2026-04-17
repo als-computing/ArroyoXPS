@@ -10,8 +10,7 @@ blocks:
     listeners:
       - class: tr_ap_xps.labview.xps_labview_listener_factory
         kwargs:
-          zmq_pub_address: "tcp://localhost"
-          zmq_pub_port: 5555
+          zmq_connection_address: "tcp://localhost:5555"
 
     publishers:
       - class: tr_ap_xps.websockets.xps_ws_publisher_factory

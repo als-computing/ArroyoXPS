@@ -56,7 +56,7 @@ services:
     volumes:
       - .:/app:Z
     networks:
-      aps_net:
+      mle_net:
 
 networks:
   mle_net:

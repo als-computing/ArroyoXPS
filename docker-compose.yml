@@ -18,20 +18,6 @@ services:
     networks:
       - mle_net
 
-  labview_processor:
-    build:
-      context: .
-      dockerfile: Dockerfile_labview_processor
-    restart: unless-stopped
-    ports:
-      - "8002:8001"
-    volumes:
-      - .:/app:Z
-    networks:
-      mle_net:
-    depends_on:
-      tiled:
-        condition: service_healthy
 
   timepix_processor:
     build:

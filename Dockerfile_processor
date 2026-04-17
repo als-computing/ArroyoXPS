@@ -6,4 +6,4 @@ COPY . /app
 # RUN pip install ./arroyo
 RUN pip install --no-cache-dir --upgrade .
 
-CMD ["arroyo", "run", "block_configs/labview_processor_block.yaml"]
+ENTRYPOINT ["arroyo", "run"]

@@ -22,7 +22,8 @@ services:
   timepix_processor:
     build:
       context: .
-      dockerfile: Dockerfile_timepix_processor
+      dockerfile: Dockerfile_processor
+    command: "block_configs/timepix_processor_block.yaml"
     restart: unless-stopped
     ports:
       - "8001:8001"

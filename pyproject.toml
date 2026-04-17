@@ -13,7 +13,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "arroyopy @ git+https://github.com/xiaoyachong/arroyopy.git@xiaoya-update-block",
+    "arroyopy @ git+https://github.com/als-computing/arroyopy.git",
     "astropy",
     "dynaconf",
     "python-dotenv",

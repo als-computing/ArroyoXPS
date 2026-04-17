@@ -28,7 +28,7 @@ DATATYPE_MAP = {
 logger = logging.getLogger(__name__)
 
 
-# CHANGED: removed app_settings; accepts zmq_connection_address as parameters instead
+# removed app_settings; accepts zmq_connection_address as parameters instead
 def setup_zmq(
     zmq_connection_address: str = "tcp://localhost:5555",
 ):

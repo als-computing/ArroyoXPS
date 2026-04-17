@@ -16,7 +16,7 @@ from arroyopy.operator import Operator
 logger = logging.getLogger(__name__)  
 
 
-# CHANGED: removed app_settings; accepts zmq_connection_address as parameters instead
+# removed app_settings; accepts zmq_connection_address as parameters instead
 def setup_zmq(
     zmq_connection_address: str = "tcp://localhost:5657",
 ):
@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     asyncio.run(listener.start())
 
-# ADDED: factory function for YAML instantiation
+# factory function for YAML instantiation
 def xps_timepix_listener_factory(
     operator,
     zmq_connection_address: str = "tcp://localhost:5657",

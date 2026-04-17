@@ -13,7 +13,7 @@ from arroyopy.publisher import Publisher
 
 from .schemas import XPSResult, XPSResultStart, XPSResultStop
 
-logger = logging.getLogger("xps_processor.XPSWSResultPublisher")  
+logger = logging.getLogger(__name__)
 
 
 class XPSWSResultPublisher(Publisher):
@@ -45,7 +45,7 @@ class XPSWSResultPublisher(Publisher):
 
     async def publish(self, message) -> None:
         if self.connected_clients:  # Only send if there are clients connected
-            asyncio.gather(
+            await asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
             )
 

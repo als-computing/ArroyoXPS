@@ -13,7 +13,7 @@ from arroyopy.operator import Operator
 
 
 
-logger = logging.getLogger("xps_processor.XPSTimepixZMQListener")  
+logger = logging.getLogger(__name__)  
 
 
 # CHANGED: removed app_settings; accepts zmq_connection_address as parameters instead

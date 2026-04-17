@@ -6,21 +6,24 @@ import numpy as np
 from arroyopy.operator import Operator
 from arroyopy.schemas import Message
 
-from ..schemas import DataFrameModel, XPSResult, XPSResultStart, XPSResultStop, XPSRawEvent, XPSStart, XPSStop, NumpyArrayModel
+from ..log_utils import setup_logger
+from ..schemas import (
+    DataFrameModel,
+    NumpyArrayModel,
+    XPSRawEvent,
+    XPSResult,
+    XPSResultStart,
+    XPSResultStop,
+    XPSStart,
+    XPSStop,
+)
 from ..timing import timer
 from .xps_processor import XPSProcessor
 
-def setup_logger(log_level: str = "INFO"):
-    formatter = logging.Formatter("%(levelname)s: (%(name)s)  %(message)s ")
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    root_logger = logging.getLogger("xps_processor")
-    root_logger.addHandler(handler)
-    root_logger.setLevel(log_level.upper())
-
-setup_logger(os.getenv("LOGGING_LEVEL", "DEBUG"))
-
-logger = logging.getLogger("xps_processor.XPSOperator")  
+setup_logger(
+    logging.getLogger("tr_ap_xps"), log_level=os.getenv("LOGGING_LEVEL", "DEBUG")
+)
+logger = logging.getLogger(__name__)  # resolves to "tr_ap_xps.pipeline.xps_operator"
 
 
 class XPSOperator(Operator):
@@ -34,7 +37,9 @@ class XPSOperator(Operator):
     def _compute_timepix_arrays(self, message: XPSRawEvent):
         raw_array = message.image.array.astype(np.float64)
         cycles_in_flush = message.image_info.cycles_in_flush or 1
-        logger.debug(f"_compute_timepix_arrays: raw_array.shape={raw_array.shape}, cycles_in_flush={cycles_in_flush}")
+        logger.debug(
+            f"_compute_timepix_arrays: raw_array.shape={raw_array.shape}, cycles_in_flush={cycles_in_flush}"
+        )
 
         if self.cumulative_sum is None:
             self.cumulative_sum = raw_array.copy()
@@ -46,7 +51,9 @@ class XPSOperator(Operator):
         integrated_2d = raw_array if raw_array.ndim == 2 else np.sum(raw_array, axis=1)
         average = self.cumulative_sum / self.total_cycles
         shot_mean_2d = average if average.ndim == 2 else np.sum(average, axis=1)
-        logger.debug(f"_compute_timepix_arrays: integrated_2d.shape={integrated_2d.shape}, shot_mean_2d.shape={shot_mean_2d.shape}")
+        logger.debug(
+            f"_compute_timepix_arrays: integrated_2d.shape={integrated_2d.shape}, shot_mean_2d.shape={shot_mean_2d.shape}"
+        )
 
         return integrated_2d, shot_mean_2d
 
@@ -73,10 +80,14 @@ class XPSOperator(Operator):
             await self.publish(XPSResultStart(scan_name=message.scan_name))
 
         elif isinstance(message, XPSRawEvent):
-            logger.debug(f"XPSRawEvent received: frame_number={message.image_info.frame_number}")
+            logger.debug(
+                f"XPSRawEvent received: frame_number={message.image_info.frame_number}"
+            )
             if self.build_heatmaps:
                 if not self.xps_processor:
-                    logger.error("Received XPSRawEvent without an active XPSProcessor. Started after labview started?")
+                    logger.error(
+                        "Received XPSRawEvent without an active XPSProcessor. Started after labview started?"
+                    )
                     return
                 result: XPSResult = await asyncio.to_thread(
                     self.xps_processor.process_frame, message
@@ -100,7 +111,9 @@ class XPSOperator(Operator):
                     logger.error(f"Error computing timepix arrays: {e}", exc_info=True)
                     return
             if result:
-                logger.debug(f"Publishing XPSResult: frame_number={result.frame_number}, shot_num={result.shot_num}")
+                logger.debug(
+                    f"Publishing XPSResult: frame_number={result.frame_number}, shot_num={result.shot_num}"
+                )
                 await self.publish(result)
             else:
                 logger.debug("Result is None, not publishing")
@@ -112,9 +125,15 @@ class XPSOperator(Operator):
             self.xps_processor = None
             try:
                 timings_df = timer.timing_dataframe
-                await self.publish(XPSResultStop(
-                    function_timings=DataFrameModel(df=timings_df) if not timings_df.empty else None
-                ))
+                await self.publish(
+                    XPSResultStop(
+                        function_timings=(
+                            DataFrameModel(df=timings_df)
+                            if not timings_df.empty
+                            else None
+                        )
+                    )
+                )
             except Exception as e:
                 logger.error(f"Error publishing XPSResultStop: {e}", exc_info=True)
 

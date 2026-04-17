@@ -7,7 +7,7 @@ from ..timing import timer
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
 
-logger = logging.getLogger("tr_ap_xps.processor")
+logger = logging.getLogger(__name__)
 
 
 class XPSProcessor:

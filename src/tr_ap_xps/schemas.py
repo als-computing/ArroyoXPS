@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from arroyopy.schemas import DataFrameModel, Event, Message, NumpyArrayModel, Start, Stop
 
@@ -92,6 +92,8 @@ class XPSStart(Start, XPSMessage):
 
     """
 
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
+
     msg_type: str = Field("start", alias="msg_type")
 
     # LabVIEW fields — all Optional so Timepix start messages are also accepted
@@ -128,9 +130,6 @@ class XPSStart(Start, XPSMessage):
     zmq_port: Optional[int] = None
     tcp_port: Optional[int] = None
 
-    class Config:
-        populate_by_name = True
-        extra = "allow"
 
 class XPSImageInfo(BaseModel):
     frame_number: int
@@ -176,14 +175,14 @@ class XPSStop(Stop, XPSMessage):
         "acquisition_duration_s": 28.91
     }
     """
+
+    model_config = ConfigDict(extra="allow")
+
     scan_name: Optional[str] = None
     total_flushes: Optional[int] = None
     total_cycles: Optional[int] = None
     total_packets: Optional[int] = None
     acquisition_duration_s: Optional[float] = None
-
-    class Config:
-        extra = "allow"
 
 
 # ADDED: operator output types — clean separation from ZMQ input types

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from ..schemas import DataFrameModel, NumpyArrayModel, XPSRawEvent, XPSResult, XPSStart
-from ..timing import timer
+from arroyopy import traced
 from .fft import calculate_fft_items
 from .peak_fitting import peak_fit
 
@@ -28,11 +28,11 @@ class XPSProcessor:
         self.shot_rolling_variance = None
         self.shot_rolling_std = None
 
-    @timer
+    @traced(span_name="compute_mean", attributes={"component": "xps_processor"})
     def _compute_mean(self, curr_frame: np.array):
         return np.mean(curr_frame, axis=0)
 
-    @timer
+    @traced(span_name="compute_rolling_values", attributes={"component": "xps_processor"})
     def _compute_rolling_values(self, curr_frame: np.array):
         if self.shot_rolling_mean is None:
             self.shot_rolling_mean = curr_frame
@@ -44,7 +44,7 @@ class XPSProcessor:
             self.shot_rolling_mean = new_mean
             self.shot_rolling_std = np.sqrt(self.shot_rolling_variance / self.shot_num)
 
-    @timer
+    @traced(span_name="process_frame", attributes={"component": "xps_processor"})
     def process_frame(self, message: XPSRawEvent) -> None:
         try:
             # Compute horizontally-integrated frame
@@ -97,7 +97,6 @@ class XPSProcessor:
                     shot_std=NumpyArrayModel(array=self.shot_rolling_std),
                 )
                 self.shot_cache = None
-                timer.end_frame()
                 return result 
         except Exception as e:
             logger.exception(f"Error processing frame: {e}")

@@ -4,6 +4,7 @@ import json
 import logging
 from typing import Union
 
+from arroyopy import traced
 import msgpack
 import numpy as np
 import pandas as pd
@@ -43,6 +44,7 @@ class XPSWSResultPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{parsed_url.hostname}:{parsed_url.port}")
         await server.wait_closed()
 
+    @traced(span_name="websocket_publish", attributes={"component": "xps_ws_publisher"})
     async def publish(self, message) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             await asyncio.gather(

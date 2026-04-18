@@ -49,4 +49,4 @@ def test_xps_processor():
 # ), "Expected a single row with 10 columns, matching a veritcally filtered integrated frame"
 
 # xps_dataset.finish()
-# assert xps_dataset.tiled_struct.timing_node.read().shape[0] == 2
+

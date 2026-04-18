@@ -13,7 +13,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "arroyopy @ git+https://github.com/als-computing/arroyopy.git",
+    "arroyopy @ git+https://github.com/als-computing/arroyopy.git@refs/heads/open_telemetry",
     "astropy",
     "dynaconf",
     "python-dotenv",

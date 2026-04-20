@@ -75,7 +75,6 @@ class XPSOperator(Operator):
         """
         if isinstance(message, XPSStart):
             logger.info(f"Start message received: scan_name={message.scan_name}")
-            timer.reset()
             self.xps_processor = XPSProcessor(message)
             self.cumulative_sum = None
             self.total_cycles = 0
@@ -108,7 +107,6 @@ class XPSOperator(Operator):
                         shot_mean=NumpyArrayModel(array=shot_mean_2d),
                         shot_std=None,
                     )
-                    timer.end_frame()
                 except Exception as e:
                     logger.error(f"Error computing timepix arrays: {e}", exc_info=True)
                     return

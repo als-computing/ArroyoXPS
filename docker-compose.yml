@@ -22,17 +22,17 @@ services:
       - mle_net
 
   timepix_processor:
-    profiles:
-      - dev
+    # profiles:
+    #   - dev
+    command: "/block_configs/timepix_processor_block.yaml"
     build:
       context: .
       dockerfile: Dockerfile_processor
-    entrypoint: /bin/bash
     restart: unless-stopped
     ports:
       - "8001:8001"
     volumes:
-      - .:/app:ro,z
+      - ./block_configs:/block_configs:ro,Z
     networks:
       mle_net:
 
@@ -99,4 +99,4 @@ volumes:
 networks:
   mle_net:
     name: mle_net
-    driver: bridge
+    external: true

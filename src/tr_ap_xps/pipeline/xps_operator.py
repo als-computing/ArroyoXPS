@@ -135,14 +135,14 @@ class XPSOperator(Operator):
         else:
             logger.warning(f"Unknown message type received: {type(message)}")
 
-def build_xps_operator(build_heatmaps: bool = False) -> XPSOperator:
+def build_xps_operator(build_heatmaps: bool = False, otlp_endpoint: str = "http://localhost:4317") -> XPSOperator:
     # Start Prometheus metrics server
-    logger.info("✓ Starting Prometheus metrics server on port 8000")
-    start_http_server(8000)
-    print("  → Metrics available at: http://localhost:8000/metrics")
+    # logger.info("✓ Starting Prometheus metrics server on port 8000")
+    # start_http_server(8000)
+    # print("  → Metrics available at: http://localhost:8000/metrics")
     # Initialize OpenTelemetry
     init_telemetry(
         service_name="arroyopy-demo",
-        otlp_endpoint="http://localhost:4317",
+        otlp_endpoint=otlp_endpoint,
     )
     return XPSOperator(build_heatmaps=build_heatmaps)

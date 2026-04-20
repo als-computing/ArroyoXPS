@@ -51,7 +51,7 @@ class XPSTimepixZMQListener(ZMQListener):
                 except Exception as e:
                     logger.error(f"Error unpacking message: {e}")
                     continue
-
+                print(metadata)
                 msg_type = metadata.get("msg_type")
 
                 # Handle different message types

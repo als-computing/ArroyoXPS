@@ -6,6 +6,7 @@ blocks:
       class: tr_ap_xps.pipeline.xps_operator.build_xps_operator
       kwargs:
         build_heatmaps: false
+        otlp_endpoint: "http://jaeger:4317"
 
     listeners:
       - class: tr_ap_xps.timepix.xps_timepix_listener_factory

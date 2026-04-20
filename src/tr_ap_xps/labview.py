@@ -7,7 +7,6 @@ import zmq.asyncio
 
 from arroyopy.zmq import ZMQListener
 
-from .config import settings
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 # Maintain a map of LabView datatypes. LabView sends BigE,
@@ -26,24 +25,20 @@ DATATYPE_MAP = {
     "Double Float": np.dtype(np.double).newbyteorder(">"),
 }
 
-app_settings = settings.xps_operator
-
 logger = logging.getLogger(__name__)
 
 
-def setup_zmq():
+# removed app_settings; accepts zmq_connection_address as parameters instead
+def setup_zmq(
+    zmq_connection_address: str = "tcp://localhost:5555",
+):
     ctx = zmq.asyncio.Context()
     lv_zmq_socket = ctx.socket(zmq.SUB)
     lv_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
-    logger.info(
-        f"binding to: {app_settings.lv_zmq_listener.zmq_pub_address}:{app_settings.lv_zmq_listener.zmq_pub_port}"
-    )
-    lv_zmq_socket.connect(
-        f"{app_settings.lv_zmq_listener.zmq_pub_address}:{app_settings.lv_zmq_listener.zmq_pub_port}"
-    )
+    logger.info(f"connecting to: {zmq_connection_address}")
+    lv_zmq_socket.connect(zmq_connection_address)
     lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
     return lv_zmq_socket
-
 
 class XPSLabviewZMQListener(ZMQListener):
     stop_signal = False
@@ -135,3 +130,11 @@ class XPSLabviewZMQListener(ZMQListener):
         if logger.getEffectiveLevel() == logging.DEBUG:
             logger.debug(f"stop: {message}")
         return XPSStop(**message)
+
+
+def xps_labview_listener_factory(
+    operator,
+    zmq_connection_address: str = "tcp://localhost:5555",
+) -> XPSLabviewZMQListener:
+    socket = setup_zmq(zmq_connection_address)
+    return XPSLabviewZMQListener(operator=operator, zmq_socket=socket)

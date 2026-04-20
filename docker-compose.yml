@@ -1,39 +1,37 @@
 services:
   tiled:
-  # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
-  image: ghcr.io/bluesky/tiled:main
-  ports:
-  - "8000:8000"
-  environment:
-  - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
-  volumes:
-  - ./services/tiled/deploy:/deploy:Z
-  - ./data:/data:Z
-  restart: unless-stopped
-  healthcheck:
-  test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
-  interval: 10s
-  timeout: 5s
-  retries: 3
-  networks:
-  aps_net:
+    # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
+    image: ghcr.io/bluesky/tiled:main
+    ports:
+      - "8000:8000"
+    environment:
+      - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
+    volumes:
+      - ./services/tiled/deploy:/deploy:Z
+      - ./data:/data:Z
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mle_net
 
-  processor:
-    command: python -m tr_ap_xps.apps.processor_cli_tpx
+
+  timepix_processor:
     build:
       context: .
       dockerfile: Dockerfile_processor
+    command: "block_configs/timepix_processor_block.yaml"
     restart: unless-stopped
     ports:
       - "8001:8001"
     volumes:
       - .:/app:Z
-      - ./settings_container.yaml:/app/settings.yaml:Z
     networks:
-      aps_net:
-    depends_on:
-      tiled:
-        condition: service_healthy
+      mle_net:
+
 
   frontend:
     build:
@@ -45,8 +43,9 @@ services:
     volumes:
       - .:/app:Z
     networks:
-      aps_net:
+      mle_net:
 
 networks:
-  aps_net:
+  mle_net:
+    name: mle_net
     driver: bridge

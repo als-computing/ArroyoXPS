@@ -11,7 +11,7 @@ import websockets
 
 from arroyopy.publisher import Publisher
 
-from .schemas import XPSResult, XPSResultStop, XPSStart
+from .schemas import XPSResult, XPSResultStart, XPSResultStop
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +43,9 @@ class XPSWSResultPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{parsed_url.hostname}:{parsed_url.port}")
         await server.wait_closed()
 
-    async def publish(self, message: XPSResult) -> None:
+    async def publish(self, message) -> None:
         if self.connected_clients:  # Only send if there are clients connected
-            asyncio.gather(
+            await asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
             )
 
@@ -53,30 +53,38 @@ class XPSWSResultPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[XPSResult | XPSStart | XPSResultStop],
+        message: Union[XPSResultStart, XPSResult, XPSResultStop],
     ) -> None:
-        if isinstance(message, XPSResultStop):
-            self.current_start_message = None
-            return
+        # CHANGED: now handles all three result types cleanly
 
-        if isinstance(message, XPSStart):
+        if isinstance(message, XPSResultStart):
             self.current_start_message = message
-            await client.send(json.dumps(message.model_dump()))
+            await client.send(json.dumps({
+                "msg_type": "start",
+                "scan_name": message.scan_name,
+            }))
             return
 
-        # send basic info
-        await client.send(
-            json.dumps(
-                {
-                    # "result_info": message.result_info,
-                    "frame_number": message.frame_number,
-                }
+        elif isinstance(message, XPSResultStop):
+            self.current_start_message = None
+            await client.send(json.dumps({"msg_type": "stop"}))
+            return
+
+        elif isinstance(message, XPSResult):
+            # send basic info
+            await client.send(
+                json.dumps(
+                    {
+                        # "result_info": message.result_info,
+                        "msg_type": "event",
+                        "frame_number": message.frame_number,
+                    }
+                )
             )
-        )
-        # send image data separately to client memory issues
-        image_bundle = await asyncio.to_thread(pack_images, message)
-        logger.info(f"Sending image bundle to client of size {len(image_bundle)}")
-        await client.send(image_bundle)
+            # send image data separately to avoid client memory issues
+            image_bundle = await asyncio.to_thread(pack_images, message)
+            logger.info(f"Sending image bundle to client of size {len(image_bundle)}")
+            await client.send(image_bundle)
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
@@ -102,10 +110,10 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
 
     # scaled = (image - image.min()) / (image.max() - image.min()) * 255
     # return scaled.astype(np.uint8).tobytes()
-    
+
     if np.allclose(image, 0):
         return image.astype(np.uint8).tobytes()
-    
+
     image_normalized = (image - image.min()) / (image.max() - image.min())
 
     # Apply logarithmic stretch
@@ -142,8 +150,16 @@ def pack_images(message: XPSResult) -> bytes:
             "raw": convert_to_uint8(message.integrated_frames.array),
             "width": message.shot_mean.array.shape[0],
             "height": message.shot_mean.array.shape[1],
-            "fitted": json.dumps(peaks_output(message.detected_peaks.df)),
+            "fitted": json.dumps(peaks_output(message.detected_peaks.df)) if message.detected_peaks else None,
             "shot_num": message.shot_num,
-            "shot_recent": convert_to_uint8(message.shot_recent.array),
+            "shot_recent": convert_to_uint8(message.shot_recent.array) if message.shot_recent else None,
+            "shot_mean": convert_to_uint8(message.shot_mean.array),
         }
     )
+
+
+# ADDED: factory function for YAML instantiation
+def xps_ws_publisher_factory(
+    ws_url: str = "ws://localhost:8001/xps_operator",
+) -> XPSWSResultPublisher:
+    return XPSWSResultPublisher(ws_url=ws_url)

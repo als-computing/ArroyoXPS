@@ -1,0 +1,18 @@
+blocks:
+  - name: XPS LabVIEW Operator
+    description: Real-time AP-XPS processor for LabVIEW data
+
+    operator:
+      class: tr_ap_xps.pipeline.xps_operator.build_xps_operator
+      kwargs:
+        build_heatmaps: true
+
+    listeners:
+      - class: tr_ap_xps.labview.xps_labview_listener_factory
+        kwargs:
+          zmq_connection_address: "tcp://localhost:5555"
+
+    publishers:
+      - class: tr_ap_xps.websockets.xps_ws_publisher_factory
+        kwargs:
+          ws_url: "ws://0.0.0.0:8001/xps_operator"

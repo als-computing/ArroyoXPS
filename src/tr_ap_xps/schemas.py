@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from arroyopy.schemas import DataFrameModel, Event, Message, NumpyArrayModel, Start, Stop
 
@@ -35,10 +35,9 @@ class XPSMessage(Message):
 
 
 class XPSStart(Start, XPSMessage):
-    msg_type: str = Literal["start"]
-    binding_energy: float = Field(..., alias="Binding Energy")
-    msg_type: str = Field("start", alias="msg_type")
     """
+    Incoming start message from ZMQ. Supports both LabVIEW and Timepix sources.
+
     LabVIEW Message:
 
     Incoming message from LabView at the start of a scan.
@@ -71,27 +70,65 @@ class XPSStart(Start, XPSMessage):
         "File Ver": "1.0.0"
     }
 
+    Timepix Message (msgpack-encoded, from splash_timepix server):
+
+    {
+        "msg_type": "start",
+        "scan_name": "acquisition_20250128T143022Z_a1b2c3d4",
+        "tdc_frequency_hz": 1000.0,
+        "t_delta_ns": 10.0,
+        "t_cycle_ns": 1000000.0,
+        "n_bins": 100,
+        "detector_size_x": 256,
+        "detector_size_y": 256,
+        "flush_interval_s": 1.0,
+        "cycles_per_flush": 1000,
+        "tdc_channel": 1,
+        "tdc_edge": "rising",
+        "collapse_y": false,
+        "zmq_port": 5657,
+        "tcp_port": 9090
+    }
 
     """
 
-    binding_energy: float = Field(..., alias="Binding Energy")
-    scan_name: str = Field(..., alias="scan_name")
-    f_trigger: int = Field(..., alias="F_Trigger")
-    f_untrigger: int = Field(..., alias="F_Un-Trigger")
-    f_dead: int = Field(..., alias="F_Dead")
-    f_reset: int = Field(..., alias="F_Reset")
-    ccd_nx: int = Field(..., alias="CCD_nx")
-    ccd_ny: int = Field(..., alias="CCD_ny")
-    pass_energy: float = Field(..., alias="Pass Energy")
-    center_energy: float = Field(..., alias="Center Energy")
-    offset_energy: float = Field(..., alias="Offset Energy")
-    lens_mode: str = Field(..., alias="Lens Mode")
-    rectangle: Rectangle = Field(..., alias="Rectangle")
-    dt: float = Field(..., alias="dt")
-    photon_energy: float = Field(..., alias="Photon Energy")
-    binding_energy: float = Field(..., alias="Binding Energy")
-    file_ver: str = Field(..., alias="File Ver")
-    data_type: str = Field(..., alias="data_type")
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
+
+    msg_type: str = Field("start", alias="msg_type")
+
+    # LabVIEW fields — all Optional so Timepix start messages are also accepted
+    binding_energy: Optional[float] = Field(None, alias="Binding Energy")
+    scan_name: Optional[str] = Field(None, alias="scan_name")
+    f_trigger: Optional[int] = Field(None, alias="F_Trigger")
+    f_untrigger: Optional[int] = Field(None, alias="F_Un-Trigger")
+    f_dead: Optional[int] = Field(None, alias="F_Dead")
+    f_reset: Optional[int] = Field(None, alias="F_Reset")
+    ccd_nx: Optional[int] = Field(None, alias="CCD_nx")
+    ccd_ny: Optional[int] = Field(None, alias="CCD_ny")
+    pass_energy: Optional[float] = Field(None, alias="Pass Energy")
+    center_energy: Optional[float] = Field(None, alias="Center Energy")
+    offset_energy: Optional[float] = Field(None, alias="Offset Energy")
+    lens_mode: Optional[str] = Field(None, alias="Lens Mode")
+    rectangle: Optional[Rectangle] = Field(None, alias="Rectangle")
+    dt: Optional[float] = Field(None, alias="dt")
+    photon_energy: Optional[float] = Field(None, alias="Photon Energy")
+    file_ver: Optional[str] = Field(None, alias="File Ver")
+    data_type: Optional[str] = Field(None, alias="data_type")
+
+    # Timepix fields from splash_timepix start message
+    tdc_frequency_hz: Optional[float] = None
+    t_delta_ns: Optional[float] = None
+    t_cycle_ns: Optional[float] = None
+    n_bins: Optional[int] = None
+    detector_size_x: Optional[int] = None
+    detector_size_y: Optional[int] = None
+    flush_interval_s: Optional[float] = None
+    cycles_per_flush: Optional[int] = None
+    tdc_channel: Optional[int] = None
+    tdc_edge: Optional[str] = None
+    collapse_y: Optional[bool] = None
+    zmq_port: Optional[int] = None
+    tcp_port: Optional[int] = None
 
 
 class XPSImageInfo(BaseModel):
@@ -99,6 +136,10 @@ class XPSImageInfo(BaseModel):
     width: int
     height: int
     data_type: str
+    # Timepix event metadata
+    timestamp: Optional[float] = None
+    cycles_in_flush: Optional[int] = None
+    total_cycles: Optional[int] = None
 
 
 class XPSRawEvent(Event, XPSMessage):
@@ -118,15 +159,41 @@ class XPSRawEvent(Event, XPSMessage):
 
 class XPSStop(Stop, XPSMessage):
     """
+    LabVIEW Message:
     {
         "msg_type": "stop",
         "Num Frames": 1
     }
 
+    Timepix Message:
+    {
+        "msg_type": "stop",
+        "scan_name": "acquisition_20250128T143022Z_a1b2c3d4",
+        "total_flushes": 9,
+        "total_cycles": 99,
+        "total_packets": 50000,
+        "acquisition_duration_s": 28.91
+    }
     """
 
-    pass
-    # num_frames: int = Field(..., alias="Num Frames")
+    model_config = ConfigDict(extra="allow")
+
+    scan_name: Optional[str] = None
+    total_flushes: Optional[int] = None
+    total_cycles: Optional[int] = None
+    total_packets: Optional[int] = None
+    acquisition_duration_s: Optional[float] = None
+
+
+# ADDED: operator output types — clean separation from ZMQ input types
+
+class XPSResultStart(Start, XPSMessage):
+    """
+    Published by XPSOperator when a new scan begins.
+    Downstream publishers use this to signal that a new acquisition has started.
+    """
+    msg_type: str = Literal["result_start"]
+    scan_name: Optional[str] = None
 
 
 class XPSResult(Event, XPSMessage):
@@ -147,5 +214,8 @@ class XPSResult(Event, XPSMessage):
 
 
 class XPSResultStop(Stop, XPSMessage):
+    """
+    Published by XPSOperator when processing ends.
+    """
     msg_type: str = Literal["result_stop"]
-    function_timings: DataFrameModel
+    function_timings: Optional[DataFrameModel] = None

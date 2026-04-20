@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "tr-ap-xps"
-version = "0.0.1"
+name = "arroyoxps"
+version = "0.1.0"
 authors = [
     { name="Dylan McReynolds", email="dmcreynolds@lbl.gov"},
 ]
@@ -56,6 +60,8 @@ simulator = [
 Homepage = "https://github.com/als-computing/AP-XPS"
 Issues = "https://github.com/als-computing/AP-XPS/issues"
 
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.isort]
 

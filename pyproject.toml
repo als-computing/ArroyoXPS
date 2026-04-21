@@ -25,6 +25,7 @@ dependencies = [
     "msgpack",
     "numpy",
     "Pillow",
+    "prometheus-client",
     "pyzmq",
     "scipy==1.14.1",
     "tiled[client]",

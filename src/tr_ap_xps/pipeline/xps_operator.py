@@ -4,6 +4,7 @@ import os
 
 from arroyopy import init_telemetry, traced
 import numpy as np
+from prometheus_client import start_http_server
 from arroyopy.operator import Operator
 from arroyopy.schemas import Message
 from prometheus_client import start_http_server
@@ -135,9 +136,9 @@ class XPSOperator(Operator):
 
 def build_xps_operator(build_heatmaps: bool = False, otlp_endpoint: str = "http://localhost:4317") -> XPSOperator:
     # Start Prometheus metrics server
-    # logger.info("✓ Starting Prometheus metrics server on port 8000")
-    # start_http_server(8000)
-    # print("  → Metrics available at: http://localhost:8000/metrics")
+    logger.info("✓ Starting Prometheus metrics server on port 8000")
+    start_http_server(8000)
+    print("  → Metrics available at: http://localhost:8000/metrics")
     # Initialize OpenTelemetry
     init_telemetry(
         service_name="arroyopy-demo",

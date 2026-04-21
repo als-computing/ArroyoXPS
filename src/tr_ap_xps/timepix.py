@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Callable
 
 import msgpack
@@ -10,7 +11,7 @@ from arroyopy.zmq import ZMQListener
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 from arroyopy.operator import Operator
-from arroyopy.telemetry import traced
+from arroyopy.telemetry import get_metrics_tracker, traced
  
 logger = logging.getLogger(__name__)  
 
@@ -37,6 +38,9 @@ class XPSTimepixZMQListener(ZMQListener):
 
     async def start(self):
         logger.info("Listener started")
+        metrics_tracker = get_metrics_tracker()
+        listener_type = self.__class__.__name__
+        operator_type = self.operator.__class__.__name__
 
         while True:
             try:
@@ -53,6 +57,7 @@ class XPSTimepixZMQListener(ZMQListener):
                     continue
                 print(metadata)
                 msg_type = metadata.get("msg_type")
+                metrics_tracker.record_message(listener_type)
 
                 # Handle different message types
                 if msg_type == "start":
@@ -98,8 +103,12 @@ class XPSTimepixZMQListener(ZMQListener):
                         if logger.getEffectiveLevel() == logging.DEBUG:
                             logger.debug(f"event: {metadata.keys()}")
 
+                        start_time = time.perf_counter()
                         await self.operator.process(
                             self._build_event(raw_message, metadata)
+                        )
+                        metrics_tracker.record_processing_time(
+                            operator_type, time.perf_counter() - start_time
                         )
                         logger.debug("event processed")
                     except zmq.Again:

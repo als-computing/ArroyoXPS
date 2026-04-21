@@ -9,7 +9,7 @@ scrape_configs:
   # Arroyopy application metrics
   - job_name: 'arroyopy'
     static_configs:
-      - targets: ['host.docker.internal:8000']  # Default metrics port
+      - targets: ['timepix_processor:8000']  # Default metrics port
         labels:
           service: 'arroyopy'
           environment: 'development'

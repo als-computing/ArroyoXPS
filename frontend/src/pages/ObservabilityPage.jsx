@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 const TABS = [
     { id: 'grafana',    label: 'Grafana',    src: 'http://localhost:3000/d/arroyopy-metrics/arroyopy-metrics?orgId=1&kiosk&refresh=5s' },
-    { id: 'prometheus', label: 'Prometheus', src: 'http://localhost:9091/targets' },
     { id: 'jaeger',     label: 'Jaeger',     src: 'http://localhost:16686/search?service=arroyopy-demo&limit=20' },
 ];
 
@@ -34,7 +33,7 @@ export default function ObservabilityPage() {
                     key={tab.id}
                     src={tab.src}
                     title={tab.label}
-                    className={`flex-grow w-full border-0 ${activeTab === tab.id ? 'block' : 'hidden'}`}
+                    className={`flex-grow w-full border-0 ${activeTab === tab.id ? 'block' : 'hidden'} ${tab.id === 'jaeger' ? 'bg-black' : ''}`}
                     allow="fullscreen"
                 />
             ))}

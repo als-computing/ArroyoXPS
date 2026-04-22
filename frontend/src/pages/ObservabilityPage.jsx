@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const TABS = [
-    { id: 'grafana',    label: 'Grafana',    src: '/grafana/d/arroyopy-metrics/arroyopy-metrics?orgId=1&kiosk&refresh=5s' },
+    { id: 'grafana',    label: 'Grafana',    src: 'http://localhost:3000/d/arroyopy-metrics/arroyopy-metrics?orgId=1&kiosk&refresh=5s' },
     { id: 'prometheus', label: 'Prometheus', src: 'http://localhost:9091/targets' },
     { id: 'jaeger',     label: 'Jaeger',     src: 'http://localhost:16686/search?service=arroyopy-demo&limit=20' },
 ];

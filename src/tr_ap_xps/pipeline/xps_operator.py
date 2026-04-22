@@ -7,7 +7,6 @@ import numpy as np
 from prometheus_client import start_http_server
 from arroyopy.operator import Operator
 from arroyopy.schemas import Message
-from prometheus_client import start_http_server
 
 from ..log_utils import setup_logger
 from ..schemas import (

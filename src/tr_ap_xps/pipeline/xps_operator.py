@@ -2,13 +2,14 @@ import asyncio
 import logging
 import os
 
+from arroyopy import init_telemetry, traced
 import numpy as np
 from arroyopy.operator import Operator
 from arroyopy.schemas import Message
+from prometheus_client import start_http_server
 
 from ..log_utils import setup_logger
 from ..schemas import (
-    DataFrameModel,
     NumpyArrayModel,
     XPSRawEvent,
     XPSResult,
@@ -17,7 +18,7 @@ from ..schemas import (
     XPSStart,
     XPSStop,
 )
-from ..timing import timer
+
 from .xps_processor import XPSProcessor
 
 setup_logger(
@@ -57,6 +58,7 @@ class XPSOperator(Operator):
 
         return integrated_2d, shot_mean_2d
 
+    @traced(span_name="process_xps_message", attributes={"component": "xps_operator"})
     async def process(self, message: Message) -> None:
         """
         Asynchronously handles different types of XPS messages. Handles the lifecycle of an XPSProcessor,
@@ -73,7 +75,6 @@ class XPSOperator(Operator):
         """
         if isinstance(message, XPSStart):
             logger.info(f"Start message received: scan_name={message.scan_name}")
-            timer.reset()
             self.xps_processor = XPSProcessor(message)
             self.cumulative_sum = None
             self.total_cycles = 0
@@ -106,7 +107,6 @@ class XPSOperator(Operator):
                         shot_mean=NumpyArrayModel(array=shot_mean_2d),
                         shot_std=None,
                     )
-                    timer.end_frame()
                 except Exception as e:
                     logger.error(f"Error computing timepix arrays: {e}", exc_info=True)
                     return
@@ -124,15 +124,8 @@ class XPSOperator(Operator):
             self.total_cycles = 0
             self.xps_processor = None
             try:
-                timings_df = timer.timing_dataframe
                 await self.publish(
-                    XPSResultStop(
-                        function_timings=(
-                            DataFrameModel(df=timings_df)
-                            if not timings_df.empty
-                            else None
-                        )
-                    )
+                    XPSResultStop()
                 )
             except Exception as e:
                 logger.error(f"Error publishing XPSResultStop: {e}", exc_info=True)
@@ -140,6 +133,14 @@ class XPSOperator(Operator):
         else:
             logger.warning(f"Unknown message type received: {type(message)}")
 
-
-def build_xps_operator(build_heatmaps: bool = False) -> XPSOperator:
+def build_xps_operator(build_heatmaps: bool = False, otlp_endpoint: str = "http://localhost:4317") -> XPSOperator:
+    # Start Prometheus metrics server
+    # logger.info("✓ Starting Prometheus metrics server on port 8000")
+    # start_http_server(8000)
+    # print("  → Metrics available at: http://localhost:8000/metrics")
+    # Initialize OpenTelemetry
+    init_telemetry(
+        service_name="arroyopy-demo",
+        otlp_endpoint=otlp_endpoint,
+    )
     return XPSOperator(build_heatmaps=build_heatmaps)

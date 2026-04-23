@@ -10,9 +10,8 @@ from arroyopy.zmq import ZMQListener
 from .schemas import NumpyArrayModel, XPSImageInfo, XPSRawEvent, XPSStart, XPSStop
 
 from arroyopy.operator import Operator
-
-
-
+from arroyopy.telemetry import traced
+ 
 logger = logging.getLogger(__name__)  
 
 
@@ -28,6 +27,8 @@ def setup_zmq(
     lv_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
     return lv_zmq_socket
 
+
+@traced(span_name="process_message", attributes={"component": "timepix_listener"})
 class XPSTimepixZMQListener(ZMQListener):
     stop_signal = False
 
@@ -50,7 +51,7 @@ class XPSTimepixZMQListener(ZMQListener):
                 except Exception as e:
                     logger.error(f"Error unpacking message: {e}")
                     continue
-
+                print(metadata)
                 msg_type = metadata.get("msg_type")
 
                 # Handle different message types

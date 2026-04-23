@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 from typing import Union
 
+from arroyopy import traced
 import numpy as np
 import pandas as pd
 from tiled.client.array import ArrayClient
@@ -29,7 +30,6 @@ class TiledScan:
     vfft: ArrayClient = None
     ifft: ArrayClient = None
     shot_sum: ArrayClient = None
-    function_timings: DataFrameClient = None
 
 
 class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
@@ -41,6 +41,7 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
         super().__init__()
         self.runs_node = runs_node
 
+    @traced(span_name="tiled_publish", attributes={"component": "tiled_publisher"})
     async def publish(
         self, message: Union[XPSResult | XPSStart | XPSResultStop]
     ) -> None:
@@ -50,17 +51,6 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
                 create_run_container, self.runs_node, message.scan_name
             )
             self.current_tiled_scan = TiledScan(run_node=current_tiled_run_node)
-            return
-
-        elif isinstance(message, XPSResultStop):
-            if not self.current_tiled_scan:
-                return
-            await asyncio.to_thread(
-                create_tiled_table_node,
-                self.current_tiled_scan.run_node,
-                message.function_timings.df,
-                "function_timings",
-            )
             return
 
         elif not isinstance(message, XPSResult):
@@ -74,31 +64,7 @@ class TiledPublisher(Publisher[XPSResult | XPSStart | XPSResultStop]):
 
         await asyncio.to_thread(self.update_tiled_scan, message)
 
-        # await asyncio.to_thread(
-        #     patch_tiled_array,
-        #     self.current_tiled_scan.integrated_frames,
-        #     message.integrated_frames.array)
-
-        # await asyncio.to_thread(
-        #     patch_tiled_dataframe,
-        #     self.current_tiled_scan.detected_peaks,
-        #     message.detected_peaks)
-
-        # await asyncio.to_thread(
-        #     patch_tiled_array,
-        #     self.current_tiled_scan.vfft,
-        #     message.vfft.array)
-
-        # await asyncio.to_thread(
-        #     patch_tiled_array,
-        #     self.current_tiled_scan.ifft,
-        #     message.ifft.array)
-
-        # await asyncio.to_thread(
-        #     patch_tiled_array,
-        #     self.current_tiled_scan.sum,
-        #     message.sum.array)
-
+    @traced(span_name="tiled_update_scan", attributes={"component": "tiled_publisher"})
     def update_tiled_scan(self, message: XPSResult) -> None:
         patch_tiled_array(
             self.current_tiled_scan.integrated_frames, message.integrated_frames.array
@@ -116,7 +82,7 @@ def create_run_container(client: Container, name: str) -> Container:
         return client.create_container(name)
     return client[name]
 
-
+@traced(span_name="tiled_create_data_nodes", attributes={"component": "tiled_publisher"})
 def create_data_nodes(tiled_scan: TiledScan, message: XPSResult) -> None:
     tiled_scan.integrated_frames = tiled_scan.run_node.write_array(
         message.integrated_frames.array, key="integrated_frames"
@@ -131,12 +97,14 @@ def create_data_nodes(tiled_scan: TiledScan, message: XPSResult) -> None:
     )
 
 
+@traced(span_name="tiled_patch_tiled_frame", attributes={"component": "tiled_publisher"})
 def patch_tiiled_frame(array_client: ArrayClient, array: np.ndarray) -> None:
     shape = array_client.shape
     offset = (shape[0],)
     array_client.patch(array[None, :], offset=offset, extend=True)
 
 
+@traced(span_name="tiled_patch_tiled_array", attributes={"component": "tiled_publisher"})
 def patch_tiled_array(
     array_client: ArrayClient, array: np.ndarray, axis_to_increment: int = 0
 ) -> None:
@@ -151,7 +119,7 @@ def patch_tiled_array(
     offset = (shape[axis_to_increment] + 1,)
     array_client.patch(array[-1:], offset=offset, extend=True)
 
-
+@traced(span_name="tiled_create_tiled_table_node", attributes={"component": "tiled_publisher"})
 def create_tiled_table_node(
     parent_node: Container, data_frame: pd.DataFrame, name: str
 ):
@@ -172,5 +140,6 @@ def create_tiled_table_node(
         return frame
 
 
+@traced(span_name="tiled_append_table_node", attributes={"component": "tiled_publisher"})
 def append_table_node(table_node: DataFrameClient, data_frame: pd.DataFrame):
     table_node.append_partition(data_frame, 0)

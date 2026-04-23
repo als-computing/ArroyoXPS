@@ -1,0 +1,20 @@
+services:
+  dev_processor:
+  # dcc -f docker-compose-dev.yml run --entrypoint /bin/bash dev_processor -i
+    build:
+      context: .
+      dockerfile: Dockerfile_processor
+    command: "block_configs/timepix_processor_block.yaml"
+    restart: unless-stopped
+
+    volumes:
+      - .:/app:rw,z
+    ports:
+      - "8001:8001"
+    networks:
+      mle_net:
+
+networks:
+  mle_net:
+    name: mle_net
+    driver: bridge

@@ -132,6 +132,7 @@ class XPSTiledResultPublisher(Publisher):
         self._current_scan_name: str | None = None
         self._shot_index: int = 0
         self._sas_start_sent: bool = False
+        self._scan_started: bool = False  # True only after XPSResultStart received
 
         logger.info(
             f"Initialized XPSTiledResultPublisher — tiled_uri={tiled_uri}, "
@@ -207,6 +208,7 @@ class XPSTiledResultPublisher(Publisher):
         self._array_clients = {}
         self._shot_index = 0
         self._sas_start_sent = False
+        self._scan_started = True  # mark scan as active; frames before this are discarded
 
         if self._current_uuid is None:
             self._current_uuid = str(uuid4())
@@ -232,6 +234,19 @@ class XPSTiledResultPublisher(Publisher):
         Args:
             message: The XPSResult message containing shot_mean.
         """
+        # Guard: discard frames that arrive before a start message is received.
+        # This handles the case where splash_timepix begins emitting before
+        # arroyoXPS is ready — those early frames must not be written to Tiled
+        # because the reader will request slice indices starting from 0 and any
+        # gap will cause slice-not-found errors.
+        if not self._scan_started:
+            logger.warning(
+                f"Received scan '{self._current_scan_name}' frame {message.frame_number} "
+                "but no start message has been received yet — discarding frame to avoid "
+                "Tiled index desync."
+            )
+            return
+
         if message.shot_mean is None:
             logger.debug("shot_mean is None — skipping frame")
             return
@@ -344,6 +359,7 @@ class XPSTiledResultPublisher(Publisher):
         self._current_uuid = None
         self._shot_index = 0
         self._sas_start_sent = False
+        self._scan_started = False  # reset; next frames must wait for a new start
 
     # ------------------------------------------------------------------
     # Tiled helpers (synchronous — called via asyncio.to_thread)

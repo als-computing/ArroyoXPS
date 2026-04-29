@@ -33,6 +33,8 @@ services:
       - "8001:8001"
     volumes:
       - ./block_configs:/block_configs:ro,Z
+    environment:
+      - RESULTS_TILED_API_KEY=${TILED_SINGLE_USER_API_KEY}
     networks:
       mle_net:
 

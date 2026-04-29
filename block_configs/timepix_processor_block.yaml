@@ -17,3 +17,11 @@ blocks:
       - class: tr_ap_xps.websockets.xps_ws_publisher_factory
         kwargs:
           ws_url: "ws://0.0.0.0:8001/xps_operator"
+
+      - class: tr_ap_xps.xps_tiled_zmq_publisher.xps_tiled_result_publisher_factory
+        kwargs:
+          zmq_address: "tcp://0.0.0.0:5000"
+          tiled_uri: "http://tiled:8000"
+          tiled_prefix: "beamlines/bl931/processed"
+          root_segments:
+            - xps_processed_images

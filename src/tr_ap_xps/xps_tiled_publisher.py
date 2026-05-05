@@ -5,17 +5,12 @@ import re
 from datetime import datetime
 from uuid import uuid4
 
-import msgpack
 import numpy as np
 import pytz
-import zmq
-import zmq.asyncio
 from arroyopy.publisher import Publisher
-from arroyosas.schemas import RawFrameEvent, SASStart, SASStop, SerializableNumpyArrayModel
 from tiled.client import from_uri
 from tiled.client.array import ArrayClient
 from tiled.client.node import Container
-from zmq.asyncio import Context, Socket
 
 from .schemas import XPSResult, XPSResultStart, XPSResultStop
 
@@ -42,59 +37,8 @@ def extract_uuid(scan_name: str) -> str | None:
     return match.group() if match else None
 
 
-def build_tiled_url(
-    tiled_uri: str,
-    tiled_prefix: str | None,
-    root_segments: list[str],
-    uuid: str,
-    shot_index: int,
-    height: int,
-    width: int,
-) -> str:
-    """Construct the Tiled array slice URL for a single xps_averaged_heatmaps frame.
-
-    Path structure:
-        [tiled_prefix /] <root_segments> / <YYYY> / <MM> / <DD> / <uuid> / xps_averaged_heatmaps
-
-    Date is the current date in US/Pacific timezone at call time.
-
-    Args:
-        tiled_uri: Base URI of the Tiled server (e.g. ``"http://tiled:8000"``).
-        tiled_prefix: Optional top-level container prefix.
-        root_segments: Intermediate path segments between prefix and date.
-        uuid: UUID extracted from scan_name, used as the container key.
-        shot_index: Zero-based index of the shot frame to slice.
-        height: Number of rows (detector height).
-        width: Number of columns (detector width).
-
-    Returns:
-        Full Tiled array URL with slice query parameter.
-    """
-    now = datetime.now(CALIFORNIA_TZ)
-    date_path = f"{now.year}/{now.month:02d}/{now.day:02d}"
-
-    parts: list[str] = []
-    if tiled_prefix:
-        parts.append(tiled_prefix)
-    parts.extend(root_segments)
-    parts.append(date_path)
-    parts.append(uuid)
-    parts.append(ARRAY_KEY)
-
-    array_path = "/".join(parts)
-    slice_param = f"{shot_index}:{shot_index + 1},0:{height},0:{width}"
-    return f"{tiled_uri}/api/v1/array/full/{array_path}?slice={slice_param}"
-
-
 class XPSTiledResultPublisher(Publisher):
-    """Publisher that writes XPS shot_mean frames to local Tiled and then
-    forwards each written frame as a SAS-style RawFrameEvent to downstream publishers.
-
-    Sequence per XPSResult:
-        1. Write (or patch) ``shot_mean`` into the local Tiled server.
-        2. Build the exact slice URL for the frame that was just written.
-        3. Publish a ``RawFrameEvent`` carrying that URL downstream
-           (e.g. to a ZMQFramePublisher wired in the same block).
+    """Publisher that writes XPS shot_mean frames to local Tiled.
 
     Container path structure:
         [tiled_prefix /] <root_segments> / <YYYY> / <MM> / <DD> / <uuid> / xps_averaged_heatmaps
@@ -110,14 +54,12 @@ class XPSTiledResultPublisher(Publisher):
 
     def __init__(
         self,
-        zmq_socket: Socket,
         tiled_uri: str,
         tiled_api_key: str | None = None,
         tiled_prefix: str | None = None,
         root_segments: list[str] | None = None,
     ) -> None:
         super().__init__()
-        self.zmq_socket = zmq_socket
         self.tiled_uri = tiled_uri
         self.tiled_api_key = tiled_api_key or LOCAL_TILED_API_KEY
         self.tiled_prefix = tiled_prefix
@@ -151,26 +93,6 @@ class XPSTiledResultPublisher(Publisher):
         """Open a synchronous Tiled client connection."""
         logger.info(f"Connecting to Tiled server at {self.tiled_uri}")
         self._tiled_client = from_uri(self.tiled_uri, api_key=self.tiled_api_key)
-
-    async def _send_zmq(self, message: SASStart | SASStop | RawFrameEvent) -> None:
-        """Serialize a SAS message and send it over ZMQ.
-
-        Args:
-            message: A SASStart, SASStop, or RawFrameEvent to serialize and send.
-        """
-        try:
-            if isinstance(message, (SASStart, SASStop)):
-                await self.zmq_socket.send(
-                    msgpack.packb(message.model_dump(), use_bin_type=True)
-                )
-            elif isinstance(message, RawFrameEvent):
-                await self.zmq_socket.send(
-                    msgpack.packb(message.model_dump(), use_bin_type=True)
-                )
-            else:
-                logger.warning(f"Unknown message type for ZMQ send: {type(message)}")
-        except Exception as e:
-            logger.error(f"Error sending ZMQ message: {e}", exc_info=True)
 
     # ------------------------------------------------------------------
     # Publisher entry point
@@ -223,22 +145,11 @@ class XPSTiledResultPublisher(Publisher):
             )
 
     async def _handle_event(self, message: XPSResult) -> None:
-        """Write shot_mean to Tiled, then publish a RawFrameEvent downstream.
-
-        Steps:
-            1. Validate shot_mean shape and UUID presence.
-            2. Write or patch the frame into the Tiled array.
-            3. Build the slice URL for the frame that was just written.
-            4. Publish a SASStart (first frame only), then a RawFrameEvent downstream.
+        """Write shot_mean to Tiled.
 
         Args:
             message: The XPSResult message containing shot_mean.
         """
-        # Guard: discard frames that arrive before a start message is received.
-        # This handles the case where splash_timepix begins emitting before
-        # arroyoXPS is ready — those early frames must not be written to Tiled
-        # because the reader will request slice indices starting from 0 and any
-        # gap will cause slice-not-found errors.
         if not self._scan_started:
             logger.warning(
                 f"Received scan '{self._current_scan_name}' frame {message.frame_number} "
@@ -263,24 +174,7 @@ class XPSTiledResultPublisher(Publisher):
             )
             return
 
-        # Send SASStart on first frame so width/height/data_type are known
-        if not self._sas_start_sent:
-            try:
-                await self._send_zmq(
-                    SASStart(
-                        run_name=self._current_scan_name or "",
-                        run_id=self._current_uuid,
-                        tiled_url=self.tiled_uri,
-                        width=shot_array.shape[1],
-                        height=shot_array.shape[0],
-                        data_type=str(shot_array.dtype),
-                    )
-                )
-                self._sas_start_sent = True
-            except Exception as e:
-                logger.error(f"Error publishing SASStart downstream: {e}", exc_info=True)
-
-        # --- Step 1: write to Tiled ---
+        # --- Write to Tiled ---
         written_index = self._shot_index  # capture before incrementing
         try:
             array_client = await asyncio.to_thread(
@@ -306,40 +200,9 @@ class XPSTiledResultPublisher(Publisher):
                 f"Error writing shot_mean for frame {message.frame_number}: {e}",
                 exc_info=True,
             )
-            return  # don't forward a URL for a frame that wasn't written
-
-        # --- Step 2: build URL from the frame we just wrote ---
-        tiled_url = build_tiled_url(
-            tiled_uri=self.tiled_uri,
-            tiled_prefix=self.tiled_prefix,
-            root_segments=self.root_segments,
-            uuid=self._current_uuid,
-            shot_index=written_index,
-            height=shot_array.shape[0],
-            width=shot_array.shape[1],
-        )
-
-        # --- Step 3: publish RawFrameEvent downstream ---
-        try:
-            await self._send_zmq(
-                RawFrameEvent(
-                    image=SerializableNumpyArrayModel(array=shot_array),
-                    frame_number=message.frame_number if message.frame_number is not None else written_index,
-                    tiled_url=tiled_url,
-                )
-            )
-            logger.debug(
-                f"Published RawFrameEvent downstream — uuid='{self._current_uuid}', "
-                f"shot_index={written_index}, tiled_url={tiled_url}"
-            )
-        except Exception as e:
-            logger.error(
-                f"Error publishing RawFrameEvent for frame {message.frame_number}: {e}",
-                exc_info=True,
-            )
 
     async def _handle_stop(self, message: XPSResultStop) -> None:
-        """Publish a SASStop downstream and clear per-scan state.
+        """Clear per-scan state.
 
         Args:
             message: The XPSResultStop message.
@@ -348,11 +211,6 @@ class XPSTiledResultPublisher(Publisher):
             f"Stop received — clearing state for scan='{self._current_scan_name}', "
             f"uuid='{self._current_uuid}'"
         )
-
-        try:
-            await self._send_zmq(SASStop(num_frames=self._shot_index))
-        except Exception as e:
-            logger.error(f"Error publishing SASStop downstream: {e}", exc_info=True)
 
         self._array_clients = {}
         self._current_scan_name = None
@@ -449,7 +307,6 @@ class XPSTiledResultPublisher(Publisher):
 
 
 def xps_tiled_result_publisher_factory(
-    zmq_address: str,
     tiled_uri: str,
     tiled_prefix: str | None = None,
     root_segments: list[str] | None = None,
@@ -457,8 +314,6 @@ def xps_tiled_result_publisher_factory(
     """Instantiate XPSTiledResultPublisher for YAML-based wiring.
 
     Args:
-        zmq_address: ZMQ address to bind and publish SAS messages to
-            (e.g. ``"tcp://0.0.0.0:5000"``).
         tiled_uri: Base URI of the Tiled server.
         tiled_prefix: Optional top-level container prefix.
         root_segments: Intermediate path segments between prefix and date.
@@ -466,12 +321,7 @@ def xps_tiled_result_publisher_factory(
     Returns:
         A configured XPSTiledResultPublisher instance.
     """
-    context = Context()
-    zmq_socket = context.socket(zmq.PUB)
-    zmq_socket.bind(zmq_address)
-    logger.info(f"ZMQ publisher bound to {zmq_address}")
     return XPSTiledResultPublisher(
-        zmq_socket=zmq_socket,
         tiled_uri=tiled_uri,
         tiled_prefix=tiled_prefix,
         root_segments=root_segments,

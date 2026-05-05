@@ -1,6 +1,11 @@
 blocks:
-  - name: XPS Timepix Operator
-    description: Real-time AP-XPS processor for Timepix data
+  - name: XPS Timepix Processor
+    description: >
+      Real-time AP-XPS processor for Timepix data.
+      Listens for splash_timepix ZMQ messages, computes shot_mean via XPSOperator,
+      and publishes to two independent sinks:
+        1. XPSWSResultPublisher — live websocket updates to the arroyoXPS frontend
+        2. XPSTiledPublisher    — persists shot_mean arrays to the local Tiled server
 
     operator:
       class: tr_ap_xps.pipeline.xps_operator.build_xps_operator
@@ -18,9 +23,8 @@ blocks:
         kwargs:
           ws_url: "ws://0.0.0.0:8001/xps_operator"
 
-      - class: tr_ap_xps.xps_tiled_zmq_publisher.xps_tiled_result_publisher_factory
+      - class: tr_ap_xps.xps_tiled_publisher.xps_tiled_result_publisher_factory
         kwargs:
-          zmq_address: "tcp://0.0.0.0:5000"
           tiled_uri: "http://tiled:8000"
           tiled_prefix: "beamlines/bl931/processed"
           root_segments:

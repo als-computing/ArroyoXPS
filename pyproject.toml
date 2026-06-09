@@ -42,7 +42,7 @@ dev = [
     "flake8",
     "fakeredis",
     "pre-commit",
-    "pytest-asyncio",
+    "pytest-asyncio==1.3.0",
     "pytest-mock",
     "tiled[server]",
 ]

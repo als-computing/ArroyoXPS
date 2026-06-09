@@ -23,9 +23,6 @@ class ZMQFramePublisher(Publisher):
             return
         if isinstance(message, RawFrameEvent):
             message = message.model_dump()
-            # message["image"] = SerializableNumpyArrayModel.serialize_array(
-            #     message["image"]["array"]
-            # )
             message = msgpack.packb(message, use_bin_type=True)
             await self.zmq_socket.send(message)
         else:

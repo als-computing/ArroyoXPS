@@ -24,7 +24,7 @@ services:
   timepix_processor:
     # profiles:
     #   - dev
-    command: "/block_configs/timepix_processor_block.yaml"
+    command: "/block_configs/timepix931_processor_block.yaml"
     build:
       context: .
       dockerfile: Dockerfile_processor
@@ -33,6 +33,27 @@ services:
       - "8001:8001"
     volumes:
       - ./block_configs:/block_configs:ro,Z
+    environment:
+      - RESULTS_TILED_API_KEY=${TILED_SINGLE_USER_API_KEY}
+      - LOGGING_LEVEL=DEBUG
+    networks:
+      mle_net:
+
+
+  tiled_processor:
+    command: "/block_configs/tiled_processor_block.yaml"
+    build:
+      context: .
+      dockerfile: Dockerfile_processor
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./block_configs:/block_configs:ro,Z
+      - ./data/tiled_poller:/data/tiled_poller:Z
+    environment:
+      - RESULTS_TILED_API_KEY=${TILED_SINGLE_USER_API_KEY}
+      - LOGGING_LEVEL=DEBUG
     networks:
       mle_net:
 

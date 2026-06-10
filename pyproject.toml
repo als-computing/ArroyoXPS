@@ -18,6 +18,7 @@ classifiers = [
 
 dependencies = [
     "arroyopy @ git+https://github.com/als-computing/arroyopy.git@refs/heads/open_telemetry",
+    "arroyosas @ git+https://github.com/als-computing/arroyosas.git@upgrade_arroyopy",
     "astropy",
     "dynaconf",
     "python-dotenv",
@@ -41,7 +42,7 @@ dev = [
     "flake8",
     "fakeredis",
     "pre-commit",
-    "pytest-asyncio",
+    "pytest-asyncio==1.3.0",
     "pytest-mock",
     "tiled[server]",
 ]

@@ -1,0 +1,27 @@
+blocks:
+  - name: XPS Tiled → LSE Processor
+    description: >
+      Watches the local Tiled server for new XPS scans written by Block 1 and
+      forwards each shot_mean frame as a RawFrameEvent over ZMQ to LSE.
+
+    operator:
+      # Pass-through: RawFrameEvent → RawFrameEvent, no computation.
+      # Reuses the existing TiledRawFrameOperator from arroyosas.
+      class: arroyosas.tiled.tiled_poller.TiledRawFrameOperator
+
+    listeners:
+      - class: tr_ap_xps.tiled_listener.tiled_new_scan_listener_factory
+        kwargs:
+          tiled_uri: "http://tiled:8000"
+          tiled_prefix: "beamlines/bl931/processed"
+          root_segments:
+            - xps_processed_images
+          poll_interval_sec: 2.0
+          frame_poll_interval_sec: 3.0
+          unchanged_cycles_threshold: 5
+          seen_scans_file: "/data/tiled_poller/seen_scans.txt"
+
+    publishers:
+      - class: tr_ap_xps.zmq_publisher.create_zmq_frame_publisher
+        kwargs:
+          zmq_address: "tcp://0.0.0.0:5000"
